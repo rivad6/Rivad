@@ -20,10 +20,10 @@ import { PricingPopup } from './components/PricingPopup';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AchievementPopup } from './components/AchievementPopup';
 
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Home as HomeIcon } from 'lucide-react';
 import { useAudio } from './context/AudioContext';
 
-const Home = React.lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
+const HomeRoute = React.lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
 const ArcadePage = React.lazy(() => import('./pages/ArcadePage').then(m => ({ default: m.ArcadePage })));
 const FestJumpPage = React.lazy(() => import('./pages/FestJumpPage').then(m => ({ default: m.FestJumpPage })));
 const SellOutPage = React.lazy(() => import('./pages/SellOutPage').then(m => ({ default: m.SellOutPage })));
@@ -35,8 +35,8 @@ function Nav() {
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none">
       <Link to="/" className="pointer-events-auto font-display font-medium text-xl uppercase tracking-widest text-white hover:text-brand-accent transition-colors flex items-center gap-3">
-        <span className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center p-1 frosted-layer overflow-hidden">
-          <span className="w-full h-full bg-brand-accent rounded-full animate-pulse shadow-[0_0_15px_rgba(242,74,41,0.6)]"></span>
+        <span className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center p-1 frosted-layer overflow-hidden focus:outline-none">
+          <HomeIcon size={14} className="text-white" />
         </span>
         Rivad
       </Link>
@@ -66,7 +66,7 @@ function AnimatedRoutes() {
           <Route path="/" element={
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}>
               <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-white font-mono text-sm uppercase tracking-widest animate-pulse">Loading...</div>}>
-                <Home />
+                <HomeRoute />
               </Suspense>
             </motion.div>
           } />
