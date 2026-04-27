@@ -11,6 +11,7 @@ import { GeneratorPage } from './pages/GeneratorPage';
 import { Footer } from './components/Footer';
 import { MusicPlayer } from './components/MusicPlayer';
 import { FloatingBackButton } from './components/FloatingBackButton';
+import { GameInvitePopup } from './components/GameInvitePopup';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 function Nav() {
@@ -39,6 +40,7 @@ export default function App() {
           <Nav />
           <MusicPlayer />
           <FloatingBackButton />
+          <GameInvitePopup />
           <div className="flex-1 relative z-10">
             <Routes>
               <Route path="/" element={<Home />} />

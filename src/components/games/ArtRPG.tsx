@@ -2,7 +2,14 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 
-type NodeId = 'start' | 'q1' | 'q2a' | 'q2b' | 'q2c' | 'q3a' | 'q3b' | 'q3c' | 'q3d' | 'q3e' | 'q3f' | 'q4a' | 'q4b' | 'e1' | 'e2' | 'e3' | 'e4' | 'e5' | 'e6' | 'e7' | 'e8' | 'e9' | 'e10' | 'e11' | 'e12' | 'e13' | 'e14' | 'e15' | 'e16';
+type NodeId = 'start' | 'q1' | 
+  'p1.q2' | 'p1.e1' | 'p1.e2' | 
+  'p2.q2' | 'p2.e1' | 'p2.e2' | 
+  'p3.q2' | 'p3.e1' | 'p3.e2' | 
+  'p4.q2' | 'p4.e1' | 'p4.e2' | 
+  'p5.q2' | 'p5.e1' | 'p5.e2' | 
+  'p6.q2' | 'p6.e1' | 'p6.e2' | 
+  'p7.q2' | 'p7.e1' | 'p7.e2';
 
 interface Choice {
   textKey: string;
@@ -23,104 +30,91 @@ const storyMap: Record<NodeId, StoryNode> = {
   q1: {
     textKey: 'game.rpg.q1',
     choices: [
-      { textKey: 'game.rpg.q1.a', next: 'q2a' },
-      { textKey: 'game.rpg.q1.b', next: 'q2b' },
-      { textKey: 'game.rpg.q1.c', next: 'q2c' }
+      { textKey: 'game.rpg.q1.1', next: 'p1.q2' },
+      { textKey: 'game.rpg.q1.2', next: 'p2.q2' },
+      { textKey: 'game.rpg.q1.3', next: 'p3.q2' },
+      { textKey: 'game.rpg.q1.4', next: 'p4.q2' },
+      { textKey: 'game.rpg.q1.5', next: 'p5.q2' },
+      { textKey: 'game.rpg.q1.6', next: 'p6.q2' },
+      { textKey: 'game.rpg.q1.7', next: 'p7.q2' }
     ]
   },
-  q2a: {
-    textKey: 'game.rpg.q2a',
+  // Path 1
+  'p1.q2': {
+    textKey: 'game.rpg.p1.q2',
     choices: [
-      { textKey: 'game.rpg.q2a.a', next: 'q3a' },
-      { textKey: 'game.rpg.q2a.b', next: 'q3b' }
+      { textKey: 'game.rpg.p1.q2.a', next: 'p1.e1' },
+      { textKey: 'game.rpg.p1.q2.b', next: 'p1.e2' }
     ]
   },
-  q2b: {
-    textKey: 'game.rpg.q2b',
+  'p1.e1': { textKey: 'game.rpg.p1.e1', choices: [], isEnding: true },
+  'p1.e2': { textKey: 'game.rpg.p1.e2', choices: [], isEnding: true },
+  
+  // Path 2
+  'p2.q2': {
+    textKey: 'game.rpg.p2.q2',
     choices: [
-      { textKey: 'game.rpg.q2b.a', next: 'q3c' },
-      { textKey: 'game.rpg.q2b.b', next: 'q3d' }
+      { textKey: 'game.rpg.p2.q2.a', next: 'p2.e1' },
+      { textKey: 'game.rpg.p2.q2.b', next: 'p2.e2' }
     ]
   },
-  q2c: {
-    textKey: 'game.rpg.q2c',
+  'p2.e1': { textKey: 'game.rpg.p2.e1', choices: [], isEnding: true },
+  'p2.e2': { textKey: 'game.rpg.p2.e2', choices: [], isEnding: true },
+
+  // Path 3
+  'p3.q2': {
+    textKey: 'game.rpg.p3.q2',
     choices: [
-      { textKey: 'game.rpg.q2c.a', next: 'q3e' },
-      { textKey: 'game.rpg.q2c.b', next: 'q3f' }
+      { textKey: 'game.rpg.p3.q2.a', next: 'p3.e1' },
+      { textKey: 'game.rpg.p3.q2.b', next: 'p3.e2' }
     ]
   },
-  q3a: {
-    textKey: 'game.rpg.q3a',
+  'p3.e1': { textKey: 'game.rpg.p3.e1', choices: [], isEnding: true },
+  'p3.e2': { textKey: 'game.rpg.p3.e2', choices: [], isEnding: true },
+
+  // Path 4
+  'p4.q2': {
+    textKey: 'game.rpg.p4.q2',
     choices: [
-      { textKey: 'game.rpg.q3a.a', next: 'e1' },
-      { textKey: 'game.rpg.q3a.b', next: 'e2' }
+      { textKey: 'game.rpg.p4.q2.a', next: 'p4.e1' },
+      { textKey: 'game.rpg.p4.q2.b', next: 'p4.e2' }
     ]
   },
-  q3b: {
-    textKey: 'game.rpg.q3b',
+  'p4.e1': { textKey: 'game.rpg.p4.e1', choices: [], isEnding: true },
+  'p4.e2': { textKey: 'game.rpg.p4.e2', choices: [], isEnding: true },
+
+  // Path 5
+  'p5.q2': {
+    textKey: 'game.rpg.p5.q2',
     choices: [
-      { textKey: 'game.rpg.q3b.a', next: 'e3' },
-      { textKey: 'game.rpg.q3b.b', next: 'q4a' }
+      { textKey: 'game.rpg.p5.q2.a', next: 'p5.e1' },
+      { textKey: 'game.rpg.p5.q2.b', next: 'p5.e2' }
     ]
   },
-  q3c: {
-    textKey: 'game.rpg.q3c',
+  'p5.e1': { textKey: 'game.rpg.p5.e1', choices: [], isEnding: true },
+  'p5.e2': { textKey: 'game.rpg.p5.e2', choices: [], isEnding: true },
+
+  // Path 6
+  'p6.q2': {
+    textKey: 'game.rpg.p6.q2',
     choices: [
-      { textKey: 'game.rpg.q3c.a', next: 'e5' },
-      { textKey: 'game.rpg.q3c.b', next: 'e6' }
+      { textKey: 'game.rpg.p6.q2.a', next: 'p6.e1' },
+      { textKey: 'game.rpg.p6.q2.b', next: 'p6.e2' }
     ]
   },
-  q3d: {
-    textKey: 'game.rpg.q3d',
+  'p6.e1': { textKey: 'game.rpg.p6.e1', choices: [], isEnding: true },
+  'p6.e2': { textKey: 'game.rpg.p6.e2', choices: [], isEnding: true },
+
+  // Path 7
+  'p7.q2': {
+    textKey: 'game.rpg.p7.q2',
     choices: [
-      { textKey: 'game.rpg.q3d.a', next: 'e7' },
-      { textKey: 'game.rpg.q3d.b', next: 'q4b' }
+      { textKey: 'game.rpg.p7.q2.a', next: 'p7.e1' },
+      { textKey: 'game.rpg.p7.q2.b', next: 'p7.e2' }
     ]
   },
-  q3e: {
-    textKey: 'game.rpg.q3e',
-    choices: [
-      { textKey: 'game.rpg.q3e.a', next: 'e13' },
-      { textKey: 'game.rpg.q3e.b', next: 'e14' }
-    ]
-  },
-  q3f: {
-    textKey: 'game.rpg.q3f',
-    choices: [
-      { textKey: 'game.rpg.q3f.a', next: 'e15' },
-      { textKey: 'game.rpg.q3f.b', next: 'e16' }
-    ]
-  },
-  q4a: {
-    textKey: 'game.rpg.q4a',
-    choices: [
-      { textKey: 'game.rpg.q4a.a', next: 'e9' },
-      { textKey: 'game.rpg.q4a.b', next: 'e10' }
-    ]
-  },
-  q4b: {
-    textKey: 'game.rpg.q4b',
-    choices: [
-      { textKey: 'game.rpg.q4b.a', next: 'e11' },
-      { textKey: 'game.rpg.q4b.b', next: 'e12' }
-    ]
-  },
-  e1: { textKey: 'game.rpg.e1', choices: [], isEnding: true },
-  e2: { textKey: 'game.rpg.e2', choices: [], isEnding: true },
-  e3: { textKey: 'game.rpg.e3', choices: [], isEnding: true },
-  e4: { textKey: 'game.rpg.e4', choices: [], isEnding: true },
-  e5: { textKey: 'game.rpg.e5', choices: [], isEnding: true },
-  e6: { textKey: 'game.rpg.e6', choices: [], isEnding: true },
-  e7: { textKey: 'game.rpg.e7', choices: [], isEnding: true },
-  e8: { textKey: 'game.rpg.e8', choices: [], isEnding: true },
-  e9: { textKey: 'game.rpg.e9', choices: [], isEnding: true },
-  e10: { textKey: 'game.rpg.e10', choices: [], isEnding: true },
-  e11: { textKey: 'game.rpg.e11', choices: [], isEnding: true },
-  e12: { textKey: 'game.rpg.e12', choices: [], isEnding: true },
-  e13: { textKey: 'game.rpg.e13', choices: [], isEnding: true },
-  e14: { textKey: 'game.rpg.e14', choices: [], isEnding: true },
-  e15: { textKey: 'game.rpg.e15', choices: [], isEnding: true },
-  e16: { textKey: 'game.rpg.e16', choices: [], isEnding: true }
+  'p7.e1': { textKey: 'game.rpg.p7.e1', choices: [], isEnding: true },
+  'p7.e2': { textKey: 'game.rpg.p7.e2', choices: [], isEnding: true }
 };
 
 export function ArtRPG() {
@@ -138,7 +132,7 @@ export function ArtRPG() {
     return (
       <div className="flex flex-col gap-4">
         <h4 className="text-[#8a63d2] font-bold text-lg md:text-xl">{lines[0]}</h4>
-        <p className="text-[#e2d5f8] text-sm md:text-base leading-relaxed">{lines.slice(1).join('\n')}</p>
+        <p className="text-[#e2d5f8] text-sm md:text-base leading-relaxed whitespace-pre-line">{lines.slice(1).join('\n')}</p>
       </div>
     );
   };
@@ -154,7 +148,7 @@ export function ArtRPG() {
           <span className="text-[#888] font-mono text-[10px] uppercase">{t('game.objective')}{t('game.rpg.goal')}</span>
         </div>
 
-        <h3 className="text-2xl md:text-4xl font-display uppercase tracking-widest text-white mb-8">
+        <h3 className="text-2xl md:text-3xl font-display uppercase tracking-widest text-white mb-8">
           {t('game.rpg.title')}
         </h3>
         <button
@@ -168,7 +162,7 @@ export function ArtRPG() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto h-[400px] flex flex-col justify-between p-6 bg-[#0a0812] border-2 border-[#3a2d59] relative overflow-hidden font-mono shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)]">
+    <div className="w-full max-w-2xl mx-auto h-[450px] flex flex-col justify-between p-6 bg-[#0a0812] border-2 border-[#3a2d59] relative overflow-hidden font-mono shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)]">
       {/* Decorative lines */}
       <div className="absolute top-0 left-0 w-full h-1 bg-[#8a63d2]/20" />
       <div className="absolute bottom-0 left-0 w-full h-1 bg-[#8a63d2]/20" />
@@ -181,12 +175,12 @@ export function ArtRPG() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-4"
           >
             {node.isEnding ? (
               renderEndingText(t(node.textKey))
             ) : (
-              <p className="text-[#e2d5f8] text-sm md:text-base leading-relaxed typing-effect">
+              <p className="text-[#e2d5f8] text-sm md:text-base leading-relaxed">
                 {t(node.textKey)}
               </p>
             )}
@@ -195,7 +189,7 @@ export function ArtRPG() {
       </div>
 
       {/* Choices Area */}
-      <div className="flex flex-col gap-3 shrink-0">
+      <div className="flex flex-col gap-2 shrink-0 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentNode + '-choices'}
@@ -203,7 +197,7 @@ export function ArtRPG() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col gap-3"
+            className="flex flex-col gap-2"
           >
             {node.isEnding ? (
               <button
@@ -218,12 +212,12 @@ export function ArtRPG() {
                 <button
                   key={idx}
                   onClick={() => handleChoice(choice.next)}
-                  className="w-full px-4 py-3 border border-[#3a2d59] bg-[#110f1c] text-[#a591c8] text-xs md:text-sm hover:bg-[#8a63d2] hover:text-white transition-colors text-left flex gap-3 items-start group cursor-none"
+                  className="w-full px-3 py-2 border border-[#3a2d59] bg-[#110f1c] text-[#a591c8] text-[11px] md:text-sm hover:bg-[#8a63d2] hover:text-white transition-all text-left flex gap-3 items-start group cursor-none leading-tight"
                 >
-                  <span className="text-[#8a63d2] group-hover:text-white shrink-0 mt-0.5">
-                    {idx === 0 ? 'A)' : idx === 1 ? 'B)' : 'C)'}
+                  <span className="text-[#8a63d2] group-hover:text-white shrink-0 font-bold">
+                    {idx + 1})
                   </span>
-                  <span className="leading-snug">{t(choice.textKey)}</span>
+                  <span className="">{t(choice.textKey)}</span>
                 </button>
               ))
             )}
