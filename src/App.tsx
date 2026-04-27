@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import { Home } from './pages/Home';
 import { ArcadePage } from './pages/ArcadePage';
 import { FestJumpPage } from './pages/FestJumpPage';
+import { SellOutPage } from './pages/SellOutPage';
 import { GeneratorPage } from './pages/GeneratorPage';
 import { Footer } from './components/Footer';
 import { MusicPlayer } from './components/MusicPlayer';
@@ -55,6 +56,11 @@ function AnimatedRoutes() {
           <Route path="/fest-jump" element={
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.5 }}>
               <FestJumpPage />
+            </motion.div>
+          } />
+          <Route path="/sell-out" element={
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.5 }}>
+              <SellOutPage />
             </motion.div>
           } />
           <Route path="/oraculo" element={

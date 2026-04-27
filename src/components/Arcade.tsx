@@ -1,23 +1,25 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
 import { ArtRPG } from './games/ArtRPG';
+import { SellOutGame } from './games/SellOutGame';
 
 import { useLanguage } from '../context/LanguageContext';
 
 export function Arcade() {
   const { t } = useLanguage();
-  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg'>('rpg');
-
   const games = [
     { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={16} /> },
     { id: 'uno', title: t('arc.game2'), icon: <Layers size={16} /> },
     { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={16} /> },
     { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={16} /> },
+    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={16} /> },
   ] as const;
+
+  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg' | 'sellout'>('rpg');
 
   return (
     <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40">
@@ -78,6 +80,7 @@ export function Arcade() {
                 {activeGame === 'tictactoe' && <IdeasTicTacToe />}
                 {activeGame === 'uno' && <PoliticalUno />}
                 {activeGame === 'rpg' && <ArtRPG />}
+                {activeGame === 'sellout' && <SellOutGame />}
               </motion.div>
             </AnimatePresence>
 
