@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
+import { motion } from 'motion/react';
 
 type Player = 'X' | 'O' | null;
 
@@ -115,20 +116,32 @@ export function IdeasTicTacToe() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2 bg-[#090b11] p-2 rounded-lg crt relative border-4 border-[#222]">
+      <div className="grid grid-cols-3 gap-3 bg-zinc-900/50 p-3 rounded-[2rem] backdrop-blur-xl relative border border-white/5 shadow-2xl overflow-hidden">
+        {/* Background Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+        
         {board.map((square, i) => (
           <button
             key={i}
             onClick={() => handleClick(i)}
             disabled={!!square || !!winner || !xIsNext}
             className={cn(
-              "w-20 h-20 md:w-24 md:h-24 bg-[#0a0a0a] text-3xl flex items-center justify-center transition-colors hover:bg-gray-900 border-2 border-[#111]",
-              !square && !winner && xIsNext && "hover:border-[#333] cursor-pointer",
+              "w-20 h-20 md:w-24 md:h-24 bg-zinc-950/80 backdrop-blur-sm text-3xl flex items-center justify-center transition-all hover:bg-zinc-900 border-2 border-white/5 rounded-2xl relative group",
+              !square && !winner && xIsNext && "hover:border-brand-accent/50 cursor-pointer active:scale-95",
               square === 'X' && "text-brand-accent",
               square === 'O' && "text-blue-400"
             )}
           >
-            {square === 'X' ? '👁' : square === 'O' ? '🏛' : ''}
+            {square === 'X' ? (
+              <motion.span initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}>👁</motion.span>
+            ) : square === 'O' ? (
+              <motion.span initial={{ scale: 0, rotate: 20 }} animate={{ scale: 1, rotate: 0 }}>🏛</motion.span>
+            ) : (
+              <span className="opacity-0 group-hover:opacity-10 transition-opacity text-white/50">?</span>
+            )}
+            
+            {/* Cell visual flair */}
+            <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none" />
           </button>
         ))}
       </div>

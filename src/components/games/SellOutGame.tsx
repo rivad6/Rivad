@@ -41,7 +41,12 @@ export const SellOutGame: React.FC = () => {
   const [gameState, setGameState] = useState<'start' | 'playing' | 'win' | 'lose'>('start');
   const [message, setMessage] = useState(t('game.sell.msg.start'));
   const [inventory, setInventory] = useState<Record<string, number>>({});
-  const [clicks, setClicks] = useState<{ id: number, x: number, y: number }[]>([]);
+  const [clicks, setClicks] = useState<{ id: number, x: number, y: number, val: number }[]>([]);
+  const hypeRef = React.useRef(hype);
+
+  useEffect(() => {
+    hypeRef.current = hype;
+  }, [hype]);
 
   const hypePerClick = 1 + (audience * 0.1);
   const passiveHype = UPGRADES.reduce((acc, up) => acc + (inventory[up.id] || 0) * up.hypeBoost, 0);
@@ -63,9 +68,10 @@ export const SellOutGame: React.FC = () => {
     if (gameState !== 'playing') return;
 
     const timer = setInterval(() => {
+      const currentHype = hypeRef.current;
       setHype(prev => prev + totalPassiveHype / 10);
       setRelevance(prev => {
-        const next = prev - (0.35 + (hype * 0.000005)); 
+        const next = prev - (0.25 + (currentHype * 0.000003)); 
         if (next <= 0) {
           setGameState('lose');
           setMessage(t('game.sell.msg.lose'));
@@ -74,21 +80,21 @@ export const SellOutGame: React.FC = () => {
         return next;
       });
 
-      if (hype >= 1000000) {
+      if (currentHype >= 1000000) {
         setGameState('win');
         setMessage(t('game.sell.msg.win'));
       }
     }, 100);
 
     return () => clearInterval(timer);
-  }, [gameState, totalPassiveHype, hype, t]);
+  }, [gameState, totalPassiveHype, t]);
 
   const handleMainClick = (e: React.MouseEvent) => {
     if (gameState !== 'playing') return;
     
     setHype(prev => prev + totalHypePerClick);
     setAudience(prev => prev + 1);
-    setRelevance(prev => Math.min(100, prev + 0.8));
+    setRelevance(prev => Math.min(100, prev + 1.2));
 
     const id = Date.now();
     setClicks(prev => [...prev, { id, x: e.clientX, y: e.clientY, val: totalHypePerClick }]);

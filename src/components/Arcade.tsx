@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
@@ -11,6 +11,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 export function Arcade() {
   const { t } = useLanguage();
+  const [showPopup, setShowPopup] = useState(false);
   const games = [
     { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={16} /> },
     { id: 'uno', title: t('arc.game2'), icon: <Layers size={16} /> },
@@ -21,8 +22,44 @@ export function Arcade() {
 
   const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg' | 'sellout'>('rpg');
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowPopup(true);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40">
+    <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40 relative">
+      {/* 60s Interruption Popup */}
+      <AnimatePresence>
+        {showPopup && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-zinc-950 border border-brand-accent/30 p-8 rounded-3xl max-w-md w-full shadow-[0_0_50px_rgba(138,99,210,0.2)] flex flex-col items-center text-center gap-6"
+            >
+              <div className="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center text-brand-accent">
+                <MessageCircle size={32} />
+              </div>
+              <h4 className="text-brand-accent text-[10px] font-black tracking-[0.3em] uppercase">
+                {t('arc.popup.title')}
+              </h4>
+              <p className="text-white font-mono text-sm leading-relaxed uppercase tracking-wider italic">
+                "{t('arc.popup.text')}"
+              </p>
+              <button
+                onClick={() => setShowPopup(false)}
+                className="w-full bg-brand-accent text-white py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all font-mono text-xs"
+              >
+                {t('arc.popup.btn')}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <div className="w-full max-w-5xl mx-auto px-6 md:px-0">
         <div className="mb-12 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-12 md:mt-4">
           <div>

@@ -66,7 +66,7 @@ export function DebatePong() {
       ball.y += ball.dy;
 
       // CPU AI
-      const cpuSpeed = 3.5 + (player.score * 0.5); // Gets harder as player scores
+      const cpuSpeed = 3.2 + (player.score * 0.4); 
       const targetPos = ball.y - paddleHeight / 2;
       if (cpu.y < targetPos) {
         cpu.y += cpuSpeed;
@@ -88,10 +88,9 @@ export function DebatePong() {
         ball.y < player.y + paddleHeight
       ) {
         ball.dx *= -1;
-        ball.dx = Math.abs(ball.dx) + 0.3; // increase speed 
-        // vary dy based on hit position
+        ball.dx = Math.min(10, Math.abs(ball.dx) + 0.4); 
         const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
-        ball.dy = hitOffset * 0.2;
+        ball.dy = hitOffset * 0.25;
         showHitText();
       }
 
@@ -102,9 +101,9 @@ export function DebatePong() {
         ball.y < cpu.y + paddleHeight
       ) {
         ball.dx *= -1;
-        ball.dx = -(Math.abs(ball.dx) + 0.3); // increase speed 
+        ball.dx = -Math.min(10, Math.abs(ball.dx) + 0.4); 
         const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
-        ball.dy = hitOffset * 0.2;
+        ball.dy = hitOffset * 0.25;
         showHitText();
       }
 
@@ -113,12 +112,12 @@ export function DebatePong() {
         cpu.score++;
         setCpuScore(cpu.score);
         resetBall();
-        shakeAmount = 10;
+        shakeAmount = 15;
       } else if (ball.x > canvas.width) {
         player.score++;
         setPlayerScore(player.score);
         resetBall();
-        shakeAmount = 10;
+        shakeAmount = 15;
       }
 
       // Constrain paddles
@@ -133,30 +132,42 @@ export function DebatePong() {
         if (shakeAmount < 0.1) shakeAmount = 0;
       }
 
-      ctx.fillStyle = '#0a0a0a';
+      ctx.fillStyle = '#050505';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Scanlines effect
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+      for (let i = 0; i < canvas.height; i += 2) {
+        ctx.fillRect(0, i, canvas.width, 1);
+      }
+
       // Draw Net
-      ctx.fillStyle = '#333';
+      ctx.fillStyle = '#1a1a1a';
       for (let i = 0; i < canvas.height; i += 20) {
         ctx.fillRect(canvas.width / 2 - 1, i, 2, 10);
       }
 
-      // Draw
-      ctx.fillStyle = '#f24a29'; // Player paddle
+      // Draw Paddles with bloom-ish effect
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#f24a29';
+      ctx.fillStyle = '#f24a29'; 
       ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
       
+      ctx.shadowColor = '#fff';
       ctx.fillStyle = '#fff'; // CPU
       ctx.fillRect(cpu.x, cpu.y, paddleWidth, paddleHeight);
       
-      ctx.fillStyle = '#fff'; // Ball
+      // Ball
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#fff'; 
       ctx.fillRect(ball.x, ball.y, ballSize, ballSize);
 
       if (hitText) {
-        ctx.fillStyle = '#f24a29';
-        ctx.font = '10px "Press Start 2P"';
+        ctx.shadowBlur = 5;
+        ctx.fillStyle = '#fff';
+        ctx.font = '8px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillText(hitText, canvas.width / 2, canvas.height / 4);
+        ctx.fillText(hitText, canvas.width / 2, 40);
       }
       ctx.restore();
 

@@ -12,7 +12,8 @@ import {
   CheckCircle2, 
   XCircle,
   Megaphone,
-  Fingerprint
+  Fingerprint,
+  Star
 } from 'lucide-react';
 
 type Color = 'rojo' | 'azul' | 'guinda' | 'naranja' | 'black';
@@ -468,8 +469,8 @@ export function PoliticalUno() {
           >
             <div className="flex flex-col items-center gap-8 p-12 bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl max-w-lg w-full">
               <div className="text-center">
-                <h3 className="text-2xl font-black italic text-white uppercase mb-2">¡DEDAZO PRESIDENCIAL!</h3>
-                <p className="text-zinc-500 text-xs tracking-widest uppercase">Elige el color del próximo sexenio</p>
+                <h3 className="text-2xl font-black italic text-white uppercase mb-2">{t('game.uno.label.wild_title')}</h3>
+                <p className="text-zinc-500 text-xs tracking-widest uppercase">{t('game.uno.label.wild_desc')}</p>
               </div>
               
               <div className="grid grid-cols-2 gap-4 w-full">
@@ -500,34 +501,61 @@ export function PoliticalUno() {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-3xl"
           >
             <motion.div 
-              initial={{ scale: 0.5, y: 100 }}
-              animate={{ scale: 1, y: 0 }}
-              className="flex flex-col items-center gap-8 p-12 text-center"
+              initial={{ scale: 0.5, y: 100, rotate: -10 }}
+              animate={{ scale: 1, y: 0, rotate: 0 }}
+              className="flex flex-col items-center gap-10 p-12 text-center relative"
             >
+              {/* Retro background flair */}
+              <div className="absolute inset-0 bg-brand-accent/5 blur-[120px] rounded-full animate-pulse" />
+              
               {winner === 'player' ? (
                 <>
-                  <CheckCircle2 className="w-32 h-32 text-brand-accent animate-bounce" />
-                  <h3 className="text-4xl md:text-6xl font-black italic text-white uppercase italic tracking-tighter">¡MAYORÍA ABSOLUTA!</h3>
-                  <p className="text-zinc-400 max-w-md uppercase tracking-[0.2em] leading-relaxed italic">{t('game.uno.msg.win')}</p>
+                  <div className="relative">
+                    <CheckCircle2 className="w-40 h-40 text-brand-accent animate-[bounce_2s_infinite]" />
+                    <Star className="absolute -top-4 -right-4 w-12 h-12 text-white animate-spin" />
+                  </div>
+                  <div className="space-y-4 relative">
+                    <h3 className="text-5xl md:text-8xl font-black italic text-white uppercase tracking-tighter leading-none">
+                      {t('game.uno.label.win_title')}
+                    </h3>
+                    <p className="text-zinc-400 max-w-md mx-auto uppercase tracking-[0.3em] font-black italic text-xs leading-relaxed">
+                      {t('game.uno.msg.win')}
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>
-                  <XCircle className="w-32 h-32 text-red-500 opacity-50" />
-                  <h3 className="text-4xl md:text-6xl font-black italic text-zinc-600 uppercase italic tracking-tighter">DESAFUERO</h3>
-                  <p className="text-zinc-600 max-w-md uppercase tracking-[0.2em] leading-relaxed italic">{t('game.uno.msg.lose')}</p>
+                  <div className="relative">
+                    <XCircle className="w-40 h-40 text-red-500/30 animate-pulse" />
+                    <AlertTriangle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 text-red-500" />
+                  </div>
+                  <div className="space-y-4 relative">
+                    <h3 className="text-5xl md:text-8xl font-black italic text-zinc-800 uppercase tracking-tighter leading-none">
+                      {t('game.uno.label.lose_title')}
+                    </h3>
+                    <p className="text-red-500/50 max-w-md mx-auto uppercase tracking-[0.3em] font-black italic text-xs leading-relaxed">
+                      {t('game.uno.msg.lose')}
+                    </p>
+                  </div>
                 </>
               )}
               
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1, backgroundColor: '#fff', color: '#000' }}
+                whileTap={{ scale: 0.9 }}
                 onClick={initGame}
-                className="mt-4 bg-white text-black px-12 py-4 font-black uppercase tracking-[0.3em] hover:bg-brand-accent hover:text-white transition-all rounded-full flex items-center gap-2"
+                className="mt-8 bg-zinc-900 text-white px-16 py-5 font-black uppercase tracking-[0.4em] transition-all rounded-full border border-white/10 flex items-center gap-3 shadow-2xl relative z-10"
               >
                 <ArrowLeftRight className="w-5 h-5" />
-                {t('game.uno.label.reset')}
-              </button>
+                {t('game.uno.label.reset_btn')}
+              </motion.button>
+              
+              <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-screen overflow-hidden opacity-5 pointer-events-none text-[150px] font-black whitespace-nowrap italic uppercase">
+                 CORRUPCIÓN • PODER • DINERO • INFLUENCIA • DEDAZO
+              </div>
             </motion.div>
           </motion.div>
         )}

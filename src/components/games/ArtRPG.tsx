@@ -180,67 +180,103 @@ export function ArtRPG() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto h-[450px] flex flex-col justify-between p-6 bg-[#0a0812] border-2 border-[#3a2d59] relative overflow-hidden font-mono shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)]">
-      {/* Decorative lines */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-[#8a63d2]/20" />
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-[#8a63d2]/20" />
+    <div className="w-full max-w-3xl mx-auto h-[550px] flex flex-col justify-between p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+      {/* Decorative Scanlines & Grain */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />
       
+      {/* Header Info */}
+      <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4 shrink-0">
+        <div className="flex items-center gap-4">
+           <div className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
+           <span className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500">{t('game.rpg.label.terminal')}</span>
+        </div>
+        <div className="text-[9px] uppercase font-bold text-zinc-700 bg-white/5 px-3 py-1 rounded-full">
+          {t('game.rpg.label.status')}: {node.isEnding ? t('game.rpg.label.finished') : t('game.rpg.label.processing')}
+        </div>
+      </div>
+
       {/* Prompt Area */}
-      <div className="flex-1 mt-4 mb-4 overflow-y-auto pr-2 custom-scrollbar">
+      <div className="flex-1 mt-2 mb-6 overflow-y-auto pr-4 custom-scrollbar relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentNode}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col gap-4"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            className="flex flex-col gap-6"
           >
             {node.isEnding ? (
-              renderEndingText(t(node.textKey))
+              <div className="space-y-6">
+                <motion.div 
+                   initial={{ scale: 0.9 }}
+                   animate={{ scale: 1 }}
+                   className="p-6 bg-brand-accent/5 border border-brand-accent/20 rounded-2xl italic"
+                >
+                  {renderEndingText(t(node.textKey))}
+                </motion.div>
+                <div className="flex items-center gap-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                   <div className="h-[1px] flex-1 bg-zinc-900" />
+                   {t('game.rpg.label.end_sim')}
+                   <div className="h-[1px] flex-1 bg-zinc-900" />
+                </div>
+              </div>
             ) : (
-              <p className="text-[#e2d5f8] text-sm md:text-base leading-relaxed">
-                {t(node.textKey)}
-              </p>
+              <div className="relative">
+                <span className="absolute -left-4 text-brand-accent animate-pulse">{'>'}</span>
+                <p className="text-zinc-300 text-sm md:text-lg leading-relaxed font-medium">
+                  {t(node.textKey)}
+                </p>
+              </div>
             )}
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Choices Area */}
-      <div className="flex flex-col gap-2 shrink-0 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="flex flex-col gap-3 shrink-0">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentNode + '-choices'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col gap-2"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex flex-col gap-3"
           >
             {node.isEnding ? (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => handleChoice('start')}
-                className="w-full px-4 py-3 border border-[#8a63d2] bg-[#8a63d2]/10 text-[#e2d5f8] text-xs uppercase tracking-widest hover:bg-[#8a63d2] hover:text-white transition-colors text-left flex justify-between items-center group cursor-none"
+                className="w-full px-6 py-4 bg-white text-black text-xs font-black uppercase tracking-[0.4em] hover:bg-brand-accent hover:text-white transition-all rounded-2xl text-center shadow-xl shadow-brand-accent/10"
               >
-                <span>{t('game.rpg.restart')}</span>
-                <span className="opacity-0 group-hover:opacity-100 transition-opacity">{'>>'}</span>
-              </button>
+                {t('game.rpg.restart')}
+              </motion.button>
             ) : (
               node.choices.map((choice, idx) => (
-                <button
+                <motion.button
                   key={idx}
+                  whileHover={{ x: 10, backgroundColor: 'rgba(138,99,210,0.1)' }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleChoice(choice.next)}
-                  className="w-full px-3 py-2 border border-[#3a2d59] bg-[#110f1c] text-[#a591c8] text-[11px] md:text-sm hover:bg-[#8a63d2] hover:text-white transition-all text-left flex gap-3 items-start group cursor-none leading-tight"
+                  className="w-full px-5 py-4 border border-white/5 bg-zinc-950/40 text-zinc-400 text-[11px] md:text-sm hover:text-white transition-all text-left flex gap-4 items-center rounded-2xl group"
                 >
-                  <span className="text-[#8a63d2] group-hover:text-white shrink-0 font-bold">
-                    {idx + 1})
+                  <span className="text-brand-accent font-black opacity-40 group-hover:opacity-100 transition-opacity font-mono">
+                    0{idx + 1}
                   </span>
-                  <span className="">{t(choice.textKey)}</span>
-                </button>
+                  <span className="font-bold tracking-tight">{t(choice.textKey)}</span>
+                </motion.button>
               ))
             )}
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Footer Decoration */}
+      <div className="mt-8 flex justify-between items-center text-[8px] font-black text-zinc-800 uppercase tracking-widest pt-4 border-t border-white/5">
+         <span>{t('game.rpg.label.sector')}</span>
+         <span>{t('game.rpg.label.layer')}: {currentNode.startsWith('boss') ? t('game.rpg.label.layer_boss') : t('game.rpg.label.layer_std')}</span>
+         <span>Hash: {Math.random().toString(16).substring(2, 10)}</span>
       </div>
 
       <style>{`
