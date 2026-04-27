@@ -74,6 +74,8 @@ export function FestJump() {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codeInput, setCodeInput] = useState('');
   const [score, setScore] = useState(0);
+  const [hudShield, setHudShield] = useState(0);
+  const [hudJetpack, setHudJetpack] = useState(0);
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_chars') || '["default"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('fest_selected_char') || 'default');
@@ -634,6 +636,8 @@ export function FestJump() {
       drawPlayer(player.x, player.y);
 
       update();
+      setHudShield(player.shield);
+      setHudJetpack(player.jetpack);
 
       if (isPlaying) {
         animationFrameId = requestAnimationFrame(draw);
@@ -688,21 +692,24 @@ export function FestJump() {
   return (
     <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)] select-none"}>
       <div className={isPlaying ? "w-full min-w-[320px] max-w-[500px] h-full max-h-[850px] mx-auto flex flex-col" : "w-full max-w-[400px] mx-auto flex flex-col"}>
-      <div className="flex justify-between items-end w-full px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-sm h-16 shrink-0 pt-4 md:pt-0">
+      <div className="flex justify-between items-end w-full px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-2xl border border-white/5 backdrop-blur-sm shrink-0 pt-4">
         <div>
-          <p className="text-brand-accent flex items-center gap-2">
-            <User className="w-4 h-4" />
+          <p className="text-brand-accent flex items-center gap-2 text-[10px] uppercase font-bold tracking-tighter opacity-80">
+            <User className="w-3 h-3" />
             {t(selectedChar.nameKey)}
           </p>
-          <p className="text-2xl mt-1 leading-none">{score}M</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-4xl font-black italic tracking-tighter">{score}</p>
+            <span className="text-[10px] text-zinc-500 font-mono">DIST</span>
+          </div>
         </div>
         <div className="text-right flex flex-col items-end justify-end h-full">
-          <div className="flex items-center gap-2 text-yellow-500 mb-1">
-            <Zap className="w-3 h-3" />
-            <span>{festCoins} KARMAS</span>
+          <div className="flex items-center gap-2 text-yellow-400 px-3 py-1 bg-yellow-400/10 rounded-full border border-yellow-400/20 mb-2">
+            <Zap className="w-3 h-3 fill-yellow-400" />
+            <span className="text-xs font-black italic">{festCoins}</span>
           </div>
-          <div className="text-[8px] text-pink-400 flex flex-col items-end gap-1">
-            {unlockedCodes.map(c => <span key={c} className="bg-pink-500/10 px-2 py-0.5 border border-pink-500/20">{c}</span>)}
+          <div className="flex flex-wrap justify-end gap-1 max-w-[120px]">
+            {unlockedCodes.map(c => <span key={c} className="text-[7px] text-pink-400 bg-pink-500/10 px-1.5 py-0.5 border border-pink-500/20 rounded uppercase font-mono">{c}</span>)}
           </div>
         </div>
       </div>
@@ -823,7 +830,18 @@ export function FestJump() {
         {/* HUD while playing */}
         {isPlaying && (
           <div className="absolute top-4 left-4 z-10 flex gap-2 pointer-events-none">
-            {/* Show active powerups indicators here if needed */}
+            {hudShield > 0 && (
+              <div className="bg-blue-500/80 backdrop-blur-sm p-1.5 rounded-md border border-blue-400/50 flex flex-col items-center">
+                <Shield className="w-4 h-4 text-white animate-pulse" />
+                <span className="text-[6px] text-white font-mono uppercase mt-0.5">Escudo</span>
+              </div>
+            )}
+            {hudJetpack > 0 && (
+              <div className="bg-amber-500/80 backdrop-blur-sm p-1.5 rounded-md border border-amber-400/50 flex flex-col items-center">
+                <Rocket className="w-4 h-4 text-white animate-bounce" />
+                <span className="text-[6px] text-white font-mono uppercase mt-0.5">Turbo</span>
+              </div>
+            )}
           </div>
         )}
       </div>

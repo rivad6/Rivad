@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAchievements } from "../../context/AchievementsContext";
-import { Play, RefreshCw, Zap } from "lucide-react";
+import { Play, RefreshCw, Zap, Shield, Star } from "lucide-react";
 import { useAudio } from "../../context/AudioContext";
 
 type GameState = "start" | "playing" | "gameover" | "win" | "takeoff" | "asteroids" | "asteroids_win";
@@ -23,6 +23,9 @@ export function CreativeInvaders() {
 
   const [gameState, setGameState] = useState<GameState>("start");
   const [score, setScore] = useState(0);
+  const [hudShield, setHudShield] = useState(0);
+  const [hudPower, setHudPower] = useState(1);
+  const [hudTurbo, setHudTurbo] = useState(0);
 
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('invaders_chars') || '["classic"]'));
@@ -533,6 +536,8 @@ export function CreativeInvaders() {
 
     if (gameState === "playing") {
       for (const enemy of s.enemies) {
+        if (enemy.type === "block") continue; // Blocks don't trigger edge hits
+
         let enemySpeedX = currentSpeed;
         if (enemy.type === "block") enemySpeedX *= 0.3;
         else if (enemy.type === "distraction") enemySpeedX *= 1.5;
@@ -550,15 +555,13 @@ export function CreativeInvaders() {
     let hitEdge = false;
     const now_ts = Date.now();
     if (gameState === "playing") {
-      if (minX <= 5 && s.enemyDirection < 0 && now_ts - s.lastHitEdgeTime > 500) {
+      if (minX <= 5 && s.enemyDirection < 0) {
         hitEdge = true;
         s.enemyDirection = 1;
-        s.lastHitEdgeTime = now_ts;
         playSound('click');
-      } else if (maxX >= GAME_WIDTH - 5 && s.enemyDirection > 0 && now_ts - s.lastHitEdgeTime > 500) {
+      } else if (maxX >= GAME_WIDTH - 5 && s.enemyDirection > 0) {
         hitEdge = true;
         s.enemyDirection = -1;
-        s.lastHitEdgeTime = now_ts;
         playSound('click');
       }
     }
@@ -696,7 +699,19 @@ export function CreativeInvaders() {
               20,
             );
 
-            if (enemy.type === "asteroid_l" || enemy.type === "asteroid_m") {
+            if (enemy.type === "boss") {
+              createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#ef4444", 50);
+              playSound('powerup');
+              // Maybe drop multiple powerups
+              for (let k = 0; k < 3; k++) {
+                const types = ["power", "shield", "speed"] as const;
+                s.drops.push({
+                  x: enemy.x + Math.random() * enemy.width,
+                  y: enemy.y + Math.random() * enemy.height,
+                  type: types[k],
+                });
+              }
+            } else if (enemy.type === "asteroid_l" || enemy.type === "asteroid_m") {
                const newType = enemy.type === "asteroid_l" ? "asteroid_m" : "asteroid_s";
                const newSize = enemy.type === "asteroid_l" ? 50 : 30;
                for (let k = 0; k < 2; k++) {
@@ -794,6 +809,11 @@ export function CreativeInvaders() {
          setGameState("asteroids_win");
        }
     }
+
+    // Sync HUD
+    setHudShield(s.player.shield);
+    setHudPower(s.player.power);
+    setHudTurbo(s.player.speedBoostTimer);
   }, [gameState, loadLevel]);
 
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
@@ -945,6 +965,26 @@ export function CreativeInvaders() {
           </p>
         </div>
         <div className="flex gap-8">
+           <div className="flex items-center gap-4 mr-4">
+              {hudShield > 0 && (
+                <div className="flex flex-col items-center">
+                  <Shield className="w-4 h-4 text-blue-400 animate-pulse" />
+                  <span className="text-[8px] text-blue-400 font-mono uppercase">Shield</span>
+                </div>
+              )}
+              {hudTurbo > 0 && (
+                <div className="flex flex-col items-center">
+                  <Zap className="w-4 h-4 text-yellow-400 animate-bounce" />
+                  <span className="text-[8px] text-yellow-400 font-mono uppercase">Turbo</span>
+                </div>
+              )}
+              {hudPower > 1 && (
+                <div className="flex flex-col items-center">
+                  <Star className="w-4 h-4 text-purple-400 animate-pulse" />
+                  <span className="text-[8px] text-purple-400 font-mono uppercase">Pwr {hudPower}</span>
+                </div>
+              )}
+           </div>
            <div className="text-right">
              <p className="text-white/50 text-xs font-mono tracking-widest uppercase mb-1">
                {t('game.invaders.level') || 'Level'}

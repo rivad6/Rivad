@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
+import { User, Zap } from 'lucide-react';
 
 export function DebatePong() {
   const { t, language } = useLanguage();
@@ -219,14 +220,21 @@ export function DebatePong() {
   return (
     <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]"}>
       <div className={isPlaying ? "w-full max-w-[600px] flex flex-col" : "flex flex-col items-center w-full"}>
-      <div className="flex justify-between w-full max-w-[400px] mx-auto px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-xs shrink-0 pt-4 md:pt-0">
-        <div className="text-center">
-          <p className="text-brand-accent">{t('game.pong.thesis')}</p>
-          <p className="text-2xl mt-2">{playerScore}</p>
+      <div className="flex justify-between w-full max-w-[420px] mx-auto px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-xl border border-white/5 shadow-xl shrink-0 pt-4">
+        <div className="flex flex-col items-center">
+          <p className="text-brand-accent text-[8px] uppercase tracking-widest mb-1">{t('game.pong.thesis')}</p>
+          <div className="flex items-center gap-3">
+            <User className="w-4 h-4 text-brand-accent opacity-50" />
+            <p className="text-4xl font-black italic">{playerScore}</p>
+          </div>
         </div>
-        <div className="text-center">
-          <p className="text-gray-400">{t('game.pong.antithesis')}</p>
-          <p className="text-2xl mt-2">{cpuScore}</p>
+        <div className="h-10 w-px bg-white/10 self-center"></div>
+        <div className="flex flex-col items-center">
+          <p className="text-zinc-500 text-[8px] uppercase tracking-widest mb-1">{t('game.pong.antithesis')}</p>
+          <div className="flex items-center gap-3">
+            <p className="text-4xl font-black italic text-zinc-300">{cpuScore}</p>
+            <Zap className="w-4 h-4 text-zinc-500 opacity-50" />
+          </div>
         </div>
       </div>
       
