@@ -1189,13 +1189,13 @@ export function CreativeInvaders() {
         </div>
       </div>
 
-      <div ref={containerRef} className="relative w-full h-[60vh] md:h-auto md:aspect-[4/3] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group">
+      <div ref={containerRef} className="relative w-full h-[70vh] min-h-[500px] md:h-auto md:min-h-0 md:aspect-[4/3] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <canvas
           ref={canvasRef}
           width={GAME_WIDTH}
           height={GAME_HEIGHT}
-          className="w-full h-full object-contain cursor-none mix-blend-screen"
+          className="w-full h-full object-contain cursor-none mix-blend-screen touch-none"
           onMouseMove={(e) => {
             if ((gameState === "playing" || gameState === "asteroids") && canvasRef.current) {
               const canvas = canvasRef.current;
@@ -1290,8 +1290,9 @@ export function CreativeInvaders() {
         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]"></div>
 
         {gameState === "start" && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-8 text-center ring-1 ring-white/10 z-50 pointer-events-auto">
-            <div className="w-full max-w-2xl flex flex-col md:flex-row items-center gap-8">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 pointer-events-auto overflow-y-auto">
+            <div className="min-h-full w-full flex flex-col items-center justify-center p-4 sm:p-8">
+              <div className="w-full max-w-2xl flex flex-col md:flex-row items-center gap-6 md:gap-8">
               <div className="flex-1 text-left flex flex-col items-center md:items-start text-center md:text-left">
                 <div className="w-16 h-16 rounded-2xl bg-brand-accent/20 flex items-center justify-center mb-4 border border-brand-accent/30 shadow-[0_0_30px_rgba(242,74,41,0.3)]">
                   <Zap className="w-8 h-8 text-brand-accent" />
@@ -1436,6 +1437,7 @@ export function CreativeInvaders() {
                  )}
               </div>
             </div>
+          </div>
           </div>
         )}
 

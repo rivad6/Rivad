@@ -777,7 +777,7 @@ export function FestJump() {
         </div>
       </div>
       
-      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full h-[65vh] md:h-auto md:aspect-[3/4] flex justify-center items-center flex-col shadow-2xl mx-auto">
+      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-[400px] max-w-full h-[65vh] min-h-[500px] md:h-auto md:min-h-0 md:aspect-[3/4] flex justify-center items-center flex-col shadow-2xl mx-auto">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <AnimatePresence>
           {message && (

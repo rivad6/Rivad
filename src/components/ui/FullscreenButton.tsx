@@ -16,7 +16,7 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
       if (!document.fullscreenElement) {
         setIsFakeFullscreen(false);
         if (targetRef.current) {
-          targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!max-w-none', '!rounded-none', '!border-none');
+          targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none');
         }
       }
     };
@@ -39,7 +39,7 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
         console.error("Native fullscreen failed, using CSS fallback:", err);
         // Fallback to CSS fullscreen
         setIsFakeFullscreen(true);
-        targetRef.current.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!max-w-none', '!rounded-none', '!border-none');
+        targetRef.current.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none');
       }
     } else {
       if (document.fullscreenElement) {
@@ -52,7 +52,7 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
         }
       } else if (isFakeFullscreen) {
         setIsFakeFullscreen(false);
-        targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-screen', '!h-screen', '!max-w-none', '!rounded-none', '!border-none');
+        targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none');
       }
     }
   };
