@@ -222,61 +222,67 @@ export function FestJump() {
     };
 
     const drawPlayer = (x: number, y: number) => {
-      ctx.save();
-      if (shake > 0) ctx.translate(Math.random()*shake - shake/2, Math.random()*shake - shake/2);
-      
-      // Body with squash/stretch
-      let stretchX = 1;
-      let stretchY = 1;
-      if (player.vy < -5) { stretchX = 0.8; stretchY = 1.2; }
-      else if (player.vy > 5) { stretchX = 0.9; stretchY = 1.1; }
-      
-      const pWidth = player.width * stretchX;
-      const pHeight = player.height * stretchY;
-      const pOffsetX = (player.width - pWidth) / 2;
-      const pOffsetY = (player.height - pHeight);
+      const drawInstance = (ix: number, iy: number) => {
+        ctx.save();
+        if (shake > 0) ctx.translate(Math.random()*shake - shake/2, Math.random()*shake - shake/2);
+        
+        // Body with squash/stretch
+        let stretchX = 1;
+        let stretchY = 1;
+        if (player.vy < -5) { stretchX = 0.8; stretchY = 1.2; }
+        else if (player.vy > 5) { stretchX = 0.9; stretchY = 1.1; }
+        
+        const pWidth = player.width * stretchX;
+        const pHeight = player.height * stretchY;
+        const pOffsetX = (player.width - pWidth) / 2;
+        const pOffsetY = (player.height - pHeight);
 
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(x + 4 + pOffsetX, y + 4 + pOffsetY, pWidth, pHeight);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(ix + 4 + pOffsetX, iy + 4 + pOffsetY, pWidth, pHeight);
 
-      // Trail for ghost
-      if (selectedChar.id === 'ghost') {
-        ctx.globalAlpha = 0.3;
+        // Trail for ghost
+        if (selectedChar.id === 'ghost') {
+          ctx.globalAlpha = 0.3;
+          ctx.fillStyle = selectedChar.color;
+          ctx.fillRect(ix - player.vx + pOffsetX, iy - player.vy + pOffsetY, pWidth, pHeight);
+          ctx.globalAlpha = 1;
+        }
+
+        // Body
         ctx.fillStyle = selectedChar.color;
-        ctx.fillRect(x - player.vx + pOffsetX, y - player.vy + pOffsetY, pWidth, pHeight);
+        ctx.fillRect(ix + pOffsetX, iy + pOffsetY, pWidth, pHeight);
+        
+        // Glasses/Accent
+        ctx.fillStyle = selectedChar.accent;
+        ctx.fillRect(ix + 2 + pOffsetX, iy + pOffsetY + (6 * stretchY), pWidth - 4, 6 * stretchY);
+        
+        // Trunk
+        ctx.fillStyle = selectedChar.color;
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(ix + player.width/2 - 2, iy + player.height, 4, 8);
         ctx.globalAlpha = 1;
-      }
 
-      // Body
-      ctx.fillStyle = selectedChar.color;
-      ctx.fillRect(x + pOffsetX, y + pOffsetY, pWidth, pHeight);
-      
-      // Glasses/Accent
-      ctx.fillStyle = selectedChar.accent;
-      ctx.fillRect(x + 2 + pOffsetX, y + pOffsetY + (6 * stretchY), pWidth - 4, 6 * stretchY);
-      
-      // Trunk
-      ctx.fillStyle = selectedChar.color;
-      ctx.globalAlpha = 0.8;
-      ctx.fillRect(x + player.width/2 - 2, y + player.height, 4, 8);
-      ctx.globalAlpha = 1;
+        // Shield Effect
+        if (player.shield > 0) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#3b82f6';
+          ctx.lineWidth = 2;
+          ctx.arc(ix + player.width/2, iy + player.height/2, 20 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
+          ctx.stroke();
+        }
 
-      // Shield Effect
-      if (player.shield > 0) {
-        ctx.beginPath();
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2;
-        ctx.arc(x + player.width/2, y + player.height/2, 20 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
-        ctx.stroke();
-      }
+        // Jetpack Effect
+        if (player.jetpack > 0) {
+          createParticles(ix + player.width/2 - 4, iy + player.height, '#f59e0b');
+        }
 
-      // Jetpack Effect
-      if (player.jetpack > 0) {
-        createParticles(x + player.width/2 - 4, y + player.height, '#f59e0b');
-      }
+        ctx.restore();
+      };
 
-      ctx.restore();
+      drawInstance(x, y);
+      if (x < 0) drawInstance(x + canvas.width, y);
+      if (x + player.width > canvas.width) drawInstance(x - canvas.width, y);
     };
 
     const update = () => {
@@ -300,8 +306,8 @@ export function FestJump() {
       player.y += player.vy;
 
       // Screen wrap
-      if (player.x < -player.width) player.x = canvas.width;
-      if (player.x > canvas.width) player.x = -player.width;
+      if (player.x < 0) player.x += canvas.width;
+      if (player.x >= canvas.width) player.x -= canvas.width;
 
       // Camera follow
       if (player.y < canvas.height / 2) {
@@ -349,6 +355,12 @@ export function FestJump() {
         powerups.forEach(pw => pw.y += diff);
       }
 
+      const playerRects = [
+        { x: player.x, w: player.width },
+        { x: player.x + canvas.width, w: player.width },
+        { x: player.x - canvas.width, w: player.width }
+      ];
+
       // Collisions Platforms
       if (player.vy > 0) {
         platforms.forEach(p => {
@@ -356,15 +368,25 @@ export function FestJump() {
           
           if (p.type === 'moving') {
             p.x += p.vx;
-            if (p.x < 0 || p.x + p.width > canvas.width) p.vx *= -1;
+            // Platforms wrap around the screen too to feel fully cylindrical
+            if (p.x < -p.width) p.x += canvas.width + p.width;
+            if (p.x > canvas.width) p.x -= canvas.width + p.width;
           }
 
-          if (
-            player.x + 4 < p.x + p.width &&
-            player.x + player.width - 4 > p.x &&
-            player.y + player.height >= p.y &&
-            player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy
-          ) {
+          let hit = false;
+          for (const pr of playerRects) {
+            if (
+              pr.x + 4 < p.x + p.width &&
+              pr.x + pr.w - 4 > p.x &&
+              player.y + player.height >= p.y &&
+              player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy
+            ) {
+              hit = true;
+              break;
+            }
+          }
+
+          if (hit) {
             player.vy = p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce;
             if (p.type === 'breaking') {
               p.broken = true;
@@ -386,14 +408,21 @@ export function FestJump() {
           if (p.broken) return;
           if (p.type === 'moving') {
             p.x += p.vx;
-            if (p.x < 0 || p.x + p.width > canvas.width) p.vx *= -1;
+            if (p.x < -p.width) p.x += canvas.width + p.width;
+            if (p.x > canvas.width) p.x -= canvas.width + p.width;
           }
         });
       }
 
       // Collisions Powerups
       powerups = powerups.filter(pw => {
-        const hit = player.x < pw.x + 20 && player.x + player.width > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y;
+        let hit = false;
+        for (const pr of playerRects) {
+          if (pr.x < pw.x + 20 && pr.x + pr.w > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y) {
+            hit = true;
+            break;
+          }
+        }
         if (hit) {
           playSound('score');
           if (pw.type === 'rocket') player.jetpack = 120;
@@ -407,12 +436,20 @@ export function FestJump() {
         e.x += e.speed;
         if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
 
-        if (
-          player.x < e.x + e.width - 4 &&
-          player.x + player.width > e.x + 4 &&
-          player.y < e.y + e.width - 4 &&
-          player.y + player.height > e.y + 4
-        ) {
+        let hit = false;
+        for (const pr of playerRects) {
+          if (
+            pr.x < e.x + e.width - 4 &&
+            pr.x + pr.w > e.x + 4 &&
+            player.y < e.y + e.width - 4 &&
+            player.y + player.height > e.y + 4
+          ) {
+            hit = true;
+            break;
+          }
+        }
+
+        if (hit) {
           if (player.shield > 0) {
             player.shield = 0;
             enemies.splice(index, 1);
@@ -437,8 +474,8 @@ export function FestJump() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // BG with multiple layers and dynamic gradient
-      const bgColorTop = cameraY < 2000 ? '#0f172a' : cameraY < 6000 ? '#064e3b' : cameraY < 12000 ? '#312e81' : '#581c87';
-      const bgColorBot = cameraY < 2000 ? '#1e293b' : cameraY < 6000 ? '#065f46' : cameraY < 12000 ? '#4338ca' : '#000000';
+      const bgColorTop = cameraY < 2000 ? '#0a0a1a' : cameraY < 6000 ? '#022c22' : cameraY < 12000 ? '#1e1b4b' : '#3b0764';
+      const bgColorBot = cameraY < 2000 ? '#1e1b4b' : cameraY < 6000 ? '#065f46' : cameraY < 12000 ? '#3730a3' : '#000000';
       
       let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
       bgGrad.addColorStop(0, bgColorTop);
@@ -447,98 +484,139 @@ export function FestJump() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Stars with depth parallax
-      for(let i=0; i<50; i++) {
-        const layer = (i % 3) + 1;
-        const speed = layer * 0.04;
-        let sy = (cameraY * speed + i * 60) % canvas.height;
-        let brightness = Math.sin(Date.now()*0.001 + i) * 0.5 + 0.5;
-        ctx.fillStyle = `rgba(255, 255, 255, ${brightness * 0.2 * layer})`;
-        ctx.fillRect((i * 137) % canvas.width, sy, layer, layer);
+      for(let i=0; i<80; i++) {
+        const layer = (i % 4) + 1;
+        const speed = layer * 0.05;
+        let sy = (cameraY * speed + i * 50) % canvas.height;
+        let sx = (i * 137 + Math.sin(cameraY*0.001 + i)*20) % canvas.width;
+        let brightness = Math.sin(Date.now()*0.002 + i) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(255, 255, 255, ${brightness * 0.25 * layer})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, layer * 0.8, 0, Math.PI*2);
+        ctx.fill();
       }
 
+      // Floating Geometric Shapes
+      ctx.globalAlpha = 0.05;
+      for (let i = 0; i < 5; i++) {
+         const speed = 0.1 + i * 0.02;
+         const yPos = (cameraY * speed + i * 200) % (canvas.height + 200) - 100;
+         const xPos = (i * 80 + Math.sin(cameraY * 0.002 + i)*100) % canvas.width;
+         ctx.save();
+         ctx.translate(xPos, canvas.height - yPos);
+         ctx.rotate((cameraY * 0.01 + i) * (i%2 ? 1 : -1));
+         ctx.fillStyle = i % 2 === 0 ? selectedChar.accent : '#ffffff';
+         ctx.beginPath();
+         if (i % 3 === 0) {
+            ctx.rect(-30, -30, 60, 60);
+         } else if (i % 3 === 1) {
+            ctx.arc(0, 0, 40, 0, Math.PI * 2);
+         } else {
+            ctx.moveTo(0, -40);
+            ctx.lineTo(35, 20);
+            ctx.lineTo(-35, 20);
+            ctx.closePath();
+         }
+         ctx.fill();
+         ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+
       // Cosmic Fog (Glowing auras)
-      ctx.globalAlpha = 0.12;
-      for (let i = 0; i < 3; i++) {
-        const offset = (cameraY * (0.1 + i * 0.05)) % (canvas.height * 1.5) - canvas.height/2;
+      ctx.globalAlpha = 0.15;
+      for (let i = 0; i < 4; i++) {
+        const offset = (cameraY * (0.15 + i * 0.05)) % (canvas.height * 1.5) - canvas.height/2;
         ctx.fillStyle = i % 2 === 0 ? selectedChar.accent : selectedChar.color;
         ctx.beginPath();
-        ctx.arc(canvas.width/2 + Math.sin(offset*0.005 + i)*150, offset, 180 + i*20, 0, Math.PI*2);
+        ctx.arc(canvas.width/2 + Math.sin(offset*0.003 + i)*200, offset, 150 + i*30, 0, Math.PI*2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
 
       // Spiral Guide Rail (Dashed line with glow)
       ctx.beginPath();
-      ctx.setLineDash([5, 15]);
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.setLineDash([4, 12]);
+      ctx.strokeStyle = `rgba(255,255,255,${0.1 + Math.sin(Date.now()*0.002)*0.05})`;
       ctx.lineWidth = 2;
-      for(let y = -50; y < canvas.height + 50; y += 5) {
+      for(let y = -50; y < canvas.height + 50; y += 10) {
         const absY = cameraY - y + canvas.height;
-        const x = (canvas.width / 2) + Math.sin(absY * 0.005) * 120;
+        const x = (canvas.width / 2) + Math.sin(absY * 0.003) * 140;
         if (y === -50) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
       ctx.setLineDash([]);
 
+      const drawWithWrap = (origX: number, drawFn: (x: number) => void) => {
+        drawFn(origX);
+        drawFn(origX - canvas.width);
+        drawFn(origX + canvas.width);
+      };
+
       // Platforms
       platforms.forEach(p => {
         if (p.broken) return; // don't draw broken platforms
 
-        // Platform Shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(p.x + 4, p.y + 4, p.width, PLATFORM_HEIGHT);
+        drawWithWrap(p.x, (pX) => {
+          // Platform Shadow
+          ctx.fillStyle = 'rgba(0,0,0,0.2)';
+          ctx.fillRect(pX + 4, p.y + 4, p.width, PLATFORM_HEIGHT);
 
-        let pColor = '#a7f3d0';
-        if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving
-        else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking
-        else if (cameraY > 5000) pColor = '#e879f9'; // Zone 2 colors
-        
-        if (p.hasSpring) pColor = '#fde047';
+          let pColor = '#a7f3d0';
+          if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving
+          else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking
+          else if (cameraY > 5000) pColor = '#e879f9'; // Zone 2 colors
+          
+          if (p.hasSpring) pColor = '#fde047';
 
-        ctx.fillStyle = pColor;
-        ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
+          ctx.fillStyle = pColor;
+          ctx.fillRect(pX, p.y, p.width, PLATFORM_HEIGHT);
 
-        // Styling Details
-        if (p.type === 'breaking') {
-           ctx.beginPath();
-           ctx.strokeStyle = '#7f1d1d';
-           ctx.lineWidth = 1;
-           ctx.moveTo(p.x + 10, p.y);
-           ctx.lineTo(p.x + 15, p.y + PLATFORM_HEIGHT);
-           ctx.moveTo(p.x + 30, p.y);
-           ctx.lineTo(p.x + 25, p.y + PLATFORM_HEIGHT);
-           ctx.stroke();
-        }
+          // Styling Details
+          if (p.type === 'breaking') {
+             ctx.beginPath();
+             ctx.strokeStyle = '#7f1d1d';
+             ctx.lineWidth = 1;
+             ctx.moveTo(pX + 10, p.y);
+             ctx.lineTo(pX + 15, p.y + PLATFORM_HEIGHT);
+             ctx.moveTo(pX + 30, p.y);
+             ctx.lineTo(pX + 25, p.y + PLATFORM_HEIGHT);
+             ctx.stroke();
+          }
 
-        // Reflection
-        ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.fillRect(p.x, p.y, p.width, 2);
+          // Reflection
+          ctx.fillStyle = 'rgba(255,255,255,0.25)';
+          ctx.fillRect(pX, p.y, p.width, 2);
 
-        if (p.hasSpring) {
-           ctx.fillStyle = '#ca8a04';
-           const jumpPulse = Math.sin(Date.now() * 0.015) * 1.5;
-           ctx.fillRect(p.x + p.width/2 - 10, p.y - 4 + jumpPulse, 20, 4);
-        }
+          if (p.hasSpring) {
+             ctx.fillStyle = '#ca8a04';
+             const jumpPulse = Math.sin(Date.now() * 0.015) * 1.5;
+             ctx.fillRect(pX + p.width/2 - 10, p.y - 4 + jumpPulse, 20, 4);
+          }
+        });
       });
 
       // Powerups
       powerups.forEach(pw => {
-        ctx.fillStyle = pw.type === 'rocket' ? '#f59e0b' : '#3b82f6';
-        ctx.beginPath();
-        ctx.arc(pw.x + 10, pw.y + 10, 8, 0, Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle = 'white';
-        ctx.fillText(pw.type === 'rocket' ? '🚀' : '🛡️', pw.x + 2, pw.y + 15);
+        drawWithWrap(pw.x, (pwX) => {
+          ctx.fillStyle = pw.type === 'rocket' ? '#f59e0b' : '#3b82f6';
+          ctx.beginPath();
+          ctx.arc(pwX + 10, pw.y + 10, 8, 0, Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle = 'white';
+          ctx.fillText(pw.type === 'rocket' ? '🚀' : '🛡️', pwX + 2, pw.y + 15);
+        });
       });
 
       // Enemies
       enemies.forEach(e => {
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(e.x, e.y, e.width, e.width);
-        ctx.fillStyle = 'white';
-        ctx.font = '20px Arial';
-        ctx.fillText('👿', e.x + 4, e.y + 22);
+        drawWithWrap(e.x, (eX) => {
+          ctx.fillStyle = '#ef4444';
+          ctx.fillRect(eX, e.y, e.width, e.width);
+          ctx.fillStyle = 'white';
+          ctx.font = '20px Arial';
+          ctx.fillText('👿', eX + 4, e.y + 22);
+        });
       });
 
       // Particles

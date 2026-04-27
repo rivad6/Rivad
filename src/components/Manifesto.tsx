@@ -4,7 +4,7 @@ export function Manifesto() {
   const { t } = useLanguage();
 
   return (
-    <section className="py-32 px-6 md:px-12 relative overflow-hidden bg-[#0A0D0A] text-[#E0E0E0] border-t border-white/5">
+    <section className="py-32 px-6 md:px-12 relative overflow-hidden bg-transparent text-[#E0E0E0] border-t border-white/5">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(242,74,41,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(242,74,41,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
       <div className="max-w-7xl mx-auto relative z-10 px-4 md:px-0">
         
@@ -14,9 +14,9 @@ export function Manifesto() {
             <h2 className="text-[10px] font-mono tracking-[0.4em] text-brand-accent/60 uppercase mb-10 border-b border-brand-accent/20 pb-5 inline-block w-full md:w-auto">
               {t('mani.title')}
             </h2>
-            <h3 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter mb-8 leading-[0.8] text-[#F5F5F5]">
+            <h3 className="text-5xl md:text-7xl lg:text-8xl font-display font-light uppercase tracking-tighter mb-10 leading-[0.95] text-[#F5F5F5]">
               {t('mani.h3')} <br/>
-              <span className="text-brand-accent font-display lowercase tracking-normal font-light drop-shadow-[0_0_30px_rgba(242,74,41,0.2)]">{t('mani.h3.sub')}</span>
+              <span className="block text-brand-accent font-serif font-black italic lowercase tracking-normal drop-shadow-[0_0_30px_rgba(242,74,41,0.2)] pt-2 md:pt-4 text-left">{t('mani.h3.sub')}</span>
             </h3>
             <div className="relative group overflow-hidden">
               <div className="absolute inset-0 bg-brand-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -49,18 +49,19 @@ export function Manifesto() {
 
         </div>
 
-        <div className="mt-40 grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-white/5 relative z-10">
-          <div className="p-10 border-r border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
-            <div className="text-[9px] font-mono text-gray-600 group-hover:text-brand-accent/50 uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box1.title')}</div>
-            <div className="font-display font-medium text-2xl text-gray-300 group-hover:text-white transition-colors">{t('mani.box1.desc')}</div>
+        <div className="mt-40 grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+          <div className="p-10 border border-white/5 rounded-2xl frosted-layer group">
+            <div className="text-[9px] font-mono text-gray-500 group-hover:text-brand-accent uppercase tracking-[0.4em] mb-6 font-bold transition-colors">{t('mani.box1.title')}</div>
+            <div className="font-serif font-light text-2xl text-gray-300 group-hover:text-white transition-colors leading-snug">{t('mani.box1.desc')}</div>
           </div>
-          <div className="p-10 border-r border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
-            <div className="text-[9px] font-mono text-gray-600 group-hover:text-brand-accent/50 uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box2.title')}</div>
-            <div className="font-display font-medium text-2xl text-gray-300 group-hover:text-white transition-colors">{t('mani.box2.desc')}</div>
+          <div className="p-10 border border-white/5 rounded-2xl frosted-layer group">
+            <div className="text-[9px] font-mono text-gray-500 group-hover:text-brand-accent uppercase tracking-[0.4em] mb-6 font-bold transition-colors">{t('mani.box2.title')}</div>
+            <div className="font-serif font-light text-2xl text-gray-300 group-hover:text-white transition-colors leading-snug">{t('mani.box2.desc')}</div>
           </div>
-          <div className="p-10 border-b border-white/5 bg-brand-accent/[0.03] group hover:bg-brand-accent/[0.05] transition-colors">
-            <div className="text-[9px] font-mono text-brand-accent uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box3.title')}</div>
-            <div className="font-display font-medium text-2xl text-white">{t('mani.box3.desc')}</div>
+          <div className="p-10 border border-brand-accent/20 rounded-2xl frosted-layer group relative overflow-hidden">
+            <div className="absolute inset-0 bg-brand-accent/5 group-hover:bg-brand-accent/10 transition-colors" />
+            <div className="relative z-10 text-[9px] font-mono text-brand-accent uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box3.title')}</div>
+            <div className="relative z-10 font-serif font-light text-2xl text-white leading-snug">{t('mani.box3.desc')}</div>
           </div>
         </div>
       </div>

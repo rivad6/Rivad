@@ -37,6 +37,13 @@ export function PoliticalUno() {
   const [topCard, setTopCard] = useState<Card | null>(null);
   const [turn, setTurn] = useState<'player' | 'cpu'>('player');
   const [message, setMessage] = useState(t('game.uno.msg.start'));
+
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(''), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
   const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
   const [isChoosingColor, setIsChoosingColor] = useState(false);
   const [direction, setDirection] = useState(1); // 1 for clockwise, -1 for reverse
@@ -412,22 +419,24 @@ export function PoliticalUno() {
              <p className="text-zinc-400 font-black uppercase tracking-tighter text-[10px]">{t('game.uno.label.actual')}</p>
            </div>
 
-           {/* Active Action Message Overlay (between piles) */}
-           <div className="absolute bottom-[-60px] md:bottom-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 pointer-events-none z-50">
+           {/* Active Action Message Overlay */}
+           <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 pointer-events-none z-50">
              <AnimatePresence mode="wait">
-               <motion.div 
-                 key={message}
-                 initial={{ opacity: 0, scale: 1.2, y: 20 }}
-                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                 exit={{ opacity: 0, scale: 0.8 }}
-                 className={cn(
-                   "bg-black/80 backdrop-blur-md px-6 py-3 rounded-full border-2 shadow-2xl flex items-center gap-3 min-w-[200px] justify-center",
-                   turn === 'player' ? "border-brand-accent/50 text-brand-accent" : "border-red-500/50 text-red-400"
-                 )}
-               >
-                 {turn === 'player' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4 animate-pulse" />}
-                 <span className="text-[10px] md:text-xs uppercase font-black tracking-widest">{message}</span>
-               </motion.div>
+               {message ? (
+                 <motion.div 
+                   key={message}
+                   initial={{ opacity: 0, scale: 1.2, y: 20 }}
+                   animate={{ opacity: 1, scale: 1, y: 0 }}
+                   exit={{ opacity: 0, scale: 0.8 }}
+                   className={cn(
+                     "bg-black/90 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-3 min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
+                     turn === 'player' ? "text-brand-accent ring-1 ring-brand-accent/30" : "text-red-400 ring-1 ring-red-500/30"
+                   )}
+                 >
+                   {turn === 'player' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4 animate-pulse" />}
+                   <span className="text-[10px] md:text-xs uppercase font-black tracking-widest">{message}</span>
+                 </motion.div>
+               ) : null}
              </AnimatePresence>
            </div>
         </div>

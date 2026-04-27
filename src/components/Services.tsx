@@ -43,8 +43,8 @@ export function Services() {
           <h2 className="text-sm font-mono tracking-widest text-[#4A25E1] uppercase mb-2 border border-[#4A25E1] px-4 py-2 rounded-full">
             {t('serv.title')}
           </h2>
-          <h3 className="text-6xl md:text-8xl lg:text-[10rem] font-display font-bold uppercase tracking-tighter leading-none mb-6">
-            {t('serv.tree')}<br /> <span className="text-[#4A25E1] transform inline-block -rotate-2">{t('serv.skills')}</span>
+          <h3 className="text-5xl md:text-8xl lg:text-[10rem] font-display font-light uppercase tracking-tighter leading-none mb-6">
+            {t('serv.tree')}<br /> <span className="text-[#4A25E1] font-serif font-black italic lowercase transform inline-block -rotate-2">{t('serv.skills')}</span>
           </h3>
           <p className="text-gray-600 font-sans text-lg md:text-xl font-light max-w-2xl text-balance">
             {t('serv.desc')}
@@ -63,7 +63,7 @@ export function Services() {
             >
               
               <div className="w-full lg:w-48 mb-6 lg:mb-0 flex items-start px-4 lg:px-8 z-10">
-                <span className="font-display font-bold text-4xl lg:text-6xl text-[#1A1A1A]/30 group-hover:text-[#4A25E1] transition-colors leading-none tracking-tighter">
+                <span className="font-display font-light text-4xl lg:text-6xl text-[#1A1A1A]/30 group-hover:text-[#4A25E1] transition-colors leading-none tracking-tighter">
                   {service.id}
                 </span>
                 <span className="font-mono text-[10px] text-[#4A25E1] ml-2 uppercase font-bold tracking-widest leading-none mt-2">

@@ -22,35 +22,32 @@ function ProjectCard({ title, category, description, icon, colSpan = 1, linkText
   
   const LinkContent = (
     <>
-      {/* Decorative scanline or grid inside card */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-      
       <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-all duration-700 pointer-events-none text-white mix-blend-overlay -translate-y-4 group-hover:translate-y-0">
         {icon}
       </div>
       
       <div className="relative z-10 h-full flex flex-col justify-between">
-        <div className="flex justify-between items-start mb-10 border-b border-white/5 pb-5">
+        <div className="flex justify-between items-start mb-10 border-b border-blue-900/30 pb-5">
           <div className="font-mono text-[9px] tracking-[0.4em] text-blue-400 uppercase">
             {category}
           </div>
-          <div className="font-mono text-3xl font-bold text-white/5 group-hover:text-white/20 transition-all duration-500">
+          <div className="font-mono text-3xl font-bold text-white/5 group-hover:text-blue-500/20 transition-all duration-500">
             {index}
           </div>
         </div>
         
         <div>
-          <h3 className="text-3xl lg:text-5xl font-display font-medium mb-6 text-white group-hover:text-blue-400 transition-all duration-500 leading-none">
+          <h3 className="text-3xl lg:text-5xl font-display font-light mb-6 text-white group-hover:text-blue-400 transition-all duration-500 leading-none">
             {title}
           </h3>
-          <p className="text-blue-200/40 group-hover:text-blue-100/70 font-sans text-sm md:text-base mb-10 leading-relaxed max-w-sm transition-colors duration-500">
+          <p className="text-blue-100/50 group-hover:text-blue-100/80 font-sans text-sm md:text-base mb-10 leading-relaxed max-w-sm transition-colors duration-500">
             {description}
           </p>
         </div>
 
-        <div className="inline-flex items-center justify-between w-full text-[10px] font-mono font-bold uppercase tracking-[0.3em] border-t border-white/5 pt-5 opacity-40 group-hover:opacity-100 group-hover:text-blue-400 text-white transition-all duration-500">
+        <div className="inline-flex items-center justify-between w-full text-[10px] font-mono font-bold uppercase tracking-[0.3em] border-t border-blue-900/30 pt-5 opacity-40 group-hover:opacity-100 group-hover:text-blue-400 text-white transition-all duration-500">
           <span>{linkText}</span>
-          <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-blue-500/50 group-hover:bg-blue-500/10 transition-all">
+          <div className="w-8 h-8 rounded-full border border-blue-500/30 flex items-center justify-center group-hover:border-blue-500/50 group-hover:bg-blue-500/10 transition-all shadow-xl">
             <ExternalLink size={12} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </div>
         </div>
@@ -59,7 +56,7 @@ function ProjectCard({ title, category, description, icon, colSpan = 1, linkText
   );
 
   const containerClasses = cn(
-    "group relative border-r border-b border-white/5 bg-transparent p-8 md:p-12 hover:bg-blue-950/10 transition-all duration-700 flex flex-col h-full overflow-hidden",
+    "group relative border-r border-b border-blue-900/20 bg-transparent p-8 md:p-12 hover:bg-blue-950/20 transition-all duration-700 flex flex-col h-full overflow-hidden frosted-layer",
     colSpan === 2 && "md:col-span-2",
     className
   );
@@ -79,8 +76,8 @@ export function Ecosystem() {
   const { t } = useLanguage();
 
   return (
-    <section id="proyectos" className="py-24 border-t border-[#1a1b36] relative z-20 bg-[#07091B]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#11164A]/20 via-[#07091B]/80 to-[#07091B] pointer-events-none" />
+    <section id="proyectos" className="py-24 border-t border-blue-900/20 relative z-20 bg-transparent">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 md:px-0 relative z-10 w-full overflow-hidden">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -90,17 +87,20 @@ export function Ecosystem() {
           className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 md:pl-12"
         >
           <div>
-            <h2 className="text-sm font-mono tracking-widest text-blue-500/50 uppercase mb-4">{t('eco.title')}</h2>
-            <h3 className="text-6xl md:text-8xl font-display uppercase tracking-[-0.04em] leading-[0.8] text-indigo-50">
-              {t('eco.multiverse')} <br /> <span className="text-blue-400 font-display font-medium tracking-normal text-[0.8em] lowercase ml-12 md:ml-24 leading-[0.8]">{t('eco.creative')}</span>
+            <h2 className="text-sm font-mono tracking-widest text-blue-400/60 uppercase mb-4">{t('eco.title')}</h2>
+            <h3 className="text-5xl md:text-7xl lg:text-8xl font-display font-light uppercase tracking-tighter leading-[0.95] text-white">
+              {t('eco.multiverse')} <br /> 
+              <span className="block text-blue-400 font-serif font-black italic tracking-normal text-[0.8em] lowercase ml-8 md:ml-24 mt-2">
+                {t('eco.creative')}
+              </span>
             </h3>
           </div>
-          <p className="text-blue-200/70 font-sans text-sm md:text-base font-light max-w-sm hidden lg:block border-l border-blue-500/30 pl-4 py-2">
+          <p className="text-blue-100/60 font-serif text-lg md:text-xl font-light max-w-sm hidden lg:block border-l border-blue-500/30 pl-4 py-2">
             {t('eco.desc')}
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:border-t lg:border-l border-[#1a1b36] lg:mx-12 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:border-t lg:border-l border-blue-900/20 lg:mx-12 relative z-10">
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.1, duration: 0.5 }}>
             <ProjectCard 
               index="01"
