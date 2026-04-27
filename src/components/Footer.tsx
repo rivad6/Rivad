@@ -161,11 +161,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-40 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8 text-[9px] font-mono text-gray-600 uppercase tracking-[0.4em] text-center md:text-left">
-          <p>© {new Date().getFullYear()} Rivad. {t('footer.rights')}</p>
-          <div className="flex items-center gap-6">
-            <span className="w-1.5 h-1.5 bg-red-900/30 rounded-full"></span>
-            <p className="hover:text-red-500 transition-colors cursor-default">{t('footer.made')}</p>
+        <div className="mt-40 pt-10 border-t border-white/5 flex flex-col items-center gap-8 text-[9px] font-mono text-gray-600 uppercase tracking-[0.4em] text-center w-full">
+          <div className="flex flex-col md:flex-row justify-between items-center w-full gap-8">
+            <p>© {new Date().getFullYear()} By Rivad. {t('footer.rights')}</p>
+            <div className="flex items-center gap-6">
+              <span className="w-1.5 h-1.5 bg-red-900/30 rounded-full animate-pulse"></span>
+              <p className="hover:text-red-500 transition-colors cursor-default">{t('footer.made')}</p>
+            </div>
+          </div>
+          <div className="pt-4 border-t border-white/5 w-full flex justify-center text-gray-700">
+            <p>Digital Footprint / Huella Digital: <span className="text-red-900/50">SHA256:0x39A8B2C4F9E7D1...[RIVAD_AUTH_APP]</span></p>
           </div>
         </div>
       </div>
