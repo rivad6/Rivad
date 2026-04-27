@@ -12,6 +12,7 @@ const translations: Record<Language, Record<string, string>> = {
   es: {
     // Nav & Common
     'nav.home': 'Inicio',
+    'nav.back_to_home': 'Ir al Inicio',
     
     // Hero
     'hero.title1': 'Catálogo',
@@ -233,6 +234,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   en: {
     'nav.home': 'Home',
+    'nav.back_to_home': 'Back to Home',
     // Hero
     'hero.title1': 'Human',
     'hero.title2': 'Catalog',
@@ -447,6 +449,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   fr: {
     'nav.home': 'Accueil',
+    'nav.back_to_home': 'Retour à l\'accueil',
     // Hero
     'hero.title1': 'Catalogue',
     'hero.title2': 'Humain',
