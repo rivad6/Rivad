@@ -9,6 +9,7 @@ export function MusicPlayer() {
   const [isDismissed, setIsDismissed] = useState(false);
   const [bufferProgress, setBufferProgress] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [copied, setCopied] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // === CONFIGURACIÓN DE TU MP3 ===
@@ -21,10 +22,26 @@ export function MusicPlayer() {
   const spotifyLink = "https://open.spotify.com/artist/3pCE7J12cRSJoJeDBwge8Q?si=q3B-n2NJQ8SY6EX3qDkgyA";
 
   useEffect(() => {
+    if (copied) {
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copied]);
+
+  useEffect(() => {
     if (audioRef.current) {
       audioRef.current.loop = true;
       audioRef.current.volume = 0.7; // Volumen inicial decente
-      console.log("Audio native element source:", audioRef.current.src);
+      
+      // Force load metadata
+      audioRef.current.load();
+      
+      // Manual check for readiness if already loaded by the time effect runs
+      if (audioRef.current.readyState >= 2) {
+        setIsReady(true);
+      }
+      
+      console.log("Audio source path:", audioRef.current.src);
     }
   }, []);
 
@@ -52,11 +69,21 @@ export function MusicPlayer() {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
+        setIsPlaying(false);
       } else {
         // Intenta reproducir, si falla por políticas del navegador lo maneja
-        audioRef.current.play().catch(e => console.error("Error al reproducir:", e));
+        audioRef.current.play()
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch(e => {
+            console.error("Error al reproducir:", e);
+            // Intentar recargar si hay error de carga
+            if (audioRef.current) {
+              audioRef.current.load();
+            }
+          });
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -68,12 +95,18 @@ export function MusicPlayer() {
       <audio 
         ref={audioRef} 
         src={audioSrc} 
-        preload="auto" 
+        preload="metadata" 
         onProgress={handleProgress}
+        onCanPlay={() => setIsReady(true)}
         onCanPlayThrough={handleCanPlayThrough}
-        onError={(e) => console.error("Audio error:", e)}
-        onCanPlay={() => console.log("Audio can play")}
-        onLoadStart={() => console.log("Audio load start")}
+        onLoadedMetadata={() => setIsReady(true)}
+        onError={(e) => {
+          console.error("Audio error:", e);
+          // Intentar forzar carga si hay error inicial
+          setIsReady(false);
+        }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
         onStalled={() => console.warn("Audio stalled")}
         onWaiting={() => console.warn("Audio waiting")}
       />
@@ -92,9 +125,21 @@ export function MusicPlayer() {
             <div className="flex-1">
               <p className="text-white text-xs font-medium mb-1">{t('music.label')}</p>
               <p className="text-gray-500 text-[10px] leading-tight mb-2" dangerouslySetInnerHTML={{ __html: t('music.desc', { title: songTitle, artist: artistName }) }} />
-              <a href={spotifyLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#8a63d2] hover:underline">
-                {t('music.spotify')} <ExternalLink size={10} />
-              </a>
+              <div className="flex items-center gap-2 mt-2">
+                <a href={spotifyLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#8a63d2] hover:underline">
+                  {t('music.spotify')} <ExternalLink size={10} />
+                </a>
+                <button 
+                  onClick={() => {
+                    const url = window.location.origin + audioSrc;
+                    navigator.clipboard.writeText(url);
+                    setCopied(true);
+                  }}
+                  className="inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-white"
+                >
+                  {copied ? "¡Copiado!" : "Direct Link"} <ExternalLink size={10} />
+                </button>
+              </div>
             </div>
             <button 
               onClick={() => setIsDismissed(true)}
@@ -136,16 +181,13 @@ export function MusicPlayer() {
         
         <button
           onClick={togglePlay}
-          disabled={!isReady}
           className={`relative group flex items-center gap-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-all shadow-lg backdrop-blur-md border overflow-hidden ${
             isPlaying 
               ? 'bg-[#8a63d2] text-white border-[#8a63d2]/50 shadow-[#8a63d2]/20' 
-              : isReady 
-                ? 'bg-[#090b11]/80 text-[#888] border-[#222] hover:border-[#8a63d2] hover:text-white'
-                : 'bg-[#090b11]/40 text-[#444] border-white/5 cursor-wait'
+              : 'bg-[#090b11]/80 text-gray-300 border-[#222] hover:border-[#8a63d2] hover:text-white'
           }`}
         >
-          {/* Buffer Progress Bar */}
+          {/* Progress Indicator */}
           {!isReady && (
             <motion.div 
               className="absolute bottom-0 left-0 h-0.5 bg-[#8a63d2] opacity-50"
@@ -159,21 +201,20 @@ export function MusicPlayer() {
               <Pause size={16} />
               <span>{t('music.pause')}</span>
             </>
-          ) : isReady ? (
-            <>
-              <Play size={16} className="text-[#8a63d2]" />
-              <span>{t('music.play')}</span>
-            </>
           ) : (
-            <div className="flex items-center gap-2">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              >
-                <Disc2 size={16} className="text-[#444]" />
-              </motion.div>
-              <span>STREAMING BUFFER {Math.round(bufferProgress)}%</span>
-            </div>
+            <>
+              {isReady ? (
+                <Play size={16} className="text-[#8a63d2]" />
+              ) : (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                >
+                  <Disc2 size={16} className="text-[#444]" />
+                </motion.div>
+              )}
+              <span>{isReady ? t('music.play') : `BUFFERING ${Math.round(bufferProgress)}%`}</span>
+            </>
           )}
         </button>
       </div>
