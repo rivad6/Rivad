@@ -39,7 +39,6 @@ export function CreativeInvaders() {
     const saved = localStorage.getItem('invaders_upgrades');
     return saved ? JSON.parse(saved) : { shield: 0, power: 0, speed: 0, rear_turret: 0 };
   });
-  const [levelUpTimer, setLevelUpTimer] = useState(0);
 
   const selectedChar = CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
 
@@ -225,12 +224,15 @@ export function CreativeInvaders() {
     planets: [] as { x: number; y: number; size: number; color: string; speed: number }[],
     shake: 0,
     playerFlash: 0,
+    isTransitioning: false,
+    levelUpTimer: 0,
   });
 
   const loadAsteroidsLevel = useCallback(() => {
     state.current.enemies = [];
     state.current.projectiles = [];
     state.current.drops = [];
+    state.current.isTransitioning = false;
     state.current.player.x = GAME_WIDTH / 2;
     state.current.player.y = GAME_HEIGHT / 2;
     state.current.bgType = "deep";
@@ -265,6 +267,7 @@ export function CreativeInvaders() {
     console.log("LOADING LEVEL", level);
     state.current.enemies = [];
     state.current.drops = [];
+    state.current.isTransitioning = false;
     state.current.enemyDirection = 1;
     state.current.enemySpeedBase = 1.0 + (level * 0.2) + (state.current.wave * 0.5);
     state.current.player.x = GAME_WIDTH / 2;
@@ -373,6 +376,9 @@ export function CreativeInvaders() {
 
   const fire = useCallback(() => {
     const s = state.current;
+    if (gameState !== 'playing' && gameState !== 'asteroids') return;
+    if (s.isTransitioning) return;
+    
     const now = Date.now();
     // Use fireRateBase
     const baseFireDelay = 300 / selectedChar.fireRateBase;
@@ -491,7 +497,7 @@ export function CreativeInvaders() {
 
     if (s.shake > 0) s.shake *= 0.9;
     if (s.playerFlash > 0) s.playerFlash--;
-    if (levelUpTimer > 0) setLevelUpTimer(prev => prev - 1);
+    if (s.levelUpTimer > 0) s.levelUpTimer--;
 
     if (gameState === "takeoff") {
         s.player.y -= 10;
@@ -578,6 +584,7 @@ export function CreativeInvaders() {
     }
 
     for (let i = s.projectiles.length - 1; i >= 0; i--) {
+      if (s.isTransitioning) break;
       s.projectiles[i].x += s.projectiles[i].vx;
       s.projectiles[i].y += s.projectiles[i].vy;
       if (
@@ -868,17 +875,21 @@ export function CreativeInvaders() {
       if (p.life >= p.maxLife) s.particles.splice(i, 1);
     }
 
-    if (s.enemies.length === 0 && levelUpTimer === 0) {
+    if (s.enemies.length === 0 && s.levelUpTimer === 0 && !s.isTransitioning) {
       if (gameState === "playing") {
+        s.isTransitioning = true;
+        s.projectiles = []; // Clear current projectiles to avoid post-mortem hits
         state.current.level++;
         console.log("LEVEL UP to", state.current.level);
-        setLevelUpTimer(100);
+        s.levelUpTimer = 100;
         if (state.current.level % 5 === 0) {
           setGameState("takeoff");
         } else {
           loadLevel(state.current.level);
         }
       } else if (gameState === "asteroids") {
+        s.isTransitioning = true;
+        s.projectiles = [];
         state.current.wave++;
         console.log("WAVE COMPLETED, returning to playing mode");
         loadLevel(state.current.level);
@@ -1103,17 +1114,17 @@ export function CreativeInvaders() {
       ctx.globalAlpha = 1.0;
     }
 
-    if (levelUpTimer > 0) {
+    if (state.current.levelUpTimer > 0) {
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 40px sans-serif";
       ctx.textAlign = "center";
-      ctx.globalAlpha = Math.min(1, levelUpTimer / 50);
+      ctx.globalAlpha = Math.min(1, state.current.levelUpTimer / 50);
       ctx.fillText(`${t('game.invaders.level_up')} ${state.current.level}`, GAME_WIDTH / 2, GAME_HEIGHT / 2);
       ctx.globalAlpha = 1.0;
     }
     
     ctx.restore();
-  }, [levelUpTimer]);
+  }, [t]);
 
   const tick = useCallback(() => {
     update();
