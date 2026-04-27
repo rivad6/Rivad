@@ -102,11 +102,11 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2, delay: 0.6 }}
-            className="md:col-span-12 lg:col-span-5 flex flex-wrap justify-end gap-3 md:gap-5"
+            className="md:col-span-12 lg:col-span-5 flex flex-col items-end justify-end gap-3 md:gap-5"
           >
             <a 
               href="#proyectos"
-              className="group relative overflow-hidden flex-1 sm:flex-none inline-flex items-center justify-between sm:min-w-[220px] px-6 py-4 md:py-6 bg-white/5 border border-white/10 hover:border-brand-accent transition-all duration-500 backdrop-blur-xl"
+              className="group relative overflow-hidden flex-nowrap w-full sm:max-w-[320px] inline-flex items-center justify-between px-6 py-4 md:py-6 bg-white/5 border border-white/10 hover:border-brand-accent transition-all duration-500 backdrop-blur-xl"
             >
               <div className="absolute inset-0 bg-brand-accent opacity-0 group-hover:opacity-5 transition-opacity" />
               <span className="relative z-10 font-mono text-[10px] tracking-[0.3em] uppercase text-white/70 group-hover:text-white transition-colors">
@@ -119,14 +119,14 @@ export function Hero() {
             
             <a 
               href="#servicios"
-              className="group flex-1 sm:flex-none inline-flex items-center justify-center sm:min-w-[220px] px-6 py-4 md:py-6 bg-transparent border border-white/5 hover:border-white/20 transition-all duration-500 backdrop-blur-sm"
+              className="group flex-nowrap w-full sm:max-w-[320px] inline-flex items-center justify-center px-6 py-4 md:py-6 bg-transparent border border-white/5 hover:border-white/20 transition-all duration-500 backdrop-blur-sm"
             >
               <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-gray-500 group-hover:text-white transition-colors">
                 {t('hero.services')}
               </span>
             </a>
 
-            <div className="w-full flex justify-end">
+            <div className="w-full sm:max-w-[320px] flex justify-end">
               <RandomFacts />
             </div>
           </motion.div>
