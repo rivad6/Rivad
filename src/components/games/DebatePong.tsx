@@ -4,11 +4,14 @@ import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { User, Zap } from 'lucide-react';
 
+import { FullscreenButton } from '../ui/FullscreenButton';
+
 export function DebatePong() {
   const { t, language } = useLanguage();
   const { playSound } = useAudio();
   const { unlockAchievement } = useAchievements();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [playerScore, setPlayerScore] = useState(0);
   const [cpuScore, setCpuScore] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -62,18 +65,31 @@ export function DebatePong() {
       hitTextTimeout = setTimeout(() => { hitText = "" }, 800);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const getScaledY = (clientY: number) => {
       const rect = canvas.getBoundingClientRect();
-      player.y = e.clientY - rect.top - paddleHeight / 2;
+      const scaleX = canvas.width / canvas.height;
+      const scaleY = rect.width / rect.height;
+      
+      let displayedHeight = rect.height;
+      if (scaleX > scaleY) {
+          displayedHeight = rect.width / scaleX;
+      }
+      
+      const offsetY = (rect.height - displayedHeight) / 2;
+      return ((clientY - rect.top - offsetY) / displayedHeight) * canvas.height;
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      player.y = getScaledY(e.clientY) - paddleHeight / 2;
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      player.y = e.touches[0].clientY - rect.top - paddleHeight / 2;
+      e.preventDefault();
+      player.y = getScaledY(e.touches[0].clientY) - paddleHeight / 2;
     };
 
     canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     const draw = () => {
       if (player.score >= 5 || cpu.score >= 5) {
@@ -265,7 +281,8 @@ export function DebatePong() {
         </div>
       </div>
       
-      <div className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full aspect-[4/3]">
+      <div ref={containerRef} className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full h-[60vh] md:h-auto md:aspect-[4/3] flex justify-center items-center mx-auto shadow-2xl">
+        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         {!isPlaying ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80">
             <h3 className="text-white text-lg mb-2 text-center leading-loose">

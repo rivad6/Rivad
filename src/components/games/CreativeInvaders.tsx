@@ -13,11 +13,14 @@ const CHARACTERS = [
   { id: 'laser', nameKey: 'game.invaders.char.laser', descKey: 'game.invaders.char.laser.desc', price: 1000, speed: 10, fireRateBase: 2, color: '#c084fc', tailColor: '#a855f7' }
 ];
 
+import { FullscreenButton } from '../ui/FullscreenButton';
+
 export function CreativeInvaders() {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
   const { playSound } = useAudio();
 
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
 
@@ -1197,7 +1200,8 @@ export function CreativeInvaders() {
         </div>
       </div>
 
-      <div className="relative w-full aspect-[4/3] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group">
+      <div ref={containerRef} className="relative w-full h-[60vh] md:h-auto md:aspect-[4/3] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group">
+        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <canvas
           ref={canvasRef}
           width={GAME_WIDTH}
@@ -1205,11 +1209,26 @@ export function CreativeInvaders() {
           className="w-full h-full object-contain cursor-none mix-blend-screen"
           onMouseMove={(e) => {
             if ((gameState === "playing" || gameState === "asteroids") && canvasRef.current) {
-              const rect = canvasRef.current.getBoundingClientRect();
-              const scaleX = GAME_WIDTH / rect.width;
-              const scaleY = GAME_HEIGHT / rect.height;
-              let x = (e.clientX - rect.left) * scaleX;
-              let y = (e.clientY - rect.top) * scaleY;
+              const canvas = canvasRef.current;
+              const rect = canvas.getBoundingClientRect();
+              
+              const scaleX = canvas.width / canvas.height;
+              const scaleY = rect.width / rect.height;
+              
+              let displayedWidth = rect.width;
+              let displayedHeight = rect.height;
+              
+              if (scaleX > scaleY) {
+                  displayedHeight = rect.width / scaleX;
+              } else {
+                  displayedWidth = rect.height * scaleX;
+              }
+              
+              const offsetX = (rect.width - displayedWidth) / 2;
+              const offsetY = (rect.height - displayedHeight) / 2;
+              
+              let x = ((e.clientX - rect.left - offsetX) / displayedWidth) * canvas.width;
+              let y = ((e.clientY - rect.top - offsetY) / displayedHeight) * canvas.height;
               
               if (gameState === "asteroids") {
                   const dx = x - (state.current.player.x + state.current.player.width / 2);
@@ -1237,11 +1256,26 @@ export function CreativeInvaders() {
           onTouchMove={(e) => {
             if ((gameState === "playing" || gameState === "asteroids") && canvasRef.current) {
               e.preventDefault();
-              const rect = canvasRef.current.getBoundingClientRect();
-              const scaleX = GAME_WIDTH / rect.width;
-              const scaleY = GAME_HEIGHT / rect.height;
-              let x = (e.touches[0].clientX - rect.left) * scaleX;
-              let y = (e.touches[0].clientY - rect.top) * scaleY;
+              const canvas = canvasRef.current;
+              const rect = canvas.getBoundingClientRect();
+              
+              const scaleX = canvas.width / canvas.height;
+              const scaleY = rect.width / rect.height;
+              
+              let displayedWidth = rect.width;
+              let displayedHeight = rect.height;
+              
+              if (scaleX > scaleY) {
+                  displayedHeight = rect.width / scaleX;
+              } else {
+                  displayedWidth = rect.height * scaleX;
+              }
+              
+              const offsetX = (rect.width - displayedWidth) / 2;
+              const offsetY = (rect.height - displayedHeight) / 2;
+              
+              let x = ((e.touches[0].clientX - rect.left - offsetX) / displayedWidth) * canvas.width;
+              let y = ((e.touches[0].clientY - rect.top - offsetY) / displayedHeight) * canvas.height;
               
               if (gameState === "asteroids") {
                   const dx = x - (state.current.player.x + state.current.player.width / 2);

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
+import { FullscreenButton } from '../ui/FullscreenButton';
 
 type NodeId = string;
 
@@ -171,9 +172,12 @@ export function ArtRPG() {
     );
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   if (currentNode === 'start') {
     return (
-      <div className="w-full max-w-2xl mx-auto h-[400px] flex flex-col justify-center items-center text-center p-8 bg-[#0a0812] border-2 border-[#3a2d59] relative shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)]">
+      <div ref={containerRef} className="w-full max-w-2xl mx-auto h-[400px] flex flex-col justify-center items-center text-center p-8 bg-[#0a0812] border-2 border-[#3a2d59] relative shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)]">
+        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         {/* Decorative Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(138,99,210,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,210,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
         
@@ -196,7 +200,8 @@ export function ArtRPG() {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto h-[550px] flex flex-col justify-between p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+    <div ref={containerRef} className="w-full max-w-3xl mx-auto min-h-[500px] h-[75vh] md:h-[550px] flex flex-col justify-between p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+      <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       {/* Decorative Scanlines & Grain */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
       <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />

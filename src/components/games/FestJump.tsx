@@ -65,10 +65,13 @@ const CODES: Record<string, () => void> = {
   'GODMODE': () => {},
 };
 
+import { FullscreenButton } from '../ui/FullscreenButton';
+
 export function FestJump() {
   const { t } = useLanguage();
   const { playSound } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showCodeInput, setShowCodeInput] = useState(false);
@@ -184,9 +187,20 @@ export function FestJump() {
 
     const handlePointerMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
+      const scaleX = canvas.width / canvas.height;
+      const scaleY = rect.width / rect.height;
+      
+      let displayedWidth = rect.width;
+      if (scaleX > scaleY) {
+          displayedWidth = rect.height * scaleX;
+      } else {
+          displayedWidth = rect.width;
+      }
+      
+      const offsetX = (rect.width - displayedWidth) / 2;
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const targetX = (clientX - rect.left) * scaleX - player.width / 2;
+      
+      const targetX = ((clientX - rect.left - offsetX) / displayedWidth) * canvas.width - player.width / 2;
       player.x = targetX;
       player.vx = 0;
     };
@@ -763,7 +777,8 @@ export function FestJump() {
         </div>
       </div>
       
-      <div className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full aspect-[3/4] shadow-2xl">
+      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full h-[65vh] md:h-auto md:aspect-[3/4] flex justify-center items-center flex-col shadow-2xl mx-auto">
+        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <AnimatePresence>
           {message && (
             <motion.div 
@@ -873,7 +888,7 @@ export function FestJump() {
           ref={canvasRef} 
           width={400} 
           height={500} 
-          className="block w-full h-full touch-none"
+          className="block w-full h-full object-contain touch-none"
         />
         
         {/* HUD while playing */}

@@ -4,6 +4,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { motion } from 'motion/react';
 
+import { FullscreenButton } from '../ui/FullscreenButton';
+
 type Player = 'X' | 'O' | null;
 
 export function IdeasTicTacToe() {
@@ -100,6 +102,8 @@ export function IdeasTicTacToe() {
     setXIsNext(false);
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const resetGame = () => {
     setBoard(Array(9).fill(null));
     setXIsNext(true);
@@ -107,7 +111,8 @@ export function IdeasTicTacToe() {
   };
 
   return (
-    <div className="flex flex-col items-center font-[var(--font-pixel)] w-full max-w-[400px]">
+    <div ref={containerRef} className="flex flex-col items-center font-[var(--font-pixel)] w-full max-w-[400px] relative">
+      <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       <div className="mb-2 text-center w-full">
          <p className="text-[#8a63d2] text-[10px] md:text-xs">{t('game.objective')}{t('game.ttt.goal')}</p>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
@@ -17,6 +17,7 @@ import {
   Fingerprint,
   Star
 } from 'lucide-react';
+import { FullscreenButton } from '../ui/FullscreenButton';
 
 type Color = 'rojo' | 'azul' | 'guinda' | 'naranja' | 'black';
 type SpecialAction = 'moche' | 'fuero' | 'alianza' | 'dedazo' | 'fake_news' | 'consulta' | 'normal';
@@ -32,6 +33,7 @@ export function PoliticalUno() {
   const { t } = useLanguage();
   const { playSound } = useAudio();
   const { unlockAchievement } = useAchievements();
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [cpuHand, setCpuHand] = useState<Card[]>([]);
   const [topCard, setTopCard] = useState<Card | null>(null);
@@ -319,7 +321,8 @@ export function PoliticalUno() {
   );
 
   return (
-    <div className="flex flex-col items-center min-h-[85vh] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pb-20 relative overflow-hidden">
+    <div ref={containerRef} className="flex flex-col items-center min-h-[85vh] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pb-20 relative overflow-hidden">
+      <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden">
