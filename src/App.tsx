@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Home } from './pages/Home';
 import { ArcadePage } from './pages/ArcadePage';
 import { FestJumpPage } from './pages/FestJumpPage';
@@ -52,6 +53,7 @@ export default function App() {
             </Routes>
           </div>
           <Footer />
+          <SpeedInsights />
         </div>
       </BrowserRouter>
     </LanguageProvider>
