@@ -12,6 +12,7 @@ import { Footer } from './components/Footer';
 import { MusicPlayer } from './components/MusicPlayer';
 import { FloatingBackButton } from './components/FloatingBackButton';
 import { GameInvitePopup } from './components/GameInvitePopup';
+import { ScrollToTop } from './components/ScrollToTop';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 function Nav() {
@@ -37,6 +38,7 @@ export default function App() {
       <BrowserRouter>
         <div className="bg-brand-bg min-h-screen text-brand-ink selection:bg-brand-accent selection:text-[#000] flex flex-col relative overflow-x-hidden">
           <div className="noise-bg"></div>
+          <ScrollToTop />
           <Nav />
           <MusicPlayer />
           <FloatingBackButton />
