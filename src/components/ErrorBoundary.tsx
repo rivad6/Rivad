@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as React from 'react';
 import { ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
@@ -27,12 +26,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   private handleReset = () => {
-    (this as any).setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null });
     window.location.reload();
   };
 
   public render() {
-    if ((this as any).state.hasError) {
+    if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6 font-mono text-white">
           <div className="max-w-md w-full bg-[#1a1a1a] border-2 border-brand-accent p-8 rounded-lg shadow-[0_0_30px_rgba(242,74,41,0.2)] relative overflow-hidden">
@@ -54,7 +53,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
               <div className="bg-black/50 p-4 rounded text-left border border-white/10 overflow-auto max-h-32">
                 <code className="text-xs text-brand-accent">
-                  {(this as any).state.error?.message || 'Unknown runtime error'}
+                  {this.state.error?.message || 'Unknown runtime error'}
                 </code>
               </div>
 
@@ -71,6 +70,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    return (this.props as any).children;
+    return this.props.children;
   }
 }
