@@ -7,12 +7,14 @@ export function MusicPlayer() {
   const { t } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [bufferProgress, setBufferProgress] = useState(0);
+  const [isReady, setIsReady] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   // === CONFIGURACIÓN DE TU MP3 ===
   // 1. Sube tu archivo .mp3 a la carpeta "public" en el panel izquierdo
   // 2. Cambia el nombre aquí si es necesario (ej: "/mi-cancion.mp3")
-  const audioSrc = "manual_para_la_soledad.mp3"; 
+  const audioSrc = "/manual_para_la_soledad.mp3"; 
   const songTitle = "Manual Para la Soledad"; 
   const artistName = "Rivad"; 
 
@@ -22,9 +24,29 @@ export function MusicPlayer() {
     if (audioRef.current) {
       audioRef.current.loop = true;
       audioRef.current.volume = 0.7; // Volumen inicial decente
-      console.log("Audio source path:", audioRef.current.src);
+      console.log("Audio native element source:", audioRef.current.src);
     }
   }, []);
+
+  const handleProgress = () => {
+    if (audioRef.current && audioRef.current.buffered.length > 0) {
+      const bufferedEnd = audioRef.current.buffered.end(audioRef.current.buffered.length - 1);
+      const duration = audioRef.current.duration;
+      if (duration > 0) {
+        const progress = (bufferedEnd / duration) * 100;
+        setBufferProgress(progress);
+        if (progress >= 99) {
+          setIsReady(true);
+        }
+      }
+    }
+  };
+
+  const handleCanPlayThrough = () => {
+    // If browser thinks it can play through, we mark as ready even if buffer math isn't exactly 100% yet
+    setIsReady(true);
+    setBufferProgress(100);
+  };
 
   const togglePlay = () => {
     if (audioRef.current) {
@@ -48,8 +70,13 @@ export function MusicPlayer() {
         src={audioSrc} 
         preload="auto" 
         crossOrigin="anonymous"
+        onProgress={handleProgress}
+        onCanPlayThrough={handleCanPlayThrough}
         onError={(e) => console.error("Audio error:", e)}
         onCanPlay={() => console.log("Audio can play")}
+        onLoadStart={() => console.log("Audio load start")}
+        onStalled={() => console.warn("Audio stalled")}
+        onWaiting={() => console.warn("Audio waiting")}
       />
 
       <AnimatePresence>
@@ -110,22 +137,44 @@ export function MusicPlayer() {
         
         <button
           onClick={togglePlay}
-          className={`flex items-center gap-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-all shadow-lg backdrop-blur-md border ${
+          disabled={!isReady}
+          className={`relative group flex items-center gap-2 px-4 py-3 font-mono text-xs uppercase tracking-widest transition-all shadow-lg backdrop-blur-md border overflow-hidden ${
             isPlaying 
               ? 'bg-[#8a63d2] text-white border-[#8a63d2]/50 shadow-[#8a63d2]/20' 
-              : 'bg-[#090b11]/80 text-[#888] border-[#222] hover:border-[#8a63d2] hover:text-white'
+              : isReady 
+                ? 'bg-[#090b11]/80 text-[#888] border-[#222] hover:border-[#8a63d2] hover:text-white'
+                : 'bg-[#090b11]/40 text-[#444] border-white/5 cursor-wait'
           }`}
         >
+          {/* Buffer Progress Bar */}
+          {!isReady && (
+            <motion.div 
+              className="absolute bottom-0 left-0 h-0.5 bg-[#8a63d2] opacity-50"
+              initial={{ width: 0 }}
+              animate={{ width: `${bufferProgress}%` }}
+            />
+          )}
+
           {isPlaying ? (
             <>
               <Pause size={16} />
               <span>{t('music.pause')}</span>
             </>
-          ) : (
+          ) : isReady ? (
             <>
               <Play size={16} className="text-[#8a63d2]" />
               <span>{t('music.play')}</span>
             </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+              >
+                <Disc2 size={16} className="text-[#444]" />
+              </motion.div>
+              <span>STREAMING BUFFER {Math.round(bufferProgress)}%</span>
+            </div>
           )}
         </button>
       </div>
