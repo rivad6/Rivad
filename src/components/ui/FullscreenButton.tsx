@@ -59,13 +59,21 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
 
   const active = isFullscreen || isFakeFullscreen;
 
+  useEffect(() => {
+    if (isFakeFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isFakeFullscreen]);
+
   return (
     <button
       onClick={toggleFullscreen}
-      className={`absolute z-50 p-2 rounded-lg bg-black/20 hover:bg-black/60 text-white/50 hover:text-white/90 backdrop-blur-sm transition-all focus:outline-none ${className}`}
+      className={`absolute z-50 p-2 rounded-lg bg-black/40 hover:bg-black/80 text-white/70 hover:text-white backdrop-blur-md transition-all focus:outline-none shadow-lg border border-white/10 ${className}`}
       title={active ? "Exit Fullscreen" : "Fullscreen"}
     >
-      {active ? <Minimize size={18} /> : <Maximize size={18} />}
+      {active ? <Minimize size={20} /> : <Maximize size={20} />}
     </button>
   );
 }

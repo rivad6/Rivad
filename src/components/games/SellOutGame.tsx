@@ -126,19 +126,10 @@ export const SellOutGame: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (gameState === 'playing') {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; }
-  }, [gameState]);
-
   return (
-    <div ref={containerRef} className={gameState === 'playing' ? "fixed inset-0 z-[100] bg-black/95 flex flex-col items-center p-4 md:p-8 overflow-y-auto backdrop-blur-md" : "flex flex-col items-center w-full max-w-5xl mx-auto p-4 md:p-8 font-[var(--font-mono)] select-none relative"}>
+    <div ref={containerRef} className="flex flex-col items-center w-full max-w-5xl mx-auto p-4 md:p-8 font-[var(--font-mono)] select-none relative bg-[#050505] min-h-[85vh]">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
-      <div className={gameState === 'playing' ? "w-full max-w-5xl mx-auto flex flex-col select-none font-[var(--font-mono)]" : "w-full flex flex-col"}>
+      <div className="w-full flex flex-col">
       
       {/* Top Banner: Progress to 1M */}
       <div className="w-full mb-8 space-y-2">

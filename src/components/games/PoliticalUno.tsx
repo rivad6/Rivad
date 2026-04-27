@@ -321,7 +321,7 @@ export function PoliticalUno() {
   );
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center min-h-[85vh] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pb-20 relative overflow-hidden">
+    <div ref={containerRef} className="flex flex-col items-center min-h-[85vh] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pb-20 relative overflow-hidden bg-[#0a0a0A]">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       
       {/* Background decoration */}

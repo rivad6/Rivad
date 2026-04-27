@@ -1132,20 +1132,9 @@ export function CreativeInvaders() {
     };
   }, [tick]);
 
-  const isFullScreen = gameState === 'playing' || gameState === 'asteroids';
-
-  useEffect(() => {
-    if (isFullScreen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; }
-  }, [isFullScreen]);
-
   return (
-    <div className={isFullScreen ? "fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md overflow-hidden" : "w-full max-w-4xl mx-auto flex flex-col items-center gap-6"}>
-      <div className={isFullScreen ? "w-full max-w-5xl mx-auto flex flex-col bg-zinc-950/50 p-6 rounded-2xl border border-white/10 shadow-2xl" : "w-full flex flex-col"}>
+    <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
+      <div className="w-full flex flex-col">
       <div className="w-full flex justify-between items-end border-b border-white/10 pb-4 mb-4">
         <div>
           <h2 className="text-2xl font-display uppercase tracking-tight text-brand-accent flex items-center gap-2 mb-1">

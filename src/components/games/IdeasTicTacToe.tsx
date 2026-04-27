@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
@@ -111,7 +111,7 @@ export function IdeasTicTacToe() {
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center font-[var(--font-pixel)] w-full max-w-[400px] relative">
+    <div ref={containerRef} className="flex flex-col items-center justify-center font-[var(--font-pixel)] w-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[400px] sm:min-h-0 sm:aspect-[4/3] rounded-xl border-4 border-gray-800 p-4 shadow-xl">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       <div className="mb-2 text-center w-full">
          <p className="text-[#8a63d2] text-[10px] md:text-xs">{t('game.objective')}{t('game.ttt.goal')}</p>
