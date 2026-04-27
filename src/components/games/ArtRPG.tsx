@@ -15,6 +15,64 @@ interface StoryNode {
   isEnding?: boolean;
 }
 
+const generatePathMapping = (p: string): Record<string, StoryNode> => {
+  return {
+    [`${p}.q2`]: {
+      textKey: `game.rpg.${p}.q2`,
+      choices: [
+        { textKey: `game.rpg.${p}.q2.a`, next: `${p}.q3a` },
+        { textKey: `game.rpg.${p}.q2.b`, next: `${p}.q3b` }
+      ]
+    },
+    [`${p}.q3a`]: {
+      textKey: `game.rpg.${p}.q3a`,
+      choices: [
+        { textKey: `game.rpg.${p}.q3a.1`, next: `${p}.q4a1` },
+        { textKey: `game.rpg.${p}.q3a.2`, next: `${p}.q4a2` }
+      ]
+    },
+    [`${p}.q3b`]: {
+      textKey: `game.rpg.${p}.q3b`,
+      choices: [
+        { textKey: `game.rpg.${p}.q3b.1`, next: `${p}.q4b1` },
+        { textKey: `game.rpg.${p}.q3b.2`, next: `${p}.q4b2` }
+      ]
+    },
+    [`${p}.q4a1`]: {
+      textKey: `game.rpg.${p}.q4a1`,
+      choices: [
+        { textKey: `game.rpg.${p}.q4a1.1`, next: `${p}.e1` },
+        { textKey: `game.rpg.${p}.q4a1.2`, next: `${p}.e1` }
+      ]
+    },
+    [`${p}.q4a2`]: {
+      textKey: `game.rpg.${p}.q4a2`,
+      choices: [
+        { textKey: `game.rpg.${p}.q4a2.1`, next: `${p}.e2` },
+        { textKey: `game.rpg.${p}.q4a2.2`, next: `${p}.e2` }
+      ]
+    },
+    [`${p}.q4b1`]: {
+      textKey: `game.rpg.${p}.q4b1`,
+      choices: [
+        { textKey: `game.rpg.${p}.q4b1.1`, next: `${p}.e3` },
+        { textKey: `game.rpg.${p}.q4b1.2`, next: `${p}.e3` }
+      ]
+    },
+    [`${p}.q4b2`]: {
+      textKey: `game.rpg.${p}.q4b2`,
+      choices: [
+        { textKey: `game.rpg.${p}.q4b2.1`, next: `${p}.e4` },
+        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.e4` }
+      ]
+    },
+    [`${p}.e1`]: { textKey: `game.rpg.${p}.e1`, choices: [], isEnding: true },
+    [`${p}.e2`]: { textKey: `game.rpg.${p}.e2`, choices: [], isEnding: true },
+    [`${p}.e3`]: { textKey: `game.rpg.${p}.e3`, choices: [], isEnding: true },
+    [`${p}.e4`]: { textKey: `game.rpg.${p}.e4`, choices: [], isEnding: true },
+  };
+};
+
 const storyMap: Record<string, StoryNode> = {
   start: {
     textKey: 'game.rpg.start',
@@ -32,194 +90,13 @@ const storyMap: Record<string, StoryNode> = {
       { textKey: 'game.rpg.q1.7', next: 'p7.q2' }
     ]
   },
-  // Path 1: Catering
-  'p1.q2': {
-    textKey: 'game.rpg.p1.q2',
-    choices: [
-      { textKey: 'game.rpg.p1.q2.a', next: 'p1.q3a' },
-      { textKey: 'game.rpg.p1.q2.b', next: 'p1.q3b' }
-    ]
-  },
-  'p1.q3a': {
-    textKey: 'game.rpg.p1.q3a',
-    choices: [
-      { textKey: 'game.rpg.p1.q3a.1', next: 'p1.e1' },
-      { textKey: 'game.rpg.p1.q3a.2', next: 'p1.e4' }
-    ]
-  },
-  'p1.q3b': {
-    textKey: 'game.rpg.p1.q3b',
-    choices: [
-      { textKey: 'game.rpg.p1.q3b.1', next: 'p1.e2' },
-      { textKey: 'game.rpg.p1.q3b.2', next: 'p1.e3' }
-    ]
-  },
-  'p1.e1': { textKey: 'game.rpg.p1.e1', choices: [], isEnding: true },
-  'p1.e2': { textKey: 'game.rpg.p1.e2', choices: [], isEnding: true },
-  'p1.e3': { textKey: 'game.rpg.p1.e3', choices: [], isEnding: true },
-  'p1.e4': { textKey: 'game.rpg.p1.e4', choices: [], isEnding: true },
-  
-  // Path 2: Artist
-  'p2.q2': {
-    textKey: 'game.rpg.p2.q2',
-    choices: [
-      { textKey: 'game.rpg.p2.q2.a', next: 'p2.q3a' },
-      { textKey: 'game.rpg.p2.q2.b', next: 'p2.q3b' }
-    ]
-  },
-  'p2.q3a': {
-    textKey: 'game.rpg.p2.q3a',
-    choices: [
-      { textKey: 'game.rpg.p2.q3a.1', next: 'p2.e1' },
-      { textKey: 'game.rpg.p2.q3a.2', next: 'p2.e2' }
-    ]
-  },
-  'p2.q3b': {
-    textKey: 'game.rpg.p2.q3b',
-    choices: [
-      { textKey: 'game.rpg.p2.q3b.1', next: 'p2.e3' },
-      { textKey: 'game.rpg.p2.q3b.2', next: 'p2.e4' }
-    ]
-  },
-  'p2.e1': { textKey: 'game.rpg.p2.e1', choices: [], isEnding: true },
-  'p2.e2': { textKey: 'game.rpg.p2.e2', choices: [], isEnding: true },
-  'p2.e3': { textKey: 'game.rpg.p2.e3', choices: [], isEnding: true },
-  'p2.e4': { textKey: 'game.rpg.p2.e4', choices: [], isEnding: true },
-
-  // Path 3: AI
-  'p3.q2': {
-    textKey: 'game.rpg.p3.q2',
-    choices: [
-      { textKey: 'game.rpg.p3.q2.a', next: 'p3.q3a' },
-      { textKey: 'game.rpg.p3.q2.b', next: 'p3.q3b' }
-    ]
-  },
-  'p3.q3a': {
-    textKey: 'game.rpg.p3.q3a',
-    choices: [
-      { textKey: 'game.rpg.p3.q3a.1', next: 'p3.e1' },
-      { textKey: 'game.rpg.p3.q3a.2', next: 'p3.e3' }
-    ]
-  },
-  'p3.q3b': {
-    textKey: 'game.rpg.p3.q3b',
-    choices: [
-      { textKey: 'game.rpg.p3.q3b.1', next: 'p3.e2' },
-      { textKey: 'game.rpg.p3.q3b.2', next: 'p3.e4' }
-    ]
-  },
-  'p3.e1': { textKey: 'game.rpg.p3.e1', choices: [], isEnding: true },
-  'p3.e2': { textKey: 'game.rpg.p3.e2', choices: [], isEnding: true },
-  'p3.e3': { textKey: 'game.rpg.p3.e3', choices: [], isEnding: true },
-  'p3.e4': { textKey: 'game.rpg.p3.e4', choices: [], isEnding: true },
-
-  // Path 4: Politics
-  'p4.q2': {
-    textKey: 'game.rpg.p4.q2',
-    choices: [
-      { textKey: 'game.rpg.p4.q2.a', next: 'p4.q3a' },
-      { textKey: 'game.rpg.p4.q2.b', next: 'p4.q3b' }
-    ]
-  },
-  'p4.q3a': {
-    textKey: 'game.rpg.p4.q3a',
-    choices: [
-      { textKey: 'game.rpg.p4.q3a.1', next: 'p4.e1' },
-      { textKey: 'game.rpg.p4.q3a.2', next: 'p4.e3' }
-    ]
-  },
-  'p4.q3b': {
-    textKey: 'game.rpg.p4.q3b',
-    choices: [
-      { textKey: 'game.rpg.p4.q3b.1', next: 'p4.e2' },
-      { textKey: 'game.rpg.p4.q3b.2', next: 'p4.e4' }
-    ]
-  },
-  'p4.e1': { textKey: 'game.rpg.p4.e1', choices: [], isEnding: true },
-  'p4.e2': { textKey: 'game.rpg.p4.e2', choices: [], isEnding: true },
-  'p4.e3': { textKey: 'game.rpg.p4.e3', choices: [], isEnding: true },
-  'p4.e4': { textKey: 'game.rpg.p4.e4', choices: [], isEnding: true },
-
-  // Path 5: Flood
-  'p5.q2': {
-    textKey: 'game.rpg.p5.q2',
-    choices: [
-      { textKey: 'game.rpg.p5.q2.a', next: 'p5.q3a' },
-      { textKey: 'game.rpg.p5.q2.b', next: 'p5.q3b' }
-    ]
-  },
-  'p5.q3a': {
-    textKey: 'game.rpg.p5.q3a',
-    choices: [
-      { textKey: 'game.rpg.p5.q3a.1', next: 'p5.e1' },
-      { textKey: 'game.rpg.p5.q3a.2', next: 'p5.e3' }
-    ]
-  },
-  'p5.q3b': {
-    textKey: 'game.rpg.p5.q3b',
-    choices: [
-      { textKey: 'game.rpg.p5.q3b.1', next: 'p5.e4' },
-      { textKey: 'game.rpg.p5.q3b.2', next: 'p5.e2' }
-    ]
-  },
-  'p5.e1': { textKey: 'game.rpg.p5.e1', choices: [], isEnding: true },
-  'p5.e2': { textKey: 'game.rpg.p5.e2', choices: [], isEnding: true },
-  'p5.e3': { textKey: 'game.rpg.p5.e3', choices: [], isEnding: true },
-  'p5.e4': { textKey: 'game.rpg.p5.e4', choices: [], isEnding: true },
-
-  // Path 6: Influencer
-  'p6.q2': {
-    textKey: 'game.rpg.p6.q2',
-    choices: [
-      { textKey: 'game.rpg.p6.q2.a', next: 'p6.q3a' },
-      { textKey: 'game.rpg.p6.q2.b', next: 'p6.q3b' }
-    ]
-  },
-  'p6.q3a': {
-    textKey: 'game.rpg.p6.q3a',
-    choices: [
-      { textKey: 'game.rpg.p6.q3a.1', next: 'p6.e1' },
-      { textKey: 'game.rpg.p6.q3a.2', next: 'p6.e3' }
-    ]
-  },
-  'p6.q3b': {
-    textKey: 'game.rpg.p6.q3b',
-    choices: [
-      { textKey: 'game.rpg.p6.q3b.1', next: 'p6.e2' },
-      { textKey: 'game.rpg.p6.q3b.2', next: 'p6.e4' }
-    ]
-  },
-  'p6.e1': { textKey: 'game.rpg.p6.e1', choices: [], isEnding: true },
-  'p6.e2': { textKey: 'game.rpg.p6.e2', choices: [], isEnding: true },
-  'p6.e3': { textKey: 'game.rpg.p6.e3', choices: [], isEnding: true },
-  'p6.e4': { textKey: 'game.rpg.p6.e4', choices: [], isEnding: true },
-
-  // Path 7: Paranormal
-  'p7.q2': {
-    textKey: 'game.rpg.p7.q2',
-    choices: [
-      { textKey: 'game.rpg.p7.q2.a', next: 'p7.q3a' },
-      { textKey: 'game.rpg.p7.q2.b', next: 'p7.q3b' }
-    ]
-  },
-  'p7.q3a': {
-    textKey: 'game.rpg.p7.q3a',
-    choices: [
-      { textKey: 'game.rpg.p7.q3a.1', next: 'p7.e4' },
-      { textKey: 'game.rpg.p7.q3a.2', next: 'p7.e1' }
-    ]
-  },
-  'p7.q3b': {
-    textKey: 'game.rpg.p7.q3b',
-    choices: [
-      { textKey: 'game.rpg.p7.q3b.1', next: 'p7.e3' },
-      { textKey: 'game.rpg.p7.q3b.2', next: 'p7.e2' }
-    ]
-  },
-  'p7.e1': { textKey: 'game.rpg.p7.e1', choices: [], isEnding: true },
-  'p7.e2': { textKey: 'game.rpg.p7.e2', choices: [], isEnding: true },
-  'p7.e3': { textKey: 'game.rpg.p7.e3', choices: [], isEnding: true },
-  'p7.e4': { textKey: 'game.rpg.p7.e4', choices: [], isEnding: true }
+  ...generatePathMapping('p1'),
+  ...generatePathMapping('p2'),
+  ...generatePathMapping('p3'),
+  ...generatePathMapping('p4'),
+  ...generatePathMapping('p5'),
+  ...generatePathMapping('p6'),
+  ...generatePathMapping('p7')
 };
 
 export function ArtRPG() {
