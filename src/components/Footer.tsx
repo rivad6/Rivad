@@ -61,12 +61,9 @@ export function Footer() {
 
               <div>
                 <h3 className="text-[10px] font-mono tracking-[0.3em] text-gray-600 uppercase mb-8 font-bold border-l-2 border-red-900/30 pl-4">{t('footer.links.net')}</h3>
-                <ul className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <ul className="flex flex-col gap-4">
                   {[
-                    { name: 'Instagram', url: 'https://www.instagram.com/oscar.c.rivadeneyra/' },
-                    { name: 'LinkedIn', url: 'https://www.linkedin.com/in/oscarcesar/' },
-                    { name: 'GitHub', url: 'https://github.com/oscarcesar' },
-                    { name: 'X / Twitter', url: 'https://twitter.com/Oscarcesar_R' }
+                    { name: 'Instagram', url: 'https://www.instagram.com/oscar.c.rivadeneyra/' }
                   ].map((social) => (
                     <li key={social.name}>
                       <a 

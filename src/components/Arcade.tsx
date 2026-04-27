@@ -56,9 +56,14 @@ export function Arcade() {
         </div>
 
         {/* Game Screen / Arcade Cabinet */}
-        <div className="relative bg-transparent p-1 md:p-2 border border-[#3a2d59] mx-auto overflow-hidden">
+        <div className="relative bg-transparent p-1 md:p-2 border border-[#3a2d59] mx-auto overflow-hidden shadow-[8px_8px_0_0_rgba(58,45,89,0.5)] bg-[#1e1633]/50">
           {/* CRT Screen Frame */}
           <div className="bg-[#05040a] border border-[#1e1633] min-h-[500px] flex items-center justify-center relative shadow-[inset_0_0_50px_rgba(0,0,0,1)]">
+            
+            {/* CRT Screen Effect overlay */}
+            <div className="absolute inset-0 pointer-events-none z-10 mix-blend-overlay opacity-30">
+              <div className="w-full h-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]" />
+            </div>
             
             <AnimatePresence mode="wait">
               <motion.div
