@@ -79,6 +79,7 @@ export function FestJump() {
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_chars') || '["default"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('fest_selected_char') || 'default');
+  const [highScore, setHighScore] = useState(() => Number(localStorage.getItem('fest_highscore') || 0));
   const [unlockedCodes, setUnlockedCodes] = useState<string[]>([]);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
@@ -88,7 +89,8 @@ export function FestJump() {
     localStorage.setItem('fest_coins', festCoins.toString());
     localStorage.setItem('fest_chars', JSON.stringify(unlockedChars));
     localStorage.setItem('fest_selected_char', selectedCharId);
-  }, [festCoins, unlockedChars, selectedCharId]);
+    localStorage.setItem('fest_highscore', highScore.toString());
+  }, [festCoins, unlockedChars, selectedCharId, highScore]);
 
   const showMsg = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
     setMessage({ text, type });
@@ -127,7 +129,7 @@ export function FestJump() {
 
     let animationFrameId: number;
     let particles: {x: number, y: number, life: number, color: string}[] = [];
-    let powerups: {x: number, y: number, type: 'spring' | 'rocket' | 'shield'}[] = [];
+    let powerups: {x: number, y: number, type: 'spring' | 'rocket' | 'shield' | 'coin'}[] = [];
     let enemies: {x: number, y: number, speed: number, width: number}[] = [];
 
     const PLATFORM_WIDTH = 60;
@@ -169,6 +171,9 @@ export function FestJump() {
     const keys = { left: false, right: false };
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
       if (e.key === 'ArrowLeft') keys.left = true;
       if (e.key === 'ArrowRight') keys.right = true;
     };
@@ -214,11 +219,24 @@ export function FestJump() {
     };
 
     const spawnPowerup = (platform: any) => {
-       if (Math.random() > 0.95) {
+       const rand = Math.random();
+       if (rand > 0.98) {
          powerups.push({
            x: platform.x + 10,
            y: platform.y - 20,
-           type: Math.random() > 0.5 ? 'rocket' : 'shield'
+           type: 'rocket'
+         });
+       } else if (rand > 0.95) {
+         powerups.push({
+           x: platform.x + 10,
+           y: platform.y - 20,
+           type: 'shield'
+         });
+       } else if (rand > 0.8) {
+         powerups.push({
+           x: platform.x + platform.width / 2 - 5,
+           y: platform.y - 15,
+           type: 'coin'
          });
        }
     };
@@ -318,6 +336,7 @@ export function FestJump() {
         player.y = canvas.height / 2;
         maxScore = Math.floor(cameraY);
         setScore(maxScore);
+        if (maxScore > highScore) setHighScore(maxScore);
 
         // Codes logic
         if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
@@ -339,13 +358,13 @@ export function FestJump() {
             p.broken = false;
             
             // Layout structures
-            if (Math.random() > 0.7) {
-               p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
-            } else {
+            if (maxScore < 2000) {
                p.x = (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(p.y * 0.005) * 120;
+            } else {
+               p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
             }
             
-            p.hasSpring = Math.random() > 0.92;
+            p.y = minY - (80 + Math.random() * 40); // Consistent gap
             if (p.type !== 'breaking') {
               spawnPowerup(p);
             }
@@ -389,6 +408,17 @@ export function FestJump() {
           }
 
           if (hit) {
+            // Check for Perfect Jump
+            const distFromCenter = Math.abs((player.x + player.width/2) - (p.x + p.width/2));
+            const isPerfect = distFromCenter < 10;
+            
+            if (isPerfect) {
+              setScore(prev => prev + 50);
+              setFestCoins(prev => prev + 2);
+              createParticles(p.x + p.width/2, p.y, '#ffffff');
+              shake = 5;
+            }
+
             player.vy = p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce;
             if (p.type === 'breaking') {
               p.broken = true;
@@ -426,9 +456,15 @@ export function FestJump() {
           }
         }
         if (hit) {
-          playSound('score');
-          if (pw.type === 'rocket') player.jetpack = 120;
-          if (pw.type === 'shield') player.shield = 1;
+          if (pw.type === 'coin') {
+            setFestCoins(prev => prev + 5);
+            playSound('powerup');
+            createParticles(pw.x, pw.y, '#facc15');
+          } else {
+            playSound('score');
+            if (pw.type === 'rocket') player.jetpack = 120;
+            if (pw.type === 'shield') player.shield = 1;
+          }
         }
         return !hit && pw.y < canvas.height;
       });
@@ -601,12 +637,25 @@ export function FestJump() {
       // Powerups
       powerups.forEach(pw => {
         drawWithWrap(pw.x, (pwX) => {
-          ctx.fillStyle = pw.type === 'rocket' ? '#f59e0b' : '#3b82f6';
-          ctx.beginPath();
-          ctx.arc(pwX + 10, pw.y + 10, 8, 0, Math.PI*2);
-          ctx.fill();
-          ctx.fillStyle = 'white';
-          ctx.fillText(pw.type === 'rocket' ? '🚀' : '🛡️', pwX + 2, pw.y + 15);
+          if (pw.type === 'coin') {
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(pwX + 10, pw.y + 10, 6, 0, Math.PI*2);
+            ctx.fill();
+            // Inner circle
+            ctx.strokeStyle = '#eab308';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(pwX + 10, pw.y + 10, 4, 0, Math.PI*2);
+            ctx.stroke();
+          } else {
+            ctx.fillStyle = pw.type === 'rocket' ? '#f59e0b' : '#3b82f6';
+            ctx.beginPath();
+            ctx.arc(pwX + 10, pw.y + 10, 8, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.fillText(pw.type === 'rocket' ? '🚀' : '🛡️', pwX + 2, pw.y + 15);
+          }
         });
       });
 
@@ -700,7 +749,7 @@ export function FestJump() {
           </p>
           <div className="flex items-baseline gap-1">
             <p className="text-4xl font-black italic tracking-tighter">{score}</p>
-            <span className="text-[10px] text-zinc-500 font-mono">DIST</span>
+            <span className="text-[10px] text-zinc-500 font-mono">/ {highScore} HI</span>
           </div>
         </div>
         <div className="text-right flex flex-col items-end justify-end h-full">

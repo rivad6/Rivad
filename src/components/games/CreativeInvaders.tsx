@@ -30,6 +30,11 @@ export function CreativeInvaders() {
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('invaders_chars') || '["classic"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
+  const [storeTab, setStoreTab] = useState<"chars" | "upgrades">("chars");
+  const [upgrades, setUpgrades] = useState(() => {
+    const saved = localStorage.getItem('invaders_upgrades');
+    return saved ? JSON.parse(saved) : { shield: 0, power: 0, speed: 0 };
+  });
 
   const selectedChar = CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
 
@@ -37,7 +42,8 @@ export function CreativeInvaders() {
     localStorage.setItem('fest_coins', festCoins.toString());
     localStorage.setItem('invaders_chars', JSON.stringify(unlockedChars));
     localStorage.setItem('invaders_selected_char', selectedCharId);
-  }, [festCoins, unlockedChars, selectedCharId]);
+    localStorage.setItem('invaders_upgrades', JSON.stringify(upgrades));
+  }, [festCoins, unlockedChars, selectedCharId, upgrades]);
 
   const buyChar = (char: typeof CHARACTERS[0]) => {
     if (festCoins >= char.price) {
@@ -202,6 +208,7 @@ export function CreativeInvaders() {
       life: number;
       maxLife: number;
       color: string;
+      isCoin?: boolean;
     }[],
     level: 1,
     lastHitEdgeTime: 0,
@@ -294,14 +301,14 @@ export function CreativeInvaders() {
         y: GAME_HEIGHT - 60,
         width: 40,
         height: 40,
-        speed: selectedChar.speed,
+        speed: selectedChar.speed + (upgrades.speed * 0.5),
         isMovingLeft: false,
         isMovingRight: false,
         isMovingUp: false,
         isMovingDown: false,
-        power: selectedChar.id === 'laser' ? 2 : 1,
+        power: (selectedChar.id === 'laser' ? 2 : 1) + upgrades.power,
         powerTimer: 0,
-        shield: selectedChar.id === 'tank' ? 3 : 0,
+        shield: (selectedChar.id === 'tank' ? 3 : 0) + upgrades.shield,
         speedBoostTimer: selectedChar.id === 'rapid' ? 500 : 0,
       },
       projectiles: [],
@@ -393,16 +400,8 @@ export function CreativeInvaders() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        (gameState === "playing" || gameState === "asteroids") &&
-        (e.key === " " ||
-          e.key === "ArrowUp" ||
-          e.key === "w" ||
-          e.key === "ArrowDown" ||
-          e.key === "s" ||
-          e.key === "ArrowLeft" ||
-          e.key === "ArrowRight")
-      ) {
+      const keysToPrevent = [" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "s", "a", "d"];
+      if (keysToPrevent.includes(e.key)) {
         e.preventDefault();
       }
       if (e.key === "ArrowLeft" || e.key === "a") state.current.player.isMovingLeft = true;
@@ -432,16 +431,18 @@ export function CreativeInvaders() {
     y: number,
     color: string,
     count: number = 15,
+    isCoin: boolean = false
   ) => {
     for (let i = 0; i < count; i++) {
       state.current.particles.push({
         x,
         y,
-        vx: (Math.random() - 0.5) * 10,
-        vy: (Math.random() - 0.5) * 10,
+        vx: (Math.random() - 0.5) * (isCoin ? 5 : 10),
+        vy: (Math.random() - 0.5) * (isCoin ? 5 : 10) - (isCoin ? 5 : 0),
         life: 1,
         maxLife: Math.random() * 25 + 10,
         color,
+        isCoin
       });
     }
   };
@@ -746,6 +747,11 @@ export function CreativeInvaders() {
             s.enemies.splice(j, 1);
             s.score += enemy.maxHp * 10;
             setScore(s.score);
+            
+            // Earn Karmas (FestCoins)
+            const earnedKarmas = Math.ceil(enemy.maxHp / 2) + (s.level);
+            setFestCoins(prev => prev + earnedKarmas);
+            createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#facc15", earnedKarmas, true);
           } else {
             playSound('hit');
             createExplosion(proj.x, proj.y, "#ffffff", 5);
@@ -929,14 +935,22 @@ export function CreativeInvaders() {
       ctx.fillStyle = p.color;
       ctx.globalAlpha = 1 - p.life / p.maxLife;
       ctx.beginPath();
-      ctx.arc(
-        p.x,
-        p.y,
-        Math.max(0.5, 3 * (1 - p.life / p.maxLife)),
-        0,
-        Math.PI * 2,
-      );
-      ctx.fill();
+      if (p.isCoin) {
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#eab308";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.arc(
+          p.x,
+          p.y,
+          Math.max(0.5, 3 * (1 - p.life / p.maxLife)),
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
       ctx.globalAlpha = 1.0;
     }
   }, []);
@@ -1095,68 +1109,122 @@ export function CreativeInvaders() {
                 <div className="text-yellow-500 font-mono text-sm tracking-widest flex items-center gap-2 mt-auto">
                    <Zap className="w-4 h-4" /> {festCoins} KARMAS
                 </div>
+                <div className="flex gap-2 mt-4">
+                  <button 
+                    onClick={() => setStoreTab("chars")}
+                    className={`px-4 py-2 text-[10px] uppercase font-bold tracking-widest transition-all border-b-2 ${storeTab === "chars" ? "border-brand-accent text-brand-accent bg-brand-accent/10" : "border-transparent text-white/40"}`}
+                  >
+                    Naves
+                  </button>
+                  <button 
+                    onClick={() => setStoreTab("upgrades")}
+                    className={`px-4 py-2 text-[10px] uppercase font-bold tracking-widest transition-all border-b-2 ${storeTab === "upgrades" ? "border-brand-accent text-brand-accent bg-brand-accent/10" : "border-transparent text-white/40"}`}
+                  >
+                    Mejoras
+                  </button>
+                </div>
               </div>
               
               <div className="flex-1 w-full bg-white/5 border border-white/10 rounded-xl p-6 relative">
-                 <div className="flex justify-between items-center w-full mb-6">
-                   <button 
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       playSound('hover');
-                       const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
-                       const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
-                       setSelectedCharId(CHARACTERS[prevIndex].id);
-                     }}
-                     className="w-10 h-10 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors z-10 cursor-pointer pointer-events-auto"
-                   >
-                     &lt;
-                   </button>
-                   
-                   <div className="flex-1 flex flex-col items-center justify-center pointer-events-none px-4">
-                     <div className="w-24 h-24 mb-4 flex items-center justify-center relative bg-black/40 border-2 rounded-lg" style={{ borderColor: `${selectedChar.color}50`, backgroundColor: `${selectedChar.color}15` }}>
-                        <div className="w-12 h-12 relative z-10" style={{ backgroundColor: selectedChar.color }}></div>
+                 {storeTab === "chars" ? (
+                   <>
+                     <div className="flex justify-between items-center w-full mb-6">
+                       <button 
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           playSound('hover');
+                           const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                           const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
+                           setSelectedCharId(CHARACTERS[prevIndex].id);
+                         }}
+                         className="w-10 h-10 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors z-10 cursor-pointer pointer-events-auto"
+                       >
+                         &lt;
+                       </button>
+                       
+                       <div className="flex-1 flex flex-col items-center justify-center pointer-events-none px-4">
+                         <div className="w-24 h-24 mb-4 flex items-center justify-center relative bg-black/40 border-2 rounded-lg" style={{ borderColor: `${selectedChar.color}50`, backgroundColor: `${selectedChar.color}15` }}>
+                            <div className="w-12 h-12 relative z-10" style={{ backgroundColor: selectedChar.color }}></div>
+                         </div>
+                         <p className="text-sm font-mono text-white uppercase tracking-widest">{t(selectedChar.nameKey)}</p>
+                         <p className="text-[10px] font-mono text-zinc-400 mt-2 h-10 text-center">{t(selectedChar.descKey)}</p>
+                       </div>
+
+                       <button 
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           playSound('hover');
+                           const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                           const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+                           setSelectedCharId(CHARACTERS[nextIndex].id);
+                         }}
+                         className="w-10 h-10 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors z-10 cursor-pointer pointer-events-auto"
+                       >
+                         &gt;
+                       </button>
                      </div>
-                     <p className="text-sm font-mono text-white uppercase tracking-widest">{t(selectedChar.nameKey)}</p>
-                     <p className="text-[10px] font-mono text-zinc-400 mt-2 h-10 text-center">{t(selectedChar.descKey)}</p>
+
+                     <div className="w-full flex justify-center">
+                       {unlockedChars.includes(selectedCharId) ? (
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             initGame();
+                           }} 
+                           className="w-full bg-brand-accent text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center gap-3 hover:bg-brand-accent/80 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(242,74,41,0.4)] cursor-pointer pointer-events-auto"
+                         >
+                           <Play size={18} /> [ START GAME ]
+                         </button>
+                       ) : (
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             buyChar(selectedChar);
+                           }} 
+                           className={`w-full font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center transition-all cursor-pointer pointer-events-auto ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-105' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
+                         >
+                           UNLOCK - {selectedChar.price} KARMAS
+                         </button>
+                       )}
+                     </div>
+                   </>
+                 ) : (
+                   <div className="flex flex-col gap-4 text-left">
+                     {[
+                       { id: 'shield', icon: Shield, name: 'Escudo Permanente', price: 1000 * (upgrades.shield + 1) },
+                       { id: 'power', icon: Zap, name: 'Potencia Inicial', price: 2000 * (upgrades.power + 1) },
+                       { id: 'speed', icon: Star, name: 'Velocidad Extra', price: 1500 * (upgrades.speed + 1) }
+                     ].map(upg => (
+                       <div key={upg.id} className="flex items-center justify-between bg-black/30 p-3 border border-white/5 rounded-lg">
+                         <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                             <upg.icon className="w-4 h-4 text-brand-accent" />
+                           </div>
+                           <div>
+                             <p className="text-[10px] text-white font-bold uppercase tracking-widest">{upg.name}</p>
+                             <p className="text-[8px] text-zinc-400">Level {upgrades[upg.id as keyof typeof upgrades]}</p>
+                           </div>
+                         </div>
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             if (festCoins >= upg.price && upgrades[upg.id as keyof typeof upgrades] < 5) {
+                               setFestCoins(prev => prev - upg.price);
+                               setUpgrades(prev => ({ ...prev, [upg.id]: prev[upg.id as keyof typeof upgrades] + 1 }));
+                               playSound('purchase');
+                             } else {
+                               playSound('alert');
+                             }
+                           }}
+                           className={`px-3 py-1.5 text-[8px] font-bold rounded flex items-center gap-1 transition-all pointer-events-auto cursor-pointer ${festCoins >= upg.price && upgrades[upg.id as keyof typeof upgrades] < 5 ? 'bg-green-600 text-white hover:bg-green-500' : 'bg-zinc-800 text-zinc-500'}`}
+                         >
+                           <Zap className="w-3 h-3" /> {upg.price}
+                         </button>
+                       </div>
+                     ))}
+                     <p className="text-[7px] text-zinc-500 text-center mt-2 italic uppercase">Mejoras permanentes para todas las naves</p>
                    </div>
-
-                   <button 
-                     onClick={(e) => {
-                       e.stopPropagation();
-                       playSound('hover');
-                       const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
-                       const nextIndex = (currentIndex + 1) % CHARACTERS.length;
-                       setSelectedCharId(CHARACTERS[nextIndex].id);
-                     }}
-                     className="w-10 h-10 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors z-10 cursor-pointer pointer-events-auto"
-                   >
-                     &gt;
-                   </button>
-                 </div>
-
-                 <div className="w-full flex justify-center">
-                   {unlockedChars.includes(selectedCharId) ? (
-                     <button 
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         initGame();
-                       }} 
-                       className="w-full bg-brand-accent text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center gap-3 hover:bg-brand-accent/80 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(242,74,41,0.4)] cursor-pointer pointer-events-auto"
-                     >
-                       <Play size={18} /> [ START GAME ]
-                     </button>
-                   ) : (
-                     <button 
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         buyChar(selectedChar);
-                       }} 
-                       className={`w-full font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center transition-all cursor-pointer pointer-events-auto ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-105' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
-                     >
-                       UNLOCK - {selectedChar.price} KARMAS
-                     </button>
-                   )}
-                 </div>
+                 )}
               </div>
             </div>
           </div>
