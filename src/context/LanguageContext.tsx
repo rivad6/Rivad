@@ -12,6 +12,7 @@ const translations: Record<Language, Record<string, string>> = {
   es: {
     // Nav & Common
     'nav.home': 'Inicio',
+    'nav.minigames': 'un cv con juegos...',
     'nav.back_to_home': 'Ir al Inicio',
     
     // Hero
@@ -302,6 +303,8 @@ const translations: Record<Language, Record<string, string>> = {
     'popup.pricing.title': 'Construye tu propio ecosistema',
     'popup.pricing.desc': '¿Te gustó esta experiencia? Un currículum tradicional ya no es suficiente. Destaca con un ecosistema interactivo a medida.',
     'popup.pricing.close': 'Ignorar por ahora',
+    'popup.pricing.cta': 'Contactar',
+    'popup.achievement.title': 'LOGRO DESBLOQUEADO',
 
     // Oracle Page
     'orc.back': '[ Base Central ]',
@@ -333,12 +336,20 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game6': 'Invasores',
     
     // Game: Creative Invaders
-    'game.invaders.title': 'Invasores Creativos',
-    'game.invaders.desc': 'Derrota a la Rutina y los Bloqueos antes de que drenen tu creatividad.',
-    'game.invaders.start': 'Empezar a Trabajar',
-    'game.invaders.gameover': 'Burnout Alcanzado',
-    'game.invaders.win': '¡Creatividad a Salvo!',
-    'game.invaders.score': 'Ideas',
+    'game.invaders.title': 'Defensores Creativos',
+    'game.invaders.desc': 'Vuelve a trazar tu inspiración. Derrota al Tedio, la Frustración y los Recortes.',
+    'game.invaders.start': 'Empezar a Trazar',
+    'game.invaders.gameover': 'SÍNDROME DE LA PÁGINA EN BLANCO',
+    'game.invaders.win': '¡Inspiración Salvada!',
+    'game.invaders.score': 'Trazos',
+    'game.invaders.level': 'Nivel',
+    'game.invaders.subtitle': 'DEFIENDE TU VISIÓN',
+    'game.invaders.instructions': 'Usa MOUSE o FLECHAS para dibujar ataques. Evita las objeciones y los bloqueos.',
+    'game.invaders.drained': 'Tinta Agotada',
+    'game.invaders.finalscore': 'Puntaje Final:',
+    'game.invaders.tryagain': 'Intentar de Nuevo',
+    'game.invaders.flow': 'Estado de Flujo Alcanzado',
+    'game.invaders.next': 'Siguiente Idea',
 
     // Game: ArtRPG
     'game.rpg.title': 'SIMULADOR DE INAUGURACIÓN',
@@ -709,6 +720,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   en: {
     'nav.home': 'Home',
+    'nav.minigames': 'a cv with games...',
     'nav.back_to_home': 'Back to Home',
     // Hero
     'hero.title1': 'Human',
@@ -993,6 +1005,8 @@ const translations: Record<Language, Record<string, string>> = {
     'popup.pricing.title': 'Build your own ecosystem',
     'popup.pricing.desc': 'Did you like this experience? A traditional resume is no longer enough. Stand out with a custom interactive ecosystem.',
     'popup.pricing.close': 'Ignore for now',
+    'popup.pricing.cta': 'Contact',
+    'popup.achievement.title': 'ACHIEVEMENT UNLOCKED',
 
     'orc.back': '[ Central Base ]',
     'orc.badge': 'Production Oracle',
@@ -1023,12 +1037,20 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game6': 'Invaders',
 
     // Game: Creative Invaders
-    'game.invaders.title': 'Creative Invaders',
-    'game.invaders.desc': 'Defeat the Routine and Blocks before they drain your creativity.',
-    'game.invaders.start': 'Start Work',
-    'game.invaders.gameover': 'Burnout Reached',
-    'game.invaders.win': 'Creativity Saved!',
-    'game.invaders.score': 'Ideas',
+    'game.invaders.title': 'Creative Defenders',
+    'game.invaders.desc': 'Retrace your inspiration. Defeat Tedium, Frustration, and Budget Cuts.',
+    'game.invaders.start': 'Start Drawing',
+    'game.invaders.gameover': 'BLANK PAGE SYNDROME',
+    'game.invaders.win': 'Inspiration Saved!',
+    'game.invaders.score': 'Strokes',
+    'game.invaders.level': 'Level',
+    'game.invaders.subtitle': 'DEFEND YOUR VISION',
+    'game.invaders.instructions': 'Use MOUSE or ARROWS to shoot and draw. Avoid blocks and objections.',
+    'game.invaders.drained': 'Ink Depleted',
+    'game.invaders.finalscore': 'Final Score:',
+    'game.invaders.tryagain': 'Try Again',
+    'game.invaders.flow': 'Flow State Achieved',
+    'game.invaders.next': 'Next Idea',
 
     // Game: ArtRPG
     'game.rpg.title': 'INAUGURATION SIMULATOR',
@@ -1399,6 +1421,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   fr: {
     'nav.home': 'Accueil',
+    'nav.minigames': 'un cv avec des jeux...',
     'nav.back_to_home': 'Retour à l\'accueil',
     // Hero
     'hero.title1': 'Catalogue',
@@ -1683,6 +1706,8 @@ const translations: Record<Language, Record<string, string>> = {
     'popup.pricing.title': 'Construisez votre propre écosystème',
     'popup.pricing.desc': 'Vous avez aimé cette expérience ? Un CV traditionnel ne suffit plus. Démarquez-vous avec un écosystème interactif sur mesure.',
     'popup.pricing.close': 'Ignorer pour le moment',
+    'popup.pricing.cta': 'Contacter',
+    'popup.achievement.title': 'SUCCÈS DÉVERROUILLÉ',
 
     'orc.back': '[ Base Centrale ]',
     'orc.badge': 'Oracle de Production',
@@ -1713,12 +1738,20 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game6': 'Envahisseurs',
 
     // Game: Creative Invaders
-    'game.invaders.title': 'Envahisseurs Créatifs',
-    'game.invaders.desc': 'Battez la Routine et les Blocages avant qu\'ils ne drainent votre créativité.',
-    'game.invaders.start': 'Commencer',
-    'game.invaders.gameover': 'Épuisement Atteint',
-    'game.invaders.win': 'Créativité Sauvée !',
-    'game.invaders.score': 'Idées',
+    'game.invaders.title': 'Défenseurs Créatifs',
+    'game.invaders.desc': 'Retracez votre inspiration. Déjouez l\'Ennui, la Frustration et les Coupures.',
+    'game.invaders.start': 'Commencer à Dessiner',
+    'game.invaders.gameover': 'SYNDROME DE LA PAGE BLANCHE',
+    'game.invaders.win': 'Inspiration Sauvée !',
+    'game.invaders.score': 'Traits',
+    'game.invaders.level': 'Niveau',
+    'game.invaders.subtitle': 'DÉFENDEZ VOTRE VISION',
+    'game.invaders.instructions': 'Utilisez la SOURIS ou FLÈCHES pour esquisser. Évitez les blocages et les objections.',
+    'game.invaders.drained': 'Encre Épuisée',
+    'game.invaders.finalscore': 'Score Final :',
+    'game.invaders.tryagain': 'Réessayer',
+    'game.invaders.flow': 'État de Flow Atteint',
+    'game.invaders.next': 'Prochaine Idée',
 
     'game.rpg.title': 'SIMULATEUR D\'INAUGURATION',
     'game.rpg.goal': 'Survis à l\'événement',

@@ -20,7 +20,7 @@ import { PricingPopup } from './components/PricingPopup';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AchievementPopup } from './components/AchievementPopup';
 
-import { Volume2, VolumeX, Home as HomeIcon } from 'lucide-react';
+import { Volume2, VolumeX, Home as HomeIcon, Gamepad2 } from 'lucide-react';
 import { useAudio } from './context/AudioContext';
 
 const HomeRoute = React.lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
@@ -30,16 +30,22 @@ const SellOutPage = React.lazy(() => import('./pages/SellOutPage').then(m => ({ 
 const GeneratorPage = React.lazy(() => import('./pages/GeneratorPage').then(m => ({ default: m.GeneratorPage })));
 
 function Nav() {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { isMuted, toggleMute } = useAudio();
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none">
-      <Link to="/" className="pointer-events-auto font-display font-medium text-xl uppercase tracking-widest text-white hover:text-brand-accent transition-colors flex items-center gap-3">
-        <span className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center p-1 frosted-layer overflow-hidden focus:outline-none">
-          <HomeIcon size={14} className="text-white" />
-        </span>
-        Rivad
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link to="/" className="pointer-events-auto font-display font-medium text-xl uppercase tracking-widest text-white hover:text-brand-accent transition-colors flex items-center gap-3">
+          <span className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center p-1 frosted-layer overflow-hidden focus:outline-none">
+            <HomeIcon size={14} className="text-white" />
+          </span>
+          Rivad
+        </Link>
+        <Link to="/juegos" className="pointer-events-auto hidden sm:flex items-center gap-2 group px-3 py-1.5 rounded-full border border-white/10 hover:border-brand-accent/50 bg-black/20 hover:bg-brand-accent/10 transition-all">
+          <Gamepad2 size={16} className="text-brand-accent group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-mono text-white/70 group-hover:text-white transition-colors uppercase tracking-widest">{t('nav.minigames')}</span>
+        </Link>
+      </div>
       <div className="flex items-center gap-4">
         <button 
           onClick={toggleMute}

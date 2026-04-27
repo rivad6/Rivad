@@ -31,7 +31,7 @@ export function PricingPopup() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
       >
         <motion.div
           initial={{ scale: 0.9, y: 20 }}
@@ -79,7 +79,7 @@ export function PricingPopup() {
               }}
               className="flex-1 px-4 py-3 bg-brand-accent/10 hover:bg-brand-accent/20 border border-brand-accent/50 text-white text-xs font-mono tracking-widest transition-colors rounded uppercase flex items-center justify-center gap-2"
             >
-              Contactar
+              {t('popup.pricing.cta') || 'Contactar'}
               <ExternalLink className="w-3 h-3" />
             </button>
           </div>

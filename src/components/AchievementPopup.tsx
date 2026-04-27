@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAchievements } from '../context/AchievementsContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useAudio } from '../context/AudioContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy } from 'lucide-react';
@@ -7,6 +8,7 @@ import { Trophy } from 'lucide-react';
 export function AchievementPopup() {
   const { recentUnlock, clearRecentUnlock } = useAchievements();
   const { playSound } = useAudio();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (recentUnlock) {
@@ -38,9 +40,9 @@ export function AchievementPopup() {
              <div className="flex-1">
                <div className="flex items-center gap-1.5 text-brand-accent text-[10px] font-black tracking-widest uppercase mb-1">
                  <Trophy size={10} />
-                 LOGRO DESBLOQUEADO
+                 {t('popup.achievement.title') || 'LOGRO DESBLOQUEADO'}
                </div>
-               <h4 className="text-white font-bold text-sm leading-tight leading-none mb-1">
+               <h4 className="text-white font-bold text-sm leading-tight mb-1">
                  {recentUnlock.title}
                </h4>
                <p className="text-zinc-400 text-xs leading-snug">
