@@ -330,6 +330,15 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game3': 'Gato de Ideas',
     'arc.game4': 'Simulador de Inauguración',
     'arc.game5': 'Venderse al Capitalismo',
+    'arc.game6': 'Invasores',
+    
+    // Game: Creative Invaders
+    'game.invaders.title': 'Invasores Creativos',
+    'game.invaders.desc': 'Derrota a la Rutina y los Bloqueos antes de que drenen tu creatividad.',
+    'game.invaders.start': 'Empezar a Trabajar',
+    'game.invaders.gameover': 'Burnout Alcanzado',
+    'game.invaders.win': '¡Creatividad a Salvo!',
+    'game.invaders.score': 'Ideas',
 
     // Game: ArtRPG
     'game.rpg.title': 'SIMULADOR DE INAUGURACIÓN',
@@ -1011,6 +1020,15 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game3': 'Ideas Tic-Tac-Toe',
     'arc.game4': 'Inauguration Simulator',
     'arc.game5': 'The Art of Selling Out',
+    'arc.game6': 'Invaders',
+
+    // Game: Creative Invaders
+    'game.invaders.title': 'Creative Invaders',
+    'game.invaders.desc': 'Defeat the Routine and Blocks before they drain your creativity.',
+    'game.invaders.start': 'Start Work',
+    'game.invaders.gameover': 'Burnout Reached',
+    'game.invaders.win': 'Creativity Saved!',
+    'game.invaders.score': 'Ideas',
 
     // Game: ArtRPG
     'game.rpg.title': 'INAUGURATION SIMULATOR',
@@ -1692,6 +1710,15 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game3': 'Morpion d\'Idées',
     'arc.game4': 'Simulateur d\'Inauguration',
     'arc.game5': 'L\'Art de se Vendre',
+    'arc.game6': 'Envahisseurs',
+
+    // Game: Creative Invaders
+    'game.invaders.title': 'Envahisseurs Créatifs',
+    'game.invaders.desc': 'Battez la Routine et les Blocages avant qu\'ils ne drainent votre créativité.',
+    'game.invaders.start': 'Commencer',
+    'game.invaders.gameover': 'Épuisement Atteint',
+    'game.invaders.win': 'Créativité Sauvée !',
+    'game.invaders.score': 'Idées',
 
     'game.rpg.title': 'SIMULATEUR D\'INAUGURATION',
     'game.rpg.goal': 'Survis à l\'événement',

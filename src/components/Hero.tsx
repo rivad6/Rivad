@@ -45,10 +45,11 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="text-center"
           >
-            <h1 className="text-[18vw] md:text-[14vw] leading-[0.75] font-display font-light uppercase tracking-tighter text-white flex flex-col pointer-events-none select-none">
+            <h1 className="text-[18vw] md:text-[14vw] leading-[0.75] font-display font-light uppercase tracking-tighter text-white flex flex-col items-center pointer-events-none select-none">
               <span className="drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">{t('hero.title1')}</span>
-              <span className="font-serif font-black italic text-brand-accent transform -translate-y-2 md:-translate-y-6 lg:-translate-y-10 pl-4 md:pl-0 mix-blend-screen drop-shadow-[0_0_60px_rgba(242,74,41,0.5)]">{t('hero.title2')}</span>
+              <span className="font-serif font-black italic text-brand-accent transform -translate-y-2 md:-translate-y-6 lg:-translate-y-10 mix-blend-screen drop-shadow-[0_0_60px_rgba(242,74,41,0.5)]">{t('hero.title2')}</span>
             </h1>
           </motion.div>
 
@@ -57,10 +58,10 @@ export function Hero() {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.8 }}
-            className="mt-4 md:mt-0 font-mono text-[9px] md:text-sm tracking-[0.4em] uppercase text-gray-500 flex flex-col md:flex-row md:items-center gap-3 md:gap-8 ml-4 md:ml-2"
+            className="mt-4 md:mt-0 font-mono text-[9px] md:text-sm tracking-[0.4em] uppercase text-gray-500 flex flex-col md:flex-row md:items-center justify-center gap-3 md:gap-8 ml-4 md:ml-2"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-white/60 tracking-normal font-sans italic lowercase">— Oscar César Rivadeneyra</span>
+            <div className="flex items-center justify-center gap-3 w-full md:w-auto">
+              <span className="text-white/60 tracking-normal font-sans font-bold text-center not-italic text-[19px]">OSCAR CÉSAR RIVADENEYRA PRINA</span>
             </div>
             <span className="hidden md:block w-16 h-px bg-white/10"></span>
             <div className="flex items-center gap-2 font-light">

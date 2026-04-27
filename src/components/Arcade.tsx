@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
 import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
+import { CreativeInvaders } from './games/CreativeInvaders';
 import { useAchievements } from '../context/AchievementsContext';
 
 import { useLanguage } from '../context/LanguageContext';
@@ -20,9 +21,10 @@ export function Arcade() {
     { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={16} /> },
     { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={16} /> },
     { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={16} /> },
+    { id: 'invaders', title: t('arc.game6'), icon: <Target size={16} /> },
   ] as const;
 
-  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg' | 'sellout'>('rpg');
+  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg' | 'sellout' | 'invaders'>('rpg');
 
   useEffect(() => {
     // Unlock first blood achievement when entering the arcade
@@ -123,6 +125,7 @@ export function Arcade() {
                 {activeGame === 'uno' && <PoliticalUno />}
                 {activeGame === 'rpg' && <ArtRPG />}
                 {activeGame === 'sellout' && <SellOutGame />}
+                {activeGame === 'invaders' && <CreativeInvaders />}
               </motion.div>
             </AnimatePresence>
 
