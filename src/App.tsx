@@ -11,7 +11,6 @@ import { GeneratorPage } from './pages/GeneratorPage';
 import { Footer } from './components/Footer';
 import { MusicPlayer } from './components/MusicPlayer';
 import { FloatingBackButton } from './components/FloatingBackButton';
-import { Analytics } from '@vercel/analytics/react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 function Nav() {
@@ -40,7 +39,6 @@ export default function App() {
           <Nav />
           <MusicPlayer />
           <FloatingBackButton />
-          <Analytics />
           <div className="flex-1 relative z-10">
             <Routes>
               <Route path="/" element={<Home />} />
