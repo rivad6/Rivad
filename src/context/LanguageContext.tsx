@@ -592,7 +592,25 @@ const translations: Record<Language, Record<string, string>> = {
     'game.fest.over': 'Game Over. Altura: {{score}}m',
     'game.fest.discount5': 'FEST2026 (5% Descuento)',
     'game.fest.discount10': 'BEATS26 (10% Descuento)',
-    'game.fest.discountVIP': 'VIPFEST (Acces/Bebida)'
+    'game.fest.discountVIP': 'VIPFEST (Acces/Bebida)',
+
+    // Boss Level (ArtRPG Extension)
+    'game.rpg.continue1': 'Ignorar y tomar la píldora bizarra...',
+    'game.rpg.continue2': '¡El arte exige ir más profundo!',
+    'game.rpg.acceptfate': 'Aceptar el destino (Finalizar)',
+    'game.rpg.boss.q1': 'El velo de la realidad se desgarra. Te encuentras en un vacío cuántico donde curadores gigantes te juzgan en una escala del 1 al Goya.',
+    'game.rpg.boss.q1.a': 'Lanzar un NFT de tu ansiedad hacia ellos.',
+    'game.rpg.boss.q1.b': 'Gritar que Duchamp era un fraude y huir hacia la luz.',
+    'game.rpg.boss.q2a': 'El NFT absorbe todo el presupuesto del Estado. Te coronan Rey del Cripto-Dadaísmo.',
+    'game.rpg.boss.q2a.1': 'Aceptar la corona y vivir en la Blockchain.',
+    'game.rpg.boss.q2a.2': 'Destruir la matriz energética mundial por amor al arte tradicional.',
+    'game.rpg.boss.q2b': 'Los curadores gigantes rompen a llorar. Has tocado el núcleo absoluto de la verdad.',
+    'game.rpg.boss.q2b.1': 'Cobrarles terapia carísima por hora.',
+    'game.rpg.boss.q2b.2': 'Trascender la forma física y volverte un rayo de inspiración láser.',
+    'game.rpg.boss.e1': 'FINAL SECRETO: EL EMPERADOR DEL BINARIO\nGobiernas el metaverso. Nada es real, todo es carísimo.',
+    'game.rpg.boss.e2': 'FINAL SECRETO: EL ÚLTIMO LUDITA\nSin electricidad, el mundo vuelve a pintar en cavernas. Eres el Dios del Carbón.',
+    'game.rpg.boss.e3': 'FINAL SECRETO: EL PSICO-COACH\nAhora das masterclasses a deidades cósmicas sobre "El valor del silencio".',
+    'game.rpg.boss.e4': 'FINAL SECRETO: LUZ ABSTRACTA\nYa no tienes problemas gástricos ni de impuestos. Eres pura vibración cromática.'
   },
   en: {
     'nav.home': 'Home',
@@ -1169,7 +1187,25 @@ const translations: Record<Language, Record<string, string>> = {
     'game.fest.over': 'Game Over. Altitude: {{score}}m',
     'game.fest.discount5': 'FEST2026 (5% Discount)',
     'game.fest.discount10': 'BEATS26 (10% Discount)',
-    'game.fest.discountVIP': 'VIPFEST (Access/Drink)'
+    'game.fest.discountVIP': 'VIPFEST (Access/Drink)',
+
+    // Boss Level (ArtRPG Extension)
+    'game.rpg.continue1': 'Ignore and take the bizarre pill...',
+    'game.rpg.continue2': 'Art demands going deeper!',
+    'game.rpg.acceptfate': 'Accept destiny (End)',
+    'game.rpg.boss.q1': 'The veil of reality tears apart. You find yourself in a quantum void where giant curators judge you on a scale of 1 to Goya.',
+    'game.rpg.boss.q1.a': 'Throw an NFT of your anxiety at them.',
+    'game.rpg.boss.q1.b': 'Scream that Duchamp was a fraud and run towards the light.',
+    'game.rpg.boss.q2a': 'The NFT absorbs the entire State budget. You are crowned King of Crypto-Dadaism.',
+    'game.rpg.boss.q2a.1': 'Accept the crown and live on the Blockchain.',
+    'game.rpg.boss.q2a.2': 'Destroy the global energy matrix for the love of traditional art.',
+    'game.rpg.boss.q2b': 'The giant curators start crying. You have touched the absolute core of truth.',
+    'game.rpg.boss.q2b.1': 'Charge them extremely expensive therapy by the hour.',
+    'game.rpg.boss.q2b.2': 'Transcend physical form and become a laser beam of inspiration.',
+    'game.rpg.boss.e1': 'SECRET ENDING: EMPEROR OF BINARY\nYou rule the metaverse. Nothing is real, everything is very expensive.',
+    'game.rpg.boss.e2': 'SECRET ENDING: THE LAST LUDDITE\nWithout electricity, the world goes back to painting in caves. You are the God of Charcoal.',
+    'game.rpg.boss.e3': 'SECRET ENDING: THE PSYCHO-COACH\nYou now give masterclasses to cosmic deities on "The Value of Silence".',
+    'game.rpg.boss.e4': 'SECRET ENDING: ABSTRACT LIGHT\nYou no longer have gastric or tax problems. You are pure chromatic vibration.'
   },
   fr: {
     'nav.home': 'Accueil',
@@ -1763,7 +1799,25 @@ const translations: Record<Language, Record<string, string>> = {
     'game.fest.over': 'Game Over. Altitude : {{score}}m',
     'game.fest.discount5': 'FEST2026 (Réduction 5%)',
     'game.fest.discount10': 'BEATS26 (Réduction 10%)',
-    'game.fest.discountVIP': 'VIPFEST (Accès/Boisson)'
+    'game.fest.discountVIP': 'VIPFEST (Accès/Boisson)',
+
+    // Boss Level (ArtRPG Extension)
+    'game.rpg.continue1': 'Ignorer et prendre la pilule bizarre...',
+    'game.rpg.continue2': 'L\'art exige d\'aller plus loin !',
+    'game.rpg.acceptfate': 'Accepter son destin (Finir)',
+    'game.rpg.boss.q1': 'Le voile de la réalité se déchire. Vous vous retrouvez dans un vide quantique où des curateurs géants vous jugent sur une échelle de 1 à Goya.',
+    'game.rpg.boss.q1.a': 'Leur lancer un NFT de votre anxiété.',
+    'game.rpg.boss.q1.b': 'Crier que Duchamp était un imposteur et fuir vers la lumière.',
+    'game.rpg.boss.q2a': 'Le NFT absorbe tout le budget de l\'État. On vous couronne Roi du Crypto-Dadaïsme.',
+    'game.rpg.boss.q2a.1': 'Accepter la couronne et vivre dans la Blockchain.',
+    'game.rpg.boss.q2a.2': 'Détruire la matrice énergétique mondiale par amour de l\'art traditionnel.',
+    'game.rpg.boss.q2b': 'Les curateurs géants se mettent à pleurer. Vous avez touché le noyau absolu de la vérité.',
+    'game.rpg.boss.q2b.1': 'Leur facturer une thérapie très chère à l\'heure.',
+    'game.rpg.boss.q2b.2': 'Transcender la forme physique et devenir un rayon d\'inspiration laser.',
+    'game.rpg.boss.e1': 'FIN SECRÈTE : L\'EMPEREUR DU BINAIRE\nVous gouvernez le métavers. Rien n\'est réel, tout est très cher.',
+    'game.rpg.boss.e2': 'FIN SECRÈTE : LE DERNIER LUDDITE\nSans électricité, le monde recommence à peindre dans des grottes. Vous êtes le Dieu du Charbon.',
+    'game.rpg.boss.e3': 'FIN SECRÈTE : LE PSYCHO-COACH\nVous donnez maintenant des masterclasses aux divinités cosmiques sur "La valeur du silence".',
+    'game.rpg.boss.e4': 'FIN SECRÈTE : LUMIÈRE ABSTRAITE\nVous n\'avez plus de problèmes gastriques ni d\'impôts. Vous êtes une pure vibration chromatique.'
   }
 };
 

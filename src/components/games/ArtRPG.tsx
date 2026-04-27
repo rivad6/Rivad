@@ -42,34 +42,43 @@ const generatePathMapping = (p: string): Record<string, StoryNode> => {
       textKey: `game.rpg.${p}.q4a1`,
       choices: [
         { textKey: `game.rpg.${p}.q4a1.1`, next: `${p}.e1` },
-        { textKey: `game.rpg.${p}.q4a1.2`, next: `${p}.e1` }
+        { textKey: `game.rpg.${p}.q4a1.2`, next: `${p}.e2` }
       ]
     },
     [`${p}.q4a2`]: {
       textKey: `game.rpg.${p}.q4a2`,
       choices: [
-        { textKey: `game.rpg.${p}.q4a2.1`, next: `${p}.e2` },
-        { textKey: `game.rpg.${p}.q4a2.2`, next: `${p}.e2` }
+        { textKey: `game.rpg.${p}.q4a2.1`, next: `${p}.e3` },
+        { textKey: `game.rpg.${p}.q4a2.2`, next: `${p}.e4` }
       ]
     },
     [`${p}.q4b1`]: {
       textKey: `game.rpg.${p}.q4b1`,
       choices: [
-        { textKey: `game.rpg.${p}.q4b1.1`, next: `${p}.e3` },
-        { textKey: `game.rpg.${p}.q4b1.2`, next: `${p}.e3` }
+        { textKey: `game.rpg.${p}.q4b1.1`, next: `${p}.e5` },
+        { textKey: `game.rpg.${p}.q4b1.2`, next: `${p}.e6` }
       ]
     },
     [`${p}.q4b2`]: {
       textKey: `game.rpg.${p}.q4b2`,
       choices: [
-        { textKey: `game.rpg.${p}.q4b2.1`, next: `${p}.e4` },
-        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.e4` }
+        { textKey: `game.rpg.${p}.q4b2.1`, next: `${p}.e7` },
+        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.e8` }
       ]
     },
-    [`${p}.e1`]: { textKey: `game.rpg.${p}.e1`, choices: [], isEnding: true },
-    [`${p}.e2`]: { textKey: `game.rpg.${p}.e2`, choices: [], isEnding: true },
-    [`${p}.e3`]: { textKey: `game.rpg.${p}.e3`, choices: [], isEnding: true },
-    [`${p}.e4`]: { textKey: `game.rpg.${p}.e4`, choices: [], isEnding: true },
+    // The previous e1 through e4 were duplicated over the a/b branches. Let's redirect them to the bizarre layer.
+    [`${p}.e1`]: { textKey: `game.rpg.${p}.e1`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.1` }] },
+    [`${p}.e2`]: { textKey: `game.rpg.${p}.e2`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.2` }] },
+    [`${p}.e3`]: { textKey: `game.rpg.${p}.e3`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.3` }] },
+    [`${p}.e4`]: { textKey: `game.rpg.${p}.e4`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.4` }] },
+    [`${p}.e5`]: { textKey: `game.rpg.${p}.e1`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.1` }] }, // reusing e1-e4 translations for simplicity
+    [`${p}.e6`]: { textKey: `game.rpg.${p}.e2`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.2` }] },
+    [`${p}.e7`]: { textKey: `game.rpg.${p}.e3`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.3` }] },
+    [`${p}.e8`]: { textKey: `game.rpg.${p}.e4`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.4` }] },
+    [`${p}.final.1`]: { textKey: `game.rpg.${p}.e1`, choices: [], isEnding: true },
+    [`${p}.final.2`]: { textKey: `game.rpg.${p}.e2`, choices: [], isEnding: true },
+    [`${p}.final.3`]: { textKey: `game.rpg.${p}.e3`, choices: [], isEnding: true },
+    [`${p}.final.4`]: { textKey: `game.rpg.${p}.e4`, choices: [], isEnding: true },
   };
 };
 
@@ -96,7 +105,34 @@ const storyMap: Record<string, StoryNode> = {
   ...generatePathMapping('p4'),
   ...generatePathMapping('p5'),
   ...generatePathMapping('p6'),
-  ...generatePathMapping('p7')
+  ...generatePathMapping('p7'),
+  
+  // THE NEW BIZARRE EXTENSION
+  'boss.q1': {
+    textKey: 'game.rpg.boss.q1',
+    choices: [
+      { textKey: 'game.rpg.boss.q1.a', next: 'boss.q2a' },
+      { textKey: 'game.rpg.boss.q1.b', next: 'boss.q2b' }
+    ]
+  },
+  'boss.q2a': {
+    textKey: 'game.rpg.boss.q2a',
+    choices: [
+      { textKey: 'game.rpg.boss.q2a.1', next: 'boss.e1' },
+      { textKey: 'game.rpg.boss.q2a.2', next: 'boss.e2' }
+    ]
+  },
+  'boss.q2b': {
+    textKey: 'game.rpg.boss.q2b',
+    choices: [
+      { textKey: 'game.rpg.boss.q2b.1', next: 'boss.e3' },
+      { textKey: 'game.rpg.boss.q2b.2', next: 'boss.e4' }
+    ]
+  },
+  'boss.e1': { textKey: 'game.rpg.boss.e1', choices: [], isEnding: true },
+  'boss.e2': { textKey: 'game.rpg.boss.e2', choices: [], isEnding: true },
+  'boss.e3': { textKey: 'game.rpg.boss.e3', choices: [], isEnding: true },
+  'boss.e4': { textKey: 'game.rpg.boss.e4', choices: [], isEnding: true },
 };
 
 export function ArtRPG() {
