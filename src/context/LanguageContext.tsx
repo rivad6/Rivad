@@ -337,6 +337,14 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Game: Creative Invaders
     'game.invaders.title': 'Defensores Creativos',
+    'game.invaders.char.classic': 'Defensor Clásico',
+    'game.invaders.char.classic.desc': 'Tiro balanceado y velocidad decente.',
+    'game.invaders.char.rapid': 'El Metralleta',
+    'game.invaders.char.rapid.desc': 'Tiro rápido, pero menos daño.',
+    'game.invaders.char.tank': 'La Bóveda',
+    'game.invaders.char.tank.desc': 'Empieza con un poderoso escudo.',
+    'game.invaders.char.laser': 'Visionario Láser',
+    'game.invaders.char.laser.desc': 'Disparo triple y velocidad extrema.',
     'game.invaders.desc': 'Vuelve a trazar tu inspiración. Derrota al Tedio, la Frustración y los Recortes.',
     'game.invaders.start': 'Empezar a Trazar',
     'game.invaders.gameover': 'SÍNDROME DE LA PÁGINA EN BLANCO',
@@ -1038,6 +1046,14 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Game: Creative Invaders
     'game.invaders.title': 'Creative Defenders',
+    'game.invaders.char.classic': 'Classic Defender',
+    'game.invaders.char.classic.desc': 'Balanced fire and decent speed.',
+    'game.invaders.char.rapid': 'The Machine Gun',
+    'game.invaders.char.rapid.desc': 'Rapid fire, but less damage.',
+    'game.invaders.char.tank': 'The Vault',
+    'game.invaders.char.tank.desc': 'Starts with a powerful shield.',
+    'game.invaders.char.laser': 'Laser Visionary',
+    'game.invaders.char.laser.desc': 'Triple shot and extreme speed.',
     'game.invaders.desc': 'Retrace your inspiration. Defeat Tedium, Frustration, and Budget Cuts.',
     'game.invaders.start': 'Start Drawing',
     'game.invaders.gameover': 'BLANK PAGE SYNDROME',
@@ -1739,6 +1755,14 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Game: Creative Invaders
     'game.invaders.title': 'Défenseurs Créatifs',
+    'game.invaders.char.classic': 'Défenseur Classique',
+    'game.invaders.char.classic.desc': 'Tir équilibré et vitesse décente.',
+    'game.invaders.char.rapid': 'La Mitraillette',
+    'game.invaders.char.rapid.desc': 'Tir rapide, mais moins de dégâts.',
+    'game.invaders.char.tank': 'Le Coffre',
+    'game.invaders.char.tank.desc': 'Commence avec un puissant bouclier.',
+    'game.invaders.char.laser': 'Visionnaire Laser',
+    'game.invaders.char.laser.desc': 'Tir triple et vitesse extrême.',
     'game.invaders.desc': 'Retracez votre inspiration. Déjouez l\'Ennui, la Frustration et les Coupures.',
     'game.invaders.start': 'Commencer à Dessiner',
     'game.invaders.gameover': 'SYNDROME DE LA PAGE BLANCHE',

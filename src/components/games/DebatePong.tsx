@@ -207,9 +207,19 @@ export function DebatePong() {
     };
   }, [isPlaying]);
 
+  useEffect(() => {
+    if (isPlaying) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; }
+  }, [isPlaying]);
+
   return (
-    <div className="flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]">
-      <div className="flex justify-between w-[400px] max-w-full px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-xs">
+    <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]"}>
+      <div className={isPlaying ? "w-full max-w-[600px] flex flex-col" : "flex flex-col items-center w-full"}>
+      <div className="flex justify-between w-full max-w-[400px] mx-auto px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-xs shrink-0 pt-4 md:pt-0">
         <div className="text-center">
           <p className="text-brand-accent">{t('game.pong.thesis')}</p>
           <p className="text-2xl mt-2">{playerScore}</p>
@@ -246,6 +256,7 @@ export function DebatePong() {
           height={300} 
           className="block max-w-full h-auto cursor-none touch-none"
         />
+      </div>
       </div>
     </div>
   );

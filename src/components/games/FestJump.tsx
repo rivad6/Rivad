@@ -676,9 +676,19 @@ export function FestJump() {
     }
   };
 
+  useEffect(() => {
+    if (isPlaying) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; }
+  }, [isPlaying]);
+
   return (
-    <div className="flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)] select-none">
-      <div className="flex justify-between items-end w-[400px] max-w-full px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-sm h-16">
+    <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)] select-none"}>
+      <div className={isPlaying ? "w-full min-w-[320px] max-w-[500px] h-full max-h-[850px] mx-auto flex flex-col" : "w-full max-w-[400px] mx-auto flex flex-col"}>
+      <div className="flex justify-between items-end w-full px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-sm h-16 shrink-0 pt-4 md:pt-0">
         <div>
           <p className="text-brand-accent flex items-center gap-2">
             <User className="w-4 h-4" />
@@ -723,66 +733,64 @@ export function FestJump() {
               exit={{ opacity: 0 }}
               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-black/90 p-6 text-center overflow-y-auto"
             >
-              {!showShop && !showCodeInput ? (
-                <>
-                  <h3 className="text-brand-accent text-2xl mb-2 italic font-black">FEST JUMP II</h3>
-                  <div className="flex gap-4 mb-8">
-                    <button onClick={() => { playSound('click'); setIsPlaying(true); }} className="bg-white text-black px-8 py-3 uppercase text-[10px] font-bold hover:bg-brand-accent hover:text-white transition-all">
-                      {t('game.insert')}
-                    </button>
-                    <button onClick={() => { playSound('hover'); setShowShop(true); }} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
-                      <ShoppingCart className="w-5 h-5" />
-                    </button>
-                    <button onClick={() => { playSound('hover'); setShowCodeInput(true); }} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
-                      <Key className="w-5 h-5" />
-                    </button>
+              {!showCodeInput ? (
+                <div className="w-full flex flex-col items-center flex-1 py-4 justify-between h-full">
+                  <div className="text-center w-full">
+                    <h3 className="text-brand-accent text-2xl mb-1 italic font-black">FEST JUMP II</h3>
+                    <p className="text-[8px] text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-2">
+                       <Zap className="w-3 h-3 text-yellow-500" /> {festCoins} KARMAS
+                    </p>
                   </div>
-                  {score > 0 && (
-                    <div className="text-zinc-500 text-[10px] uppercase space-y-1">
-                      <p className="text-red-500 text-sm mb-2">{t('game.fest.over', { score: score.toString() })}</p>
-                      <p>KARMAS GANADOS: +{Math.floor(score / 50)}</p>
-                    </div>
-                  )}
-                </>
-              ) : showShop ? (
-                <div className="w-full h-full flex flex-col pt-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <h4 className="text-white text-xs tracking-widest">{t('game.fest.shop')}</h4>
-                    <button onClick={() => { playSound('hover'); setShowShop(false); }} className="text-zinc-500 text-[10px] uppercase hover:text-white">[ Volver ]</button>
+
+                  <div className="w-full relative px-6 mt-4">
+                     <div className="flex justify-between items-center w-full overflow-hidden relative" style={{ height: "140px" }}>
+                       <button 
+                         onClick={() => {
+                           playSound('hover');
+                           const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                           const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
+                           setSelectedCharId(CHARACTERS[prevIndex].id);
+                         }}
+                         className="absolute left-0 z-10 w-8 h-8 flex items-center justify-center text-white bg-black/50 rounded-full"
+                       >
+                         &lt;
+                       </button>
+                       
+                       <div className="flex-1 flex flex-col items-center justify-center pointer-events-none">
+                         <div className="w-20 h-20 mb-3 flex items-center justify-center relative bg-black/40 border border-white/5" style={{ backgroundColor: `${selectedChar.color}15` }}>
+                            <div className="w-12 h-12 relative z-10" style={{ backgroundColor: selectedChar.color }}></div>
+                         </div>
+                         <p className="text-[12px] text-white uppercase font-bold tracking-widest">{t(selectedChar.nameKey)}</p>
+                         <p className="text-[8px] text-zinc-400 mt-1 h-8 max-w-[150px] leading-tight italic">{t(selectedChar.descKey)}</p>
+                       </div>
+
+                       <button 
+                         onClick={() => {
+                           playSound('hover');
+                           const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                           const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+                           setSelectedCharId(CHARACTERS[nextIndex].id);
+                         }}
+                         className="absolute right-0 z-10 w-8 h-8 flex items-center justify-center text-white bg-black/50 rounded-full"
+                       >
+                         &gt;
+                       </button>
+                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pb-4">
-                    {CHARACTERS.map(char => {
-                      const isUnlocked = unlockedChars.includes(char.id);
-                      const isSelected = selectedCharId === char.id;
-                      return (
-                        <div key={char.id} className={`p-4 border-2 transition-all ${isSelected ? 'border-brand-accent bg-brand-accent/5' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}>
-                          <div className="w-full aspect-square mb-2 flex items-center justify-center relative bg-black/40 border border-white/5" style={{ backgroundColor: `${char.color}10` }}>
-                             <div className="w-8 h-8 relative z-10" style={{ backgroundColor: char.color }}></div>
-                             <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-full animate-pulse bg-gradient-to-t from-transparent to-white/10" />
-                             </div>
-                          </div>
-                          <p className="text-[10px] text-white mb-1 truncate font-bold">{t(char.nameKey)}</p>
-                          <p className="text-[7px] text-zinc-500 mb-2 h-8 leading-tight italic">{t(char.descKey)}</p>
-                          {isUnlocked ? (
-                            <button 
-                              disabled={isSelected}
-                              onClick={() => { playSound('hover'); setSelectedCharId(char.id); }}
-                              className={`w-full py-2 text-[8px] uppercase font-bold ${isSelected ? 'text-brand-accent' : 'bg-white text-black hover:bg-brand-accent hover:text-white'}`}
-                            >
-                              {isSelected ? t('game.fest.selected') : 'Seleccionar'}
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => buyChar(char)}
-                              className="w-full py-2 bg-yellow-500 text-black text-[8px] uppercase font-bold hover:bg-yellow-400"
-                            >
-                              {char.price} KARMAS
-                            </button>
-                          )}
-                        </div>
-                      )
-                    })}
+
+                  <div className="w-full px-8 mt-2 flex flex-col gap-3">
+                     {unlockedChars.includes(selectedCharId) ? (
+                       <button onClick={() => { playSound('click'); setIsPlaying(true); }} className="w-full bg-brand-accent text-white py-3 uppercase text-[12px] font-bold hover:bg-white hover:text-black transition-all">
+                         [ START GAME ]
+                       </button>
+                     ) : (
+                       <button onClick={() => buyChar(selectedChar)} className={`w-full py-3 uppercase text-[12px] font-bold transition-all ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>
+                         UNLOCK - {selectedChar.price} KARMAS
+                       </button>
+                     )}
+                     <button onClick={() => { playSound('hover'); setShowCodeInput(true); }} className="text-[8px] text-zinc-500 hover:text-white uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
+                       <Key className="w-3 h-3" /> Insert Code
+                     </button>
                   </div>
                 </div>
               ) : (
@@ -834,6 +842,7 @@ export function FestJump() {
            <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> Críticos de Arte</div>
            <p className="mt-4 leading-relaxed opacity-60 italic">Escala la espiral infinita del éxito y derrota el conformismo.</p>
         </div>
+      </div>
       </div>
     </div>
   );

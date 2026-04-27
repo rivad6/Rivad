@@ -124,8 +124,18 @@ export const SellOutGame: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (gameState === 'playing') {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; }
+  }, [gameState]);
+
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl mx-auto p-4 md:p-8 font-[var(--font-mono)] select-none">
+    <div className={gameState === 'playing' ? "fixed inset-0 z-[100] bg-black/95 flex flex-col items-center p-4 md:p-8 overflow-y-auto backdrop-blur-md" : "flex flex-col items-center w-full max-w-5xl mx-auto p-4 md:p-8 font-[var(--font-mono)] select-none"}>
+      <div className={gameState === 'playing' ? "w-full max-w-5xl mx-auto flex flex-col select-none font-[var(--font-mono)]" : "w-full flex flex-col"}>
       
       {/* Top Banner: Progress to 1M */}
       <div className="w-full mb-8 space-y-2">
@@ -354,6 +364,7 @@ export const SellOutGame: React.FC = () => {
       {/* Decorative Branding */}
       <div className="mt-16 opacity-10 text-[8px] uppercase tracking-[1em] font-black text-zinc-500 text-center w-full">
         {t('game.sell.footer')}
+      </div>
       </div>
     </div>
   );

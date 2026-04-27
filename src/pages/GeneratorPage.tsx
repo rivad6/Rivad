@@ -176,9 +176,19 @@ export function GeneratorPage() {
                     </p>
                     
                     <div className="mt-12 flex flex-col sm:flex-row gap-6 items-center justify-between border-t border-pink-900/30 pt-8">
-                      <a href="/#contacto" className="bg-pink-500 text-white px-8 py-4 rounded-full font-mono font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-3">
+                      <button 
+                        onClick={() => {
+                          const contactDiv = document.getElementById('contacto');
+                          if (contactDiv) {
+                            contactDiv.scrollIntoView({ behavior: 'smooth' });
+                            const select = document.getElementById('topic') as HTMLSelectElement;
+                            if (select) select.value = 'Gestión Cultural y Conferencias';
+                          }
+                        }}
+                        className="bg-pink-500 text-white px-8 py-4 rounded-full font-mono font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-3"
+                      >
                         {t('orc.btn.action')} <Send size={14} />
-                      </a>
+                      </button>
                       <button onClick={() => {
                         setStep(1);
                         setEventName("");

@@ -6,6 +6,13 @@ import { useAudio } from "../../context/AudioContext";
 
 type GameState = "start" | "playing" | "gameover" | "win" | "takeoff" | "asteroids" | "asteroids_win";
 
+const CHARACTERS = [
+  { id: 'classic', nameKey: 'game.invaders.char.classic', descKey: 'Basic Ship', price: 0, speed: 7, fireRateBase: 1, color: '#fbbf24', tailColor: '#f59e0b' },
+  { id: 'rapid', nameKey: 'game.invaders.char.rapid', descKey: 'Rapid Fire', price: 200, speed: 8, fireRateBase: 1.5, color: '#6ee7b7', tailColor: '#10b981' },
+  { id: 'tank', nameKey: 'game.invaders.char.tank', descKey: 'Starting Shield', price: 500, speed: 6, fireRateBase: 1, color: '#93c5fd', tailColor: '#3b82f6' },
+  { id: 'laser', nameKey: 'game.invaders.char.laser', descKey: 'Fast lasers + Speed', price: 1000, speed: 10, fireRateBase: 2, color: '#c084fc', tailColor: '#a855f7' }
+];
+
 export function CreativeInvaders() {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
@@ -16,6 +23,28 @@ export function CreativeInvaders() {
 
   const [gameState, setGameState] = useState<GameState>("start");
   const [score, setScore] = useState(0);
+
+  const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
+  const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('invaders_chars') || '["classic"]'));
+  const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
+
+  const selectedChar = CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
+
+  useEffect(() => {
+    localStorage.setItem('fest_coins', festCoins.toString());
+    localStorage.setItem('invaders_chars', JSON.stringify(unlockedChars));
+    localStorage.setItem('invaders_selected_char', selectedCharId);
+  }, [festCoins, unlockedChars, selectedCharId]);
+
+  const buyChar = (char: typeof CHARACTERS[0]) => {
+    if (festCoins >= char.price) {
+      setFestCoins(prev => prev - char.price);
+      setUnlockedChars(prev => [...prev, char.id]);
+      playSound('purchase');
+    } else {
+      playSound('alert');
+    }
+  };
 
   // Game configuration
   const GAME_WIDTH = 800;
@@ -150,6 +179,12 @@ export function CreativeInvaders() {
       offset: number;
     }[],
     drops: [] as { x: number; y: number; type: "power" | "shield" | "speed" }[],
+    stars: Array.from({length: 100}).map(() => ({
+      x: Math.random() * 800,
+      y: Math.random() * 600,
+      speed: Math.random() * 2 + 0.5,
+      size: Math.random() * 2 + 1
+    })),
     enemyDirection: 1,
     enemySpeedBase: 1.5,
     enemyMoveTimer: 0,
@@ -166,6 +201,7 @@ export function CreativeInvaders() {
       color: string;
     }[],
     level: 1,
+    lastHitEdgeTime: 0,
   });
 
   const loadAsteroidsLevel = useCallback(() => {
@@ -252,19 +288,25 @@ export function CreativeInvaders() {
         y: GAME_HEIGHT - 60,
         width: 40,
         height: 40,
-        speed: 7,
+        speed: selectedChar.speed,
         isMovingLeft: false,
         isMovingRight: false,
         isMovingUp: false,
         isMovingDown: false,
-        power: 1,
+        power: selectedChar.id === 'laser' ? 2 : 1,
         powerTimer: 0,
-        shield: 0,
-        speedBoostTimer: 0,
+        shield: selectedChar.id === 'tank' ? 3 : 0,
+        speedBoostTimer: selectedChar.id === 'rapid' ? 500 : 0,
       },
       projectiles: [],
       enemies: [],
       drops: [],
+      stars: Array.from({length: 100}).map(() => ({
+        x: Math.random() * GAME_WIDTH,
+        y: Math.random() * GAME_HEIGHT,
+        speed: Math.random() * 2 + 0.5,
+        size: Math.random() * 2 + 1
+      })),
       enemyDirection: 1,
       enemySpeedBase: 1.5,
       enemyMoveTimer: 0,
@@ -278,12 +320,14 @@ export function CreativeInvaders() {
     loadLevel(1);
     setScore(0);
     setGameState("playing");
-  }, [loadLevel]);
+  }, [loadLevel, selectedChar]);
 
   const fire = useCallback(() => {
     const s = state.current;
     const now = Date.now();
-    const fireDelay = s.player.speedBoostTimer > 0 ? 100 : (s.player.power > 1 ? 150 : 300);
+    // Use fireRateBase
+    const baseFireDelay = 300 / selectedChar.fireRateBase;
+    const fireDelay = s.player.speedBoostTimer > 0 ? baseFireDelay * 0.33 : (s.player.power > 1 ? baseFireDelay * 0.5 : baseFireDelay);
 
     if (now - s.lastFireTime > fireDelay) {
       playSound('fire');
@@ -397,9 +441,21 @@ export function CreativeInvaders() {
   };
 
   const update = useCallback(() => {
+    const s = state.current;
+    if (gameState !== "playing" && gameState !== "asteroids" && gameState !== "takeoff") return;
+
     if (gameState === "takeoff") {
-        const s = state.current;
         s.player.y -= 10;
+        
+        // Speed up stars for effect
+        for (const star of s.stars) {
+          star.y += star.speed * 8;
+          if (star.y > GAME_HEIGHT) {
+            star.y = 0;
+            star.x = Math.random() * GAME_WIDTH;
+          }
+        }
+
         if (s.player.y < -s.player.height) {
             setGameState("asteroids");
             loadAsteroidsLevel();
@@ -417,10 +473,17 @@ export function CreativeInvaders() {
               color: "#fbbf24",
             });
         }
+        return; // Important: stay in takeoff sequence
     }
 
-    if (gameState !== "playing" && gameState !== "asteroids") return;
-    const s = state.current;
+    // Update stars
+    for (const star of s.stars) {
+      star.y += star.speed + (s.player.speedBoostTimer > 0 ? 5 : 0);
+      if (star.y > GAME_HEIGHT) {
+        star.y = 0;
+        star.x = Math.random() * GAME_WIDTH;
+      }
+    }
 
     s.time += 0.05;
 
@@ -470,9 +533,13 @@ export function CreativeInvaders() {
 
     if (gameState === "playing") {
       for (const enemy of s.enemies) {
-        let nextX = enemy.x + s.enemyDirection * currentSpeed;
+        let enemySpeedX = currentSpeed;
+        if (enemy.type === "block") enemySpeedX *= 0.3;
+        else if (enemy.type === "distraction") enemySpeedX *= 1.5;
+        else if (enemy.type === "boss") enemySpeedX *= 1.2;
+
+        let nextX = enemy.x + s.enemyDirection * enemySpeedX;
         if (enemy.type === "distraction") {
-           // approximation of movement bounds
            nextX += Math.cos(enemy.offset) * 4; 
         }
         if (nextX < minX) minX = nextX;
@@ -481,13 +548,18 @@ export function CreativeInvaders() {
     }
 
     let hitEdge = false;
+    const now_ts = Date.now();
     if (gameState === "playing") {
-      if (minX <= 5 && s.enemyDirection < 0) {
+      if (minX <= 5 && s.enemyDirection < 0 && now_ts - s.lastHitEdgeTime > 500) {
         hitEdge = true;
         s.enemyDirection = 1;
-      } else if (maxX >= GAME_WIDTH - 5 && s.enemyDirection > 0) {
+        s.lastHitEdgeTime = now_ts;
+        playSound('click');
+      } else if (maxX >= GAME_WIDTH - 5 && s.enemyDirection > 0 && now_ts - s.lastHitEdgeTime > 500) {
         hitEdge = true;
         s.enemyDirection = -1;
+        s.lastHitEdgeTime = now_ts;
+        playSound('click');
       }
     }
 
@@ -505,7 +577,7 @@ export function CreativeInvaders() {
            vx: isBoss ? (Math.random() - 0.5) * 4 : 0,
            vy: isFast ? 8 + s.level : 5 + s.level,
            speed: isFast ? 8 + s.level : 5 + s.level,
-           color: isBoss ? "#ef4444" : isFast ? "#fbbf24" : "#9ca3af",
+           color: isBoss ? "#ef4444" : isFast ? "#fbbf24" : "#ff00ff", // Magenta for fast bullets
            isEnemy: true
         });
 
@@ -540,10 +612,10 @@ export function CreativeInvaders() {
          
          // Player collision for asteroids
          if (
-           s.player.x < enemy.x + enemy.width &&
-           s.player.x + s.player.width > enemy.x &&
-           s.player.y < enemy.y + enemy.height &&
-           s.player.y + s.player.height > enemy.y
+           s.player.x < enemy.x + enemy.width - 5 &&
+           s.player.x + s.player.width > enemy.x + 5 &&
+           s.player.y < enemy.y + enemy.height - 5 &&
+           s.player.y + s.player.height > enemy.y + 5
          ) {
            createExplosion(s.player.x + s.player.width/2, s.player.y + s.player.height/2, "#f87171", 20);
            setGameState("gameover");
@@ -552,7 +624,7 @@ export function CreativeInvaders() {
         const moveX = s.enemyDirection * currentSpeed;
 
         if (hitEdge) {
-          if (enemy.type !== "block") enemy.y += 25;
+          if (enemy.type !== "block") enemy.y += 20; // Reduced from 25
           if (enemy.y >= s.player.y - enemy.height) {
             setGameState("gameover");
           }
@@ -745,8 +817,16 @@ export function CreativeInvaders() {
       ctx.stroke();
     }
 
+    // Draw stars
+    ctx.fillStyle = "#4b5563"; // Dim gray instead of white
+    for (const star of s.stars) {
+      ctx.globalAlpha = star.speed / 6;
+      ctx.fillRect(star.x, star.y, star.size, star.size + (s.player.speedBoostTimer > 0 ? 15 : 0));
+    }
+    ctx.globalAlpha = 1;
+
     // Player
-    const playerPalette = ['#1e293b', '#d4d4d4', '#475569', s.player.power > 1 ? '#a855f7' : '#fbbf24', '#9ca3af', '#f87171'];
+    const playerPalette = ['#1e293b', '#d4d4d4', '#475569', s.player.power > 1 ? '#a855f7' : selectedChar.color, '#9ca3af', selectedChar.tailColor];
     ctx.shadowBlur = s.player.power > 1 ? 20 : (s.player.speedBoostTimer > 0 ? 15 : 0);
     ctx.shadowColor = s.player.power > 1 ? "#a78bfa" : (s.player.speedBoostTimer > 0 ? "#fde047" : "transparent");
     drawSprite(ctx, sprites.player, s.player.x, s.player.y, s.player.width, s.player.height, playerPalette);
@@ -793,13 +873,16 @@ export function CreativeInvaders() {
     }
 
     // Projectiles
+    ctx.lineCap = "round";
     for (const proj of s.projectiles) {
-      ctx.fillStyle = proj.color;
+      ctx.strokeStyle = proj.color;
+      ctx.lineWidth = proj.isEnemy ? 4 : 3;
       ctx.shadowBlur = proj.isEnemy ? 15 : 10;
       ctx.shadowColor = proj.color;
       ctx.beginPath();
-      ctx.arc(proj.x, proj.y, proj.isEnemy ? 6 : 4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(proj.x, proj.y);
+      ctx.lineTo(proj.x - (proj.vx * 2), proj.y - (proj.vy * 2));
+      ctx.stroke();
       ctx.shadowBlur = 0;
     }
 
@@ -837,9 +920,21 @@ export function CreativeInvaders() {
     };
   }, [tick]);
 
+  const isFullScreen = gameState === 'playing' || gameState === 'asteroids';
+
+  useEffect(() => {
+    if (isFullScreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; }
+  }, [isFullScreen]);
+
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-      <div className="w-full flex justify-between items-end border-b border-white/10 pb-4">
+    <div className={isFullScreen ? "fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-4 backdrop-blur-md overflow-hidden" : "w-full max-w-4xl mx-auto flex flex-col items-center gap-6"}>
+      <div className={isFullScreen ? "w-full max-w-5xl mx-auto flex flex-col bg-zinc-950/50 p-6 rounded-2xl border border-white/10 shadow-2xl" : "w-full flex flex-col"}>
+      <div className="w-full flex justify-between items-end border-b border-white/10 pb-4 mb-4">
         <div>
           <h2 className="text-2xl font-display uppercase tracking-tight text-brand-accent flex items-center gap-2 mb-1">
             <Zap className="w-6 h-6" />
@@ -856,7 +951,7 @@ export function CreativeInvaders() {
              </p>
              <div className="bg-black/50 border border-white/20 px-4 py-2 rounded-md">
                <p className="text-3xl font-mono text-white tracking-widest">
-                 {gameState === 'playing' ? state.current.level : gameState === 'asteroids' ? 'MAX' : 1}
+                 {gameState === 'playing' ? state.current.level : gameState === 'asteroids' ? 'DEEP SPACE' : 1}
                </p>
              </div>
            </div>
@@ -923,27 +1018,89 @@ export function CreativeInvaders() {
         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]"></div>
 
         {gameState === "start" && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center ring-1 ring-white/10">
-            <div className="w-16 h-16 rounded-2xl bg-brand-accent/20 flex items-center justify-center mb-6 border border-brand-accent/30 shadow-[0_0_30px_rgba(242,74,41,0.3)]">
-              <Zap className="w-8 h-8 text-brand-accent" />
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-8 text-center ring-1 ring-white/10 z-50 pointer-events-auto">
+            <div className="w-full max-w-2xl flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-1 text-left flex flex-col items-center md:items-start text-center md:text-left">
+                <div className="w-16 h-16 rounded-2xl bg-brand-accent/20 flex items-center justify-center mb-4 border border-brand-accent/30 shadow-[0_0_30px_rgba(242,74,41,0.3)]">
+                  <Zap className="w-8 h-8 text-brand-accent" />
+                </div>
+                <h3 className="text-3xl font-display text-white mb-2 uppercase tracking-tighter">
+                  {t("game.invaders.subtitle")}
+                </h3>
+                <p className="text-white/60 text-xs font-mono max-w-xs mb-4 leading-relaxed">
+                  {t("game.invaders.instructions")} Destroy{" "}
+                  <span className="text-red-500 font-bold">BLOCKS</span>, shatter{" "}
+                  <span className="text-yellow-500 font-bold">DISTRACTIONS</span>,
+                  and break the{" "}
+                  <span className="text-gray-400 font-bold">ROUTINE</span>.
+                </p>
+                <div className="text-yellow-500 font-mono text-sm tracking-widest flex items-center gap-2 mt-auto">
+                   <Zap className="w-4 h-4" /> {festCoins} KARMAS
+                </div>
+              </div>
+              
+              <div className="flex-1 w-full bg-white/5 border border-white/10 rounded-xl p-6 relative">
+                 <div className="flex justify-between items-center w-full mb-6">
+                   <button 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       playSound('hover');
+                       const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                       const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
+                       setSelectedCharId(CHARACTERS[prevIndex].id);
+                     }}
+                     className="w-10 h-10 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors z-10 cursor-pointer pointer-events-auto"
+                   >
+                     &lt;
+                   </button>
+                   
+                   <div className="flex-1 flex flex-col items-center justify-center pointer-events-none px-4">
+                     <div className="w-24 h-24 mb-4 flex items-center justify-center relative bg-black/40 border-2 rounded-lg" style={{ borderColor: `${selectedChar.color}50`, backgroundColor: `${selectedChar.color}15` }}>
+                        <div className="w-12 h-12 relative z-10" style={{ backgroundColor: selectedChar.color }}></div>
+                     </div>
+                     <p className="text-sm font-mono text-white uppercase tracking-widest">{t(selectedChar.nameKey)}</p>
+                     <p className="text-[10px] font-mono text-zinc-400 mt-2 h-10 text-center">{t(selectedChar.descKey)}</p>
+                   </div>
+
+                   <button 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       playSound('hover');
+                       const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                       const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+                       setSelectedCharId(CHARACTERS[nextIndex].id);
+                     }}
+                     className="w-10 h-10 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors z-10 cursor-pointer pointer-events-auto"
+                   >
+                     &gt;
+                   </button>
+                 </div>
+
+                 <div className="w-full flex justify-center">
+                   {unlockedChars.includes(selectedCharId) ? (
+                     <button 
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         initGame();
+                       }} 
+                       className="w-full bg-brand-accent text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center gap-3 hover:bg-brand-accent/80 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(242,74,41,0.4)] cursor-pointer pointer-events-auto"
+                     >
+                       <Play size={18} /> [ START GAME ]
+                     </button>
+                   ) : (
+                     <button 
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         buyChar(selectedChar);
+                       }} 
+                       className={`w-full font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center transition-all cursor-pointer pointer-events-auto ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-105' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
+                     >
+                       UNLOCK - {selectedChar.price} KARMAS
+                     </button>
+                   )}
+                 </div>
+              </div>
             </div>
-            <h3 className="text-3xl font-display text-white mb-2 uppercase tracking-tighter">
-              {t("game.invaders.subtitle")}
-            </h3>
-            <p className="text-white/60 text-sm font-mono max-w-md mb-8 leading-relaxed">
-              {t("game.invaders.instructions")} Destroy{" "}
-              <span className="text-red-500 font-bold">BLOCKS</span>, shatter{" "}
-              <span className="text-yellow-500 font-bold">DISTRACTIONS</span>,
-              and break the{" "}
-              <span className="text-gray-400 font-bold">ROUTINE</span>. Grab 'C'
-              for coffee power!
-            </p>
-            <button
-              onClick={initGame}
-              className="bg-brand-accent text-white font-mono text-sm uppercase tracking-widest px-10 py-5 rounded-full flex items-center gap-3 hover:bg-brand-accent/80 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(242,74,41,0.4)]"
-            >
-              <Play size={18} /> {t("game.invaders.start")}
-            </button>
           </div>
         )}
 
@@ -968,6 +1125,17 @@ export function CreativeInvaders() {
           </div>
         )}
 
+        {gameState === "takeoff" && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
+                <h3 className="text-4xl font-display text-brand-accent animate-pulse uppercase tracking-[0.2em] drop-shadow-[0_0_15px_rgba(242,74,41,0.6)]">
+                    ENTERING DEEP SPACE
+                </h3>
+                <p className="text-white/50 font-mono mt-4 uppercase tracking-[0.4em] text-[10px] animate-bounce">
+                    Stabilizing propulsion...
+                </p>
+            </div>
+        )}
+
         {gameState === "asteroids_win" && (
           <div className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30">
             <h3 className="text-5xl font-display text-white mb-2 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(242,74,41,0.5)]">
@@ -990,6 +1158,7 @@ export function CreativeInvaders() {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
