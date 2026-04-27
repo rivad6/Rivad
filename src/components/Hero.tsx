@@ -66,6 +66,19 @@ export function Hero() {
               <span className="text-brand-accent/60 font-bold">{age}</span>
               <span className="text-gray-700">{t('hero.years')}</span>
             </div>
+
+            <span className="hidden md:block w-px h-3 bg-gray-800"></span>
+
+            <div className="flex items-center gap-3 border border-white/5 bg-white/5 px-4 py-1.5 rounded-full backdrop-blur-sm shadow-xl">
+              <div className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-[8px] md:text-[10px] uppercase tracking-[0.15em]">
+                <span className="text-gray-500/80">Cargo Actual:</span>
+                <span className="text-white/90 font-bold">JUD DEL FARO BICENTENARIO MH CDMX</span>
+              </div>
+            </div>
           </motion.div>
         </div>
 
