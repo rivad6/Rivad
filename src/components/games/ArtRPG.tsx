@@ -2,14 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 
-type NodeId = 'start' | 'q1' | 
-  'p1.q2' | 'p1.e1' | 'p1.e2' | 
-  'p2.q2' | 'p2.e1' | 'p2.e2' | 
-  'p3.q2' | 'p3.e1' | 'p3.e2' | 
-  'p4.q2' | 'p4.e1' | 'p4.e2' | 
-  'p5.q2' | 'p5.e1' | 'p5.e2' | 
-  'p6.q2' | 'p6.e1' | 'p6.e2' | 
-  'p7.q2' | 'p7.e1' | 'p7.e2';
+type NodeId = string;
 
 interface Choice {
   textKey: string;
@@ -22,7 +15,7 @@ interface StoryNode {
   isEnding?: boolean;
 }
 
-const storyMap: Record<NodeId, StoryNode> = {
+const storyMap: Record<string, StoryNode> = {
   start: {
     textKey: 'game.rpg.start',
     choices: [{ textKey: 'game.rpg.start', next: 'q1' }]
@@ -39,82 +32,194 @@ const storyMap: Record<NodeId, StoryNode> = {
       { textKey: 'game.rpg.q1.7', next: 'p7.q2' }
     ]
   },
-  // Path 1
+  // Path 1: Catering
   'p1.q2': {
     textKey: 'game.rpg.p1.q2',
     choices: [
-      { textKey: 'game.rpg.p1.q2.a', next: 'p1.e1' },
-      { textKey: 'game.rpg.p1.q2.b', next: 'p1.e2' }
+      { textKey: 'game.rpg.p1.q2.a', next: 'p1.q3a' },
+      { textKey: 'game.rpg.p1.q2.b', next: 'p1.q3b' }
+    ]
+  },
+  'p1.q3a': {
+    textKey: 'game.rpg.p1.q3a',
+    choices: [
+      { textKey: 'game.rpg.p1.q3a.1', next: 'p1.e1' },
+      { textKey: 'game.rpg.p1.q3a.2', next: 'p1.e4' }
+    ]
+  },
+  'p1.q3b': {
+    textKey: 'game.rpg.p1.q3b',
+    choices: [
+      { textKey: 'game.rpg.p1.q3b.1', next: 'p1.e2' },
+      { textKey: 'game.rpg.p1.q3b.2', next: 'p1.e3' }
     ]
   },
   'p1.e1': { textKey: 'game.rpg.p1.e1', choices: [], isEnding: true },
   'p1.e2': { textKey: 'game.rpg.p1.e2', choices: [], isEnding: true },
+  'p1.e3': { textKey: 'game.rpg.p1.e3', choices: [], isEnding: true },
+  'p1.e4': { textKey: 'game.rpg.p1.e4', choices: [], isEnding: true },
   
-  // Path 2
+  // Path 2: Artist
   'p2.q2': {
     textKey: 'game.rpg.p2.q2',
     choices: [
-      { textKey: 'game.rpg.p2.q2.a', next: 'p2.e1' },
-      { textKey: 'game.rpg.p2.q2.b', next: 'p2.e2' }
+      { textKey: 'game.rpg.p2.q2.a', next: 'p2.q3a' },
+      { textKey: 'game.rpg.p2.q2.b', next: 'p2.q3b' }
+    ]
+  },
+  'p2.q3a': {
+    textKey: 'game.rpg.p2.q3a',
+    choices: [
+      { textKey: 'game.rpg.p2.q3a.1', next: 'p2.e1' },
+      { textKey: 'game.rpg.p2.q3a.2', next: 'p2.e2' }
+    ]
+  },
+  'p2.q3b': {
+    textKey: 'game.rpg.p2.q3b',
+    choices: [
+      { textKey: 'game.rpg.p2.q3b.1', next: 'p2.e3' },
+      { textKey: 'game.rpg.p2.q3b.2', next: 'p2.e4' }
     ]
   },
   'p2.e1': { textKey: 'game.rpg.p2.e1', choices: [], isEnding: true },
   'p2.e2': { textKey: 'game.rpg.p2.e2', choices: [], isEnding: true },
+  'p2.e3': { textKey: 'game.rpg.p2.e3', choices: [], isEnding: true },
+  'p2.e4': { textKey: 'game.rpg.p2.e4', choices: [], isEnding: true },
 
-  // Path 3
+  // Path 3: AI
   'p3.q2': {
     textKey: 'game.rpg.p3.q2',
     choices: [
-      { textKey: 'game.rpg.p3.q2.a', next: 'p3.e1' },
-      { textKey: 'game.rpg.p3.q2.b', next: 'p3.e2' }
+      { textKey: 'game.rpg.p3.q2.a', next: 'p3.q3a' },
+      { textKey: 'game.rpg.p3.q2.b', next: 'p3.q3b' }
+    ]
+  },
+  'p3.q3a': {
+    textKey: 'game.rpg.p3.q3a',
+    choices: [
+      { textKey: 'game.rpg.p3.q3a.1', next: 'p3.e1' },
+      { textKey: 'game.rpg.p3.q3a.2', next: 'p3.e3' }
+    ]
+  },
+  'p3.q3b': {
+    textKey: 'game.rpg.p3.q3b',
+    choices: [
+      { textKey: 'game.rpg.p3.q3b.1', next: 'p3.e2' },
+      { textKey: 'game.rpg.p3.q3b.2', next: 'p3.e4' }
     ]
   },
   'p3.e1': { textKey: 'game.rpg.p3.e1', choices: [], isEnding: true },
   'p3.e2': { textKey: 'game.rpg.p3.e2', choices: [], isEnding: true },
+  'p3.e3': { textKey: 'game.rpg.p3.e3', choices: [], isEnding: true },
+  'p3.e4': { textKey: 'game.rpg.p3.e4', choices: [], isEnding: true },
 
-  // Path 4
+  // Path 4: Politics
   'p4.q2': {
     textKey: 'game.rpg.p4.q2',
     choices: [
-      { textKey: 'game.rpg.p4.q2.a', next: 'p4.e1' },
-      { textKey: 'game.rpg.p4.q2.b', next: 'p4.e2' }
+      { textKey: 'game.rpg.p4.q2.a', next: 'p4.q3a' },
+      { textKey: 'game.rpg.p4.q2.b', next: 'p4.q3b' }
+    ]
+  },
+  'p4.q3a': {
+    textKey: 'game.rpg.p4.q3a',
+    choices: [
+      { textKey: 'game.rpg.p4.q3a.1', next: 'p4.e1' },
+      { textKey: 'game.rpg.p4.q3a.2', next: 'p4.e3' }
+    ]
+  },
+  'p4.q3b': {
+    textKey: 'game.rpg.p4.q3b',
+    choices: [
+      { textKey: 'game.rpg.p4.q3b.1', next: 'p4.e2' },
+      { textKey: 'game.rpg.p4.q3b.2', next: 'p4.e4' }
     ]
   },
   'p4.e1': { textKey: 'game.rpg.p4.e1', choices: [], isEnding: true },
   'p4.e2': { textKey: 'game.rpg.p4.e2', choices: [], isEnding: true },
+  'p4.e3': { textKey: 'game.rpg.p4.e3', choices: [], isEnding: true },
+  'p4.e4': { textKey: 'game.rpg.p4.e4', choices: [], isEnding: true },
 
-  // Path 5
+  // Path 5: Flood
   'p5.q2': {
     textKey: 'game.rpg.p5.q2',
     choices: [
-      { textKey: 'game.rpg.p5.q2.a', next: 'p5.e1' },
-      { textKey: 'game.rpg.p5.q2.b', next: 'p5.e2' }
+      { textKey: 'game.rpg.p5.q2.a', next: 'p5.q3a' },
+      { textKey: 'game.rpg.p5.q2.b', next: 'p5.q3b' }
+    ]
+  },
+  'p5.q3a': {
+    textKey: 'game.rpg.p5.q3a',
+    choices: [
+      { textKey: 'game.rpg.p5.q3a.1', next: 'p5.e1' },
+      { textKey: 'game.rpg.p5.q3a.2', next: 'p5.e3' }
+    ]
+  },
+  'p5.q3b': {
+    textKey: 'game.rpg.p5.q3b',
+    choices: [
+      { textKey: 'game.rpg.p5.q3b.1', next: 'p5.e4' },
+      { textKey: 'game.rpg.p5.q3b.2', next: 'p5.e2' }
     ]
   },
   'p5.e1': { textKey: 'game.rpg.p5.e1', choices: [], isEnding: true },
   'p5.e2': { textKey: 'game.rpg.p5.e2', choices: [], isEnding: true },
+  'p5.e3': { textKey: 'game.rpg.p5.e3', choices: [], isEnding: true },
+  'p5.e4': { textKey: 'game.rpg.p5.e4', choices: [], isEnding: true },
 
-  // Path 6
+  // Path 6: Influencer
   'p6.q2': {
     textKey: 'game.rpg.p6.q2',
     choices: [
-      { textKey: 'game.rpg.p6.q2.a', next: 'p6.e1' },
-      { textKey: 'game.rpg.p6.q2.b', next: 'p6.e2' }
+      { textKey: 'game.rpg.p6.q2.a', next: 'p6.q3a' },
+      { textKey: 'game.rpg.p6.q2.b', next: 'p6.q3b' }
+    ]
+  },
+  'p6.q3a': {
+    textKey: 'game.rpg.p6.q3a',
+    choices: [
+      { textKey: 'game.rpg.p6.q3a.1', next: 'p6.e1' },
+      { textKey: 'game.rpg.p6.q3a.2', next: 'p6.e3' }
+    ]
+  },
+  'p6.q3b': {
+    textKey: 'game.rpg.p6.q3b',
+    choices: [
+      { textKey: 'game.rpg.p6.q3b.1', next: 'p6.e2' },
+      { textKey: 'game.rpg.p6.q3b.2', next: 'p6.e4' }
     ]
   },
   'p6.e1': { textKey: 'game.rpg.p6.e1', choices: [], isEnding: true },
   'p6.e2': { textKey: 'game.rpg.p6.e2', choices: [], isEnding: true },
+  'p6.e3': { textKey: 'game.rpg.p6.e3', choices: [], isEnding: true },
+  'p6.e4': { textKey: 'game.rpg.p6.e4', choices: [], isEnding: true },
 
-  // Path 7
+  // Path 7: Paranormal
   'p7.q2': {
     textKey: 'game.rpg.p7.q2',
     choices: [
-      { textKey: 'game.rpg.p7.q2.a', next: 'p7.e1' },
-      { textKey: 'game.rpg.p7.q2.b', next: 'p7.e2' }
+      { textKey: 'game.rpg.p7.q2.a', next: 'p7.q3a' },
+      { textKey: 'game.rpg.p7.q2.b', next: 'p7.q3b' }
+    ]
+  },
+  'p7.q3a': {
+    textKey: 'game.rpg.p7.q3a',
+    choices: [
+      { textKey: 'game.rpg.p7.q3a.1', next: 'p7.e4' },
+      { textKey: 'game.rpg.p7.q3a.2', next: 'p7.e1' }
+    ]
+  },
+  'p7.q3b': {
+    textKey: 'game.rpg.p7.q3b',
+    choices: [
+      { textKey: 'game.rpg.p7.q3b.1', next: 'p7.e3' },
+      { textKey: 'game.rpg.p7.q3b.2', next: 'p7.e2' }
     ]
   },
   'p7.e1': { textKey: 'game.rpg.p7.e1', choices: [], isEnding: true },
-  'p7.e2': { textKey: 'game.rpg.p7.e2', choices: [], isEnding: true }
+  'p7.e2': { textKey: 'game.rpg.p7.e2', choices: [], isEnding: true },
+  'p7.e3': { textKey: 'game.rpg.p7.e3', choices: [], isEnding: true },
+  'p7.e4': { textKey: 'game.rpg.p7.e4', choices: [], isEnding: true }
 };
 
 export function ArtRPG() {
