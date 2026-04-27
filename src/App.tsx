@@ -113,6 +113,30 @@ function AnimatedRoutes() {
   );
 }
 
+function AppContent() {
+  const location = useLocation();
+  const isGamePage = ['/fest-jump', '/juegos', '/sell-out', '/oraculo'].includes(location.pathname);
+
+  return (
+    <div className={`bg-brand-bg min-h-screen text-brand-ink selection:bg-brand-accent selection:text-[#000] flex flex-col relative ${isGamePage ? 'overflow-hidden' : 'overflow-x-hidden'}`}>
+      <div className="noise-bg"></div>
+      <ScrollToTop />
+      <Nav />
+      <MusicPlayer />
+      <FloatingBackButton />
+      <GameInvitePopup />
+      <PricingPopup />
+      <AchievementPopup />
+      <SpeedInsights />
+      <Analytics />
+      <div className="flex-1 relative z-10 w-full">
+        <AnimatedRoutes />
+      </div>
+      {!isGamePage && <Footer />}
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -120,22 +144,7 @@ export default function App() {
         <AchievementsProvider>
           <LanguageProvider>
             <BrowserRouter>
-              <div className="bg-brand-bg min-h-screen text-brand-ink selection:bg-brand-accent selection:text-[#000] flex flex-col relative overflow-x-hidden">
-                <div className="noise-bg"></div>
-                <ScrollToTop />
-                <Nav />
-                <MusicPlayer />
-                <FloatingBackButton />
-                <GameInvitePopup />
-                <PricingPopup />
-                <AchievementPopup />
-                <SpeedInsights />
-                <Analytics />
-                <div className="flex-1 relative z-10 w-full">
-                  <AnimatedRoutes />
-                </div>
-                <Footer />
-              </div>
+              <AppContent />
             </BrowserRouter>
           </LanguageProvider>
         </AchievementsProvider>

@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 export function ArcadePage() {
   const { t } = useLanguage();
   return (
-    <main className="min-h-screen bg-[#110f1c] flex flex-col pt-12 text-white overflow-hidden relative">
+    <main className="min-h-screen bg-[#110f1c] flex flex-col pt-32 text-white overflow-hidden relative">
       <div className="absolute inset-0 bg-[#07050e] opacity-50 pointer-events-none" />
       <div className="px-6 md:px-12 w-full max-w-5xl mx-auto relative z-10">
         <Link 

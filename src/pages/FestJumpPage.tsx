@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 export function FestJumpPage() {
   const { t } = useLanguage();
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center relative font-mono selection:bg-brand-accent selection:text-white pb-20 pt-10 px-4">
+    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center relative font-mono selection:bg-brand-accent selection:text-white pb-20 pt-32 px-4">
       {/* Background Decor */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-brand-accent/5 rounded-full blur-[150px]" />

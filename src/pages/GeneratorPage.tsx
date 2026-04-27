@@ -46,7 +46,7 @@ export function GeneratorPage() {
     : "";
 
   return (
-    <main className="min-h-screen bg-[#050308] text-white flex flex-col pt-12 relative overflow-hidden">
+    <main className="min-h-screen bg-[#050308] text-white flex flex-col pt-32 relative overflow-hidden">
       {/* Immersive geometric background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-pink-900/20 via-[#050308]/80 to-[#050308] pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
