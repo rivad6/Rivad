@@ -16,6 +16,9 @@ const ACHIEVEMENTS_DATA: Achievement[] = [
   { id: 'sellout', title: 'Vendido', description: 'Alcanza el máximo de Hype en Sell Out Game.', icon: '💸' },
   { id: 'brokeback', title: 'Caída de Fama', description: 'Pierde toda tu relevancia en Sell Out Game.', icon: '📉' },
   { id: 'red_pill', title: 'Basado', description: 'Termina la simulación RPG.', icon: '💊' },
+  { id: 'invaders_level_5', title: 'Explorador Orbital', description: 'Alcanza el nivel 5 en Defensores Creativos.', icon: '🚀' },
+  { id: 'invaders_boss_kill', title: 'Crítico Implacable', description: 'Derrota a un jefe en el Nivel 4.', icon: '👾' },
+  { id: 'invaders_all_ships', title: 'Coleccionista de Visiones', description: 'Desbloquea todas las naves del hangar.', icon: '🛸' },
 ];
 
 interface AchievementsContextType {

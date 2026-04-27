@@ -53,7 +53,13 @@ export function CreativeInvaders() {
   const buyChar = (char: typeof CHARACTERS[0]) => {
     if (festCoins >= char.price) {
       setFestCoins(prev => prev - char.price);
-      setUnlockedChars(prev => [...prev, char.id]);
+      setUnlockedChars(prev => {
+        const next = [...prev, char.id];
+        if (next.length === CHARACTERS.length) {
+          unlockAchievement('invaders_all_ships');
+        }
+        return next;
+      });
       playSound('purchase');
     } else {
       playSound('alert');
@@ -264,7 +270,6 @@ export function CreativeInvaders() {
   }, []);
 
   const loadLevel = useCallback((level: number) => {
-    console.log("LOADING LEVEL", level);
     state.current.enemies = [];
     state.current.drops = [];
     state.current.isTransitioning = false;
@@ -368,7 +373,6 @@ export function CreativeInvaders() {
       lastHitEdgeTime: 0
     };
 
-    console.log("INIT GAME");
     loadLevel(1);
     setScore(0);
     setGameState("playing");
@@ -772,6 +776,7 @@ export function CreativeInvaders() {
             );
 
             if (enemy.type === "boss") {
+              unlockAchievement('invaders_boss_kill');
               createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#ef4444", 50);
               playSound('powerup');
               // Maybe drop multiple powerups
@@ -880,7 +885,7 @@ export function CreativeInvaders() {
         s.isTransitioning = true;
         s.projectiles = []; // Clear current projectiles to avoid post-mortem hits
         state.current.level++;
-        console.log("LEVEL UP to", state.current.level);
+        if (state.current.level === 5) unlockAchievement('invaders_level_5');
         s.levelUpTimer = 100;
         if (state.current.level % 5 === 0) {
           setGameState("takeoff");
@@ -891,9 +896,13 @@ export function CreativeInvaders() {
         s.isTransitioning = true;
         s.projectiles = [];
         state.current.wave++;
-        console.log("WAVE COMPLETED, returning to playing mode");
-        loadLevel(state.current.level);
-        setGameState("playing");
+        saveScore();
+        if (state.current.level > 10) {
+           setGameState("win");
+        } else {
+           loadLevel(state.current.level);
+           setGameState("playing");
+        }
         playSound("win");
       }
     }
@@ -902,7 +911,12 @@ export function CreativeInvaders() {
     setHudShield(s.player.shield);
     setHudPower(s.player.power);
     setHudTurbo(s.player.speedBoostTimer);
-  }, [gameState, loadLevel, playSound, upgrades, t]);
+  }, [gameState, loadLevel, playSound, upgrades, t, unlockAchievement]);
+
+  const saveScore = () => {
+    const s = state.current;
+    if (s.score > highScore) setHighScore(s.score);
+  };
 
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = "#0a0a0B";
@@ -1484,8 +1498,8 @@ export function CreativeInvaders() {
             </div>
         )}
 
-        {gameState === "asteroids_win" && (
-          <div className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30">
+        {gameState === "win" && (
+          <div className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30 pointer-events-auto">
             <h3 className="text-5xl font-display text-white mb-2 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(242,74,41,0.5)]">
               {t("game.invaders.win")}
             </h3>
@@ -1500,7 +1514,7 @@ export function CreativeInvaders() {
             </p>
             <button
               onClick={initGame}
-              className="bg-white text-brand-accent font-black font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-colors shadow-[0_0_30px_rgba(255,255,255,0.4)]"
+              className="bg-white text-brand-accent font-black font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-colors shadow-[0_0_30px_rgba(255,255,255,0.4)] cursor-pointer"
             >
               <RefreshCw size={18} /> {t("game.invaders.next")}
             </button>

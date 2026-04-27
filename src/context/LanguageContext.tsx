@@ -380,6 +380,12 @@ const translations: Record<Language, Record<string, string>> = {
     'game.invaders.instruction.distractions': 'DISTRACCIONES',
     'game.invaders.instruction.routine': 'RUTINA',
     'game.invaders.instruction.desc': 'Destruye {{blocks}}, rompe {{distractions}}, y quiebra la {{routine}}.',
+    'achievement.invaders_level_5.title': 'Explorador Orbital',
+    'achievement.invaders_level_5.desc': 'Alcanza el nivel 5 en Defensores Creativos.',
+    'achievement.invaders_boss_kill.title': 'Crítico Implacable',
+    'achievement.invaders_boss_kill.desc': 'Derrota a un jefe en el Nivel 4.',
+    'achievement.invaders_all_ships.title': 'Coleccionista de Visiones',
+    'achievement.invaders_all_ships.desc': 'Desbloquea todas las naves del hangar.',
 
     // Game: ArtRPG
     'game.rpg.title': 'SIMULADOR DE INAUGURACIÓN',
@@ -1115,6 +1121,12 @@ const translations: Record<Language, Record<string, string>> = {
     'game.invaders.instruction.distractions': 'DISTRACTIONS',
     'game.invaders.instruction.routine': 'ROUTINE',
     'game.invaders.instruction.desc': 'Destroy {{blocks}}, shatter {{distractions}}, and break the {{routine}}.',
+    'achievement.invaders_level_5.title': 'Orbital Explorer',
+    'achievement.invaders_level_5.desc': 'Reach level 5 in Creative Invaders.',
+    'achievement.invaders_boss_kill.title': 'Relentless Critic',
+    'achievement.invaders_boss_kill.desc': 'Defeat a boss in Level 4.',
+    'achievement.invaders_all_ships.title': 'Vision Collector',
+    'achievement.invaders_all_ships.desc': 'Unlock all ships from the hangar.',
 
     // Game: ArtRPG
     'game.rpg.title': 'INAUGURATION SIMULATOR',
