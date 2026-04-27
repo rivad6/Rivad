@@ -129,16 +129,6 @@ export function MusicPlayer() {
                 <a href={spotifyLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#8a63d2] hover:underline">
                   {t('music.spotify')} <ExternalLink size={10} />
                 </a>
-                <button 
-                  onClick={() => {
-                    const url = window.location.origin + audioSrc;
-                    navigator.clipboard.writeText(url);
-                    setCopied(true);
-                  }}
-                  className="inline-flex items-center gap-1 text-[10px] text-gray-500 hover:text-white"
-                >
-                  {copied ? "¡Copiado!" : "Direct Link"} <ExternalLink size={10} />
-                </button>
               </div>
             </div>
             <button 
