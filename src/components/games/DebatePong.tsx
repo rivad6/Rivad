@@ -83,28 +83,32 @@ export function DebatePong() {
       // Paddles
       if (
         ball.x < player.x + paddleWidth &&
-        ball.x > player.x &&
+        ball.x + ballSize > player.x &&
         ball.y + ballSize > player.y &&
         ball.y < player.y + paddleHeight
       ) {
-        ball.dx *= -1;
-        ball.dx = Math.min(10, Math.abs(ball.dx) + 0.4); 
-        const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
-        ball.dy = hitOffset * 0.25;
-        showHitText();
+        if (ball.dx < 0) {
+          ball.dx *= -1;
+          ball.dx = Math.min(10, Math.abs(ball.dx) + 0.4); 
+          const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
+          ball.dy = hitOffset * 0.25;
+          showHitText();
+        }
       }
 
       if (
         ball.x + ballSize > cpu.x &&
-        ball.x + ballSize < cpu.x + paddleWidth &&
+        ball.x < cpu.x + paddleWidth &&
         ball.y + ballSize > cpu.y &&
         ball.y < cpu.y + paddleHeight
       ) {
-        ball.dx *= -1;
-        ball.dx = -Math.min(10, Math.abs(ball.dx) + 0.4); 
-        const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
-        ball.dy = hitOffset * 0.25;
-        showHitText();
+        if (ball.dx > 0) {
+          ball.dx *= -1;
+          ball.dx = -Math.min(10, Math.abs(ball.dx) + 0.4); 
+          const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
+          ball.dy = hitOffset * 0.25;
+          showHitText();
+        }
       }
 
       // Scoring

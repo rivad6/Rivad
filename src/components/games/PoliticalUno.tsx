@@ -119,19 +119,19 @@ export function PoliticalUno() {
         setMessage(currentPlayer === 'player' ? t('game.uno.msg.moche.win') : t('game.uno.msg.moche.lose'));
         if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard()]);
         else setPlayerHand(prev => [...prev, generateCard(), generateCard()]);
-        return otherPlayer;
+        return currentPlayer; // +2 skips the opponent
       case 'fuero':
         setMessage(currentPlayer === 'player' ? t('game.uno.msg.fuero.win') : t('game.uno.msg.fuero.lose'));
-        return currentPlayer;
+        return currentPlayer; // Skip skips opponent
       case 'alianza':
         setMessage(t('game.uno.msg.alliance'));
         setDirection(prev => prev * -1);
-        return otherPlayer;
+        return currentPlayer; // In a 2-player game, reverse acts as a skip
       case 'fake_news':
         setMessage(t('game.uno.msg.fake_news'));
         if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
         else setPlayerHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
-        return otherPlayer;
+        return currentPlayer; // +4 skips opponent
       case 'consulta':
         setMessage(t('game.uno.msg.consulta'));
         setPlayerHand(prev => [...prev, generateCard()]);
