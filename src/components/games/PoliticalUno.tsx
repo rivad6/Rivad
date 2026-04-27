@@ -1,10 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  Shield, 
+  Handshake, 
+  Coins, 
+  ArrowLeftRight, 
+  UserRound, 
+  AlertTriangle, 
+  CheckCircle2, 
+  XCircle,
+  Megaphone,
+  Fingerprint
+} from 'lucide-react';
 
-type Color = 'rojo' | 'azul' | 'guinda' | 'naranja';
-type SpecialAction = 'moche' | 'fuero' | 'alianza' | 'normal';
-type Card = { color: Color; value: number | string; id: string; action: SpecialAction };
+type Color = 'rojo' | 'azul' | 'guinda' | 'naranja' | 'black';
+type SpecialAction = 'moche' | 'fuero' | 'alianza' | 'dedazo' | 'fake_news' | 'consulta' | 'normal';
+type Card = { 
+  color: Color; 
+  value: number | string; 
+  id: string; 
+  action: SpecialAction;
+  partyNameKey?: string;
+};
 
 export function PoliticalUno() {
   const { t } = useLanguage();
@@ -14,54 +33,71 @@ export function PoliticalUno() {
   const [turn, setTurn] = useState<'player' | 'cpu'>('player');
   const [message, setMessage] = useState(t('game.uno.msg.start'));
   const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
+  const [isChoosingColor, setIsChoosingColor] = useState(false);
+  const [direction, setDirection] = useState(1); // 1 for clockwise, -1 for reverse
 
   const colors: Color[] = ['rojo', 'azul', 'guinda', 'naranja'];
+  
   const colorStyles: Record<Color, string> = {
-    rojo: 'bg-red-600',
-    azul: 'bg-blue-600',
-    guinda: 'bg-[#732021]', // Morena style
-    naranja: 'bg-orange-500'
+    rojo: 'from-red-500 to-red-800 border-red-400',
+    azul: 'from-blue-500 to-blue-800 border-blue-400',
+    guinda: 'from-[#732021] to-[#4a1415] border-[#a12d2f]',
+    naranja: 'from-orange-400 to-orange-700 border-orange-300',
+    black: 'from-zinc-800 to-black border-zinc-600'
   };
 
-  const initGame = () => {
-    setPlayerHand(Array(5).fill(null).map(generateCard));
-    setCpuHand(Array(5).fill(null).map(generateCard));
-    setTopCard(generateCard());
-    setTurn('player');
-    setWinner(null);
-    setMessage(t('game.uno.msg.turn'));
-  };
-
-  const getActionName = (action: SpecialAction) => {
-    switch (action) {
-      case 'moche': return '+2';
-      case 'fuero': return '∅';
-      case 'alianza': return '⇄';
+  const getPartyKey = (color: Color) => {
+    switch(color) {
+      case 'rojo': return 'game.uno.party.red';
+      case 'azul': return 'game.uno.party.blue';
+      case 'guinda': return 'game.uno.party.guinda';
+      case 'naranja': return 'game.uno.party.orange';
       default: return '';
     }
-  }
+  };
 
-  const generateCard = (): Card => {
-    const isSpecial = Math.random() > 0.75;
-    const color = colors[Math.floor(Math.random() * colors.length)];
+  const generateCard = useCallback((forceColor?: Color): Card => {
+    const isSpecial = Math.random() > 0.7;
+    const color = forceColor || colors[Math.floor(Math.random() * colors.length)];
     
     if (isSpecial) {
-      const actions: SpecialAction[] = ['moche', 'fuero', 'alianza'];
+      const actions: SpecialAction[] = ['moche', 'fuero', 'alianza', 'fake_news', 'consulta', 'dedazo'];
       const action = actions[Math.floor(Math.random() * actions.length)];
+      
+      // Dedazo is wild (black)
+      const finalColor = action === 'dedazo' ? 'black' : color;
+      
       return {
-        color,
-        value: getActionName(action),
-        id: Math.random().toString(36).substr(2, 9),
-        action
+        color: finalColor,
+        value: action === 'moche' ? '+2' : action === 'fake_news' ? '+4' : '★',
+        id: Math.random().toString(36).substring(2, 11),
+        action,
+        partyNameKey: action === 'dedazo' ? undefined : getPartyKey(finalColor)
       };
     }
 
     return {
       color,
       value: Math.floor(Math.random() * 9) + 1,
-      id: Math.random().toString(36).substr(2, 9),
-      action: 'normal'
+      id: Math.random().toString(36).substring(2, 11),
+      action: 'normal',
+      partyNameKey: getPartyKey(color)
     };
+  }, []);
+
+  const initGame = () => {
+    setPlayerHand(Array(7).fill(null).map(() => generateCard()));
+    setCpuHand(Array(7).fill(null).map(() => generateCard()));
+    let initialTop = generateCard();
+    while (initialTop.action !== 'normal') {
+      initialTop = generateCard();
+    }
+    setTopCard(initialTop);
+    setTurn('player');
+    setWinner(null);
+    setDirection(1);
+    setIsChoosingColor(false);
+    setMessage(t('game.uno.msg.turn'));
   };
 
   useEffect(() => {
@@ -70,30 +106,54 @@ export function PoliticalUno() {
 
   const isValidPlay = (card: Card) => {
     if (!topCard) return true;
-    return card.color === topCard.color || card.value === topCard.value || card.action === topCard.action;
+    if (card.action === 'dedazo') return true;
+    return card.color === topCard.color || card.value === topCard.value;
   };
 
   const processAction = (card: Card, currentPlayer: 'player' | 'cpu') => {
-    const nextPlayer = currentPlayer === 'player' ? 'cpu' : 'player';
+    const otherPlayer = currentPlayer === 'player' ? 'cpu' : 'player';
     
-    if (card.action === 'moche') {
-       setMessage(currentPlayer === 'player' ? t('game.uno.msg.moche.win') : t('game.uno.msg.moche.lose'));
-       if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard()]);
-       else setPlayerHand(prev => [...prev, generateCard(), generateCard()]);
-       return nextPlayer;
-    } else if (card.action === 'fuero') {
-       setMessage(currentPlayer === 'player' ? t('game.uno.msg.fuero.win') : t('game.uno.msg.fuero.lose'));
-       return currentPlayer;
-    } else if (card.action === 'alianza') {
-       setMessage(t('game.uno.msg.alliance'));
-       return currentPlayer;
+    switch (card.action) {
+      case 'moche':
+        setMessage(currentPlayer === 'player' ? t('game.uno.msg.moche.win') : t('game.uno.msg.moche.lose'));
+        if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard()]);
+        else setPlayerHand(prev => [...prev, generateCard(), generateCard()]);
+        return otherPlayer;
+      case 'fuero':
+        setMessage(currentPlayer === 'player' ? t('game.uno.msg.fuero.win') : t('game.uno.msg.fuero.lose'));
+        return currentPlayer;
+      case 'alianza':
+        setMessage(t('game.uno.msg.alliance'));
+        setDirection(prev => prev * -1);
+        return otherPlayer;
+      case 'fake_news':
+        setMessage(t('game.uno.msg.fake_news'));
+        if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
+        else setPlayerHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
+        return otherPlayer;
+      case 'consulta':
+        setMessage(t('game.uno.msg.consulta'));
+        setPlayerHand(prev => [...prev, generateCard()]);
+        setCpuHand(prev => [...prev, generateCard()]);
+        return otherPlayer;
+      case 'dedazo':
+        setMessage(t('game.uno.msg.dedazo'));
+        if (currentPlayer === 'player') {
+          setIsChoosingColor(true);
+          return 'player'; // Wait for color choice
+        } else {
+          // CPU chooses random color
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
+          return 'player';
+        }
+      default:
+        return otherPlayer;
     }
-    
-    return nextPlayer;
   };
 
   const playCard = (index: number) => {
-    if (turn !== 'player' || winner) return;
+    if (turn !== 'player' || winner || isChoosingColor) return;
     const card = playerHand[index];
     
     if (isValidPlay(card)) {
@@ -109,32 +169,55 @@ export function PoliticalUno() {
       }
       
       const nextTurn = processAction(card, 'player');
-      setTurn(nextTurn);
-      
-      if (nextTurn === 'cpu' && card.action === 'normal') {
-        setMessage(t('game.uno.msg.opposition'));
+      if (card.action !== 'dedazo') {
+        setTurn(nextTurn);
       }
     } else {
       setMessage(t('game.uno.msg.error'));
     }
   };
 
-  const drawCard = () => {
-    if (turn !== 'player' || winner) return;
-    setPlayerHand([...playerHand, generateCard()]);
+  const handleColorChoice = (color: Color) => {
+    if (!topCard) return;
+    setTopCard({ ...topCard, color });
+    setIsChoosingColor(false);
     setTurn('cpu');
+  };
+
+  const drawCard = () => {
+    if (turn !== 'player' || winner || isChoosingColor) return;
+    const newCard = generateCard();
+    setPlayerHand([...playerHand, newCard]);
     setMessage(t('game.uno.msg.draw'));
+    setTurn('cpu');
   };
 
   useEffect(() => {
     if (turn === 'cpu' && !winner) {
       const cpuTurn = setTimeout(() => {
-        const validIndex = cpuHand.findIndex(isValidPlay);
-        if (validIndex !== -1) {
-          const cardToPlay = cpuHand[validIndex];
+        // Advanced CPU Logic: 
+        // 1. If player has few cards (<=3), prioritize aggressive cards (moche, fake_news)
+        // 2. Otherwise play normal cards to save specials
+        
+        let validIndices = cpuHand.map((c, i) => isValidPlay(c) ? i : -1).filter(i => i !== -1);
+        
+        if (validIndices.length > 0) {
+          let targetIndex = validIndices[0];
+          
+          if (playerHand.length <= 3) {
+            // Aggressive mode
+            const aggro = validIndices.find(i => cpuHand[i].action === 'moche' || cpuHand[i].action === 'fake_news');
+            if (aggro !== undefined) targetIndex = aggro;
+          } else {
+            // Conservative mode: save specials
+            const normal = validIndices.find(i => cpuHand[i].action === 'normal');
+            if (normal !== undefined) targetIndex = normal;
+          }
+
+          const cardToPlay = cpuHand[targetIndex];
           setTopCard(cardToPlay);
           const newHand = [...cpuHand];
-          newHand.splice(validIndex, 1);
+          newHand.splice(targetIndex, 1);
           setCpuHand(newHand);
           
           if (newHand.length === 0) {
@@ -143,98 +226,313 @@ export function PoliticalUno() {
           } else {
             const nextTurn = processAction(cardToPlay, 'cpu');
             setTurn(nextTurn);
-            if (nextTurn === 'player' && cardToPlay.action === 'normal') {
-               setMessage(t('game.uno.msg.cpu_play'));
-            }
           }
         } else {
           setCpuHand([...cpuHand, generateCard()]);
           setMessage(t('game.uno.msg.cpu_draw'));
           setTurn('player');
         }
-      }, 2000);
+      }, 1500);
       return () => clearTimeout(cpuTurn);
     }
-  }, [turn, cpuHand, winner]);
+  }, [turn, cpuHand, winner, topCard, playerHand.length]);
 
-  const CardView = ({ card, onClick, hidden = false }: { key?: string | number, card: Card, onClick?: () => void, hidden?: boolean }) => (
-    <div 
+  const CardIcon = ({ action }: { action: SpecialAction }) => {
+    switch (action) {
+      case 'moche': return <Coins className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'fuero': return <Shield className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'alianza': return <ArrowLeftRight className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'dedazo': return <Fingerprint className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'fake_news': return <Megaphone className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'consulta': return <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />;
+      default: return null;
+    }
+  };
+
+  const CardView = ({ card, onClick, hidden = false, isSelected = false }: { key?: string | number, card: Card, onClick?: () => void, hidden?: boolean, isSelected?: boolean }) => (
+    <motion.div 
+      layout
+      initial={{ y: 50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -50, opacity: 0 }}
+      whileHover={!hidden ? { scale: 1.05, y: -10, zIndex: 50 } : {}}
       onClick={onClick}
       className={cn(
-        "w-16 h-24 md:w-20 md:h-32 rounded-lg border-2 border-white flex flex-col items-center justify-center p-2 text-white font-bold cursor-pointer transition-transform hover:-translate-y-2 relative overflow-hidden shrink-0",
-        hidden ? "bg-gray-800 border-gray-500" : colorStyles[card.color]
+        "w-16 h-24 md:w-24 md:h-36 rounded-xl border-t-2 border-l-2 flex flex-col items-center justify-between p-2 md:p-3 text-white font-bold cursor-pointer transition-all relative overflow-hidden shrink-0 shadow-xl",
+        hidden ? "bg-zinc-900 border-zinc-700" : `bg-gradient-to-br ${colorStyles[card.color]}`,
+        isSelected && "ring-2 ring-white ring-offset-2 ring-offset-black scale-110"
       )}
     >
-      <div className="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')]"></div>
-      {!hidden && (
+      <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+      
+      {!hidden ? (
         <>
-          <span className="absolute top-1 left-2 text-[8px] md:text-xs">
-            {card.action === 'moche' ? t('game.uno.action.moche') : card.action === 'fuero' ? t('game.uno.action.fuero') : card.action === 'alianza' ? t('game.uno.action.alliance') : ''}
-          </span>
-          <span className="text-xl md:text-3xl filter drop-shadow-md z-10">{card.value}</span>
+          <div className="w-full flex justify-between items-start">
+            <span className="text-[10px] md:text-sm">{card.value}</span>
+            {card.action !== 'normal' && <span className="opacity-50"><AlertTriangle className="w-3 h-3" /></span>}
+          </div>
+          
+          <div className="flex flex-col items-center gap-1 opacity-90">
+             {card.action === 'normal' ? (
+                <span className="text-2xl md:text-5xl font-serif">{card.value}</span>
+             ) : (
+                <CardIcon action={card.action} />
+             )}
+             {card.partyNameKey && (
+               <span className="text-[6px] md:text-[8px] uppercase tracking-tighter opacity-70 text-center">
+                 {t(card.partyNameKey)}
+               </span>
+             )}
+          </div>
+
+          <div className="w-full flex justify-end items-end rotate-180">
+            <span className="text-[10px] md:text-sm">{card.value}</span>
+          </div>
         </>
+      ) : (
+        <div className="w-full h-full border-2 border-zinc-800 rounded-lg flex items-center justify-center bg-zinc-800/10">
+          <UserRound className="w-8 h-8 md:w-12 md:h-12 text-zinc-700 opacity-30" />
+        </div>
       )}
-      {hidden && <span className="text-xl">?</span>}
-    </div>
+    </motion.div>
   );
 
   return (
-    <div className="flex flex-col items-center max-w-full font-[var(--font-pixel)] text-[10px] md:text-xs text-white">
-      <div className="mb-2 text-center w-full">
-         <p className="text-[#8a63d2]">{t('game.objective')}{t('game.uno.goal')}</p>
-      </div>
-      <p className="mb-4 h-8 text-center text-brand-accent max-w-xs">{message}</p>
+    <div className="flex flex-col items-center min-h-[85vh] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pb-20 relative overflow-hidden">
       
-      {/* CPU Hand */}
-      <div className="flex gap-[-20px] mb-8 justify-center crt bg-[#090b11] p-4 rounded-xl border border-[#222] max-w-full overflow-x-auto w-[90vw] md:w-full">
-        <div className="flex -space-x-8 md:-space-x-4">
-          {cpuHand.map((c) => (
-             <CardView key={c.id} card={c} hidden={true} />
-          ))}
-        </div>
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden">
+        <Fingerprint className="absolute -top-20 -left-20 w-96 h-96 rotate-12" />
+        <Megaphone className="absolute -bottom-20 -right-20 w-80 h-80 -rotate-12" />
       </div>
 
-      {/* Play Area */}
-      <div className="flex items-center justify-center gap-8 mb-8 my-4 w-full">
-        <div className="flex flex-col items-center gap-2">
-           <p className="text-gray-500">{t('game.uno.label.deck')}</p>
-           <button 
-             onClick={drawCard}
-             disabled={turn !== 'player' || !!winner}
-             className="w-16 h-24 md:w-20 md:h-32 bg-[#0a0a0a] border-2 border-[#333] rounded-lg flex items-center justify-center hover:bg-[#111] hover:border-[#444] transition-colors disabled:opacity-50 text-[8px] md:text-[10px]"
-           >
-             {t('game.uno.label.draw')}
-           </button>
-        </div>
+      {/* HUD Header */}
+      <div className="mb-4 md:mb-8 flex flex-col items-center gap-1 w-full max-w-2xl px-4 relative z-10">
+         <div className="flex items-center gap-2 mb-1">
+           <div className={cn("w-2 h-2 rounded-full", turn === 'player' ? "bg-brand-accent shadow-[0_0_10px_rgba(138,99,210,0.8)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]")} />
+           <span className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">
+             {turn === 'player' ? t('game.uno.label.session_open') : t('game.uno.label.session_closed')}
+           </span>
+         </div>
+         <h2 className="text-2xl md:text-4xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2 group">
+           <Megaphone className="text-brand-accent h-6 w-6 md:h-10 md:w-10 group-hover:rotate-12 transition-transform" />
+           <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">Political UNO</span>
+           <span className="text-zinc-700 text-sm md:text-xl font-mono not-italic mt-1">2.0</span>
+         </h2>
+      </div>
+
+      {/* The Table Arena */}
+      <div className="flex flex-col gap-6 md:gap-12 items-center w-full relative z-10">
         
-        <div className="flex flex-col items-center gap-2">
-          <p className="text-gray-500">{t('game.uno.label.pile')}</p>
-          {topCard && <CardView card={topCard} />}
+        {/* Opponent Area (Top) */}
+        <div className={cn(
+          "flex flex-col items-center gap-3 bg-zinc-950/40 p-4 md:p-6 rounded-[2rem] border transition-all duration-500 w-full max-w-4xl mx-auto",
+          turn === 'cpu' ? "border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]" : "border-white/5"
+        )}>
+          <div className="flex items-center gap-4 mb-1">
+            <h3 className="text-[10px] md:text-sm uppercase tracking-widest text-zinc-500 font-bold">{t('game.uno.label.opposition')}</h3>
+            <div className="flex items-center gap-1 bg-zinc-900 px-3 py-1 rounded-full border border-white/5">
+              <UserRound className="w-3 h-3 text-red-500" />
+              <span className="text-xs font-black">{cpuHand.length}</span>
+            </div>
+          </div>
+          <div className="flex -space-x-12 md:-space-x-16 hover:-space-x-8 transition-all duration-500 pb-2">
+            {cpuHand.map((c) => (
+               <CardView key={c.id} card={c} hidden={true} />
+            ))}
+          </div>
         </div>
+
+        {/* Central Arena */}
+        <div className="relative flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 w-full py-4 min-h-[300px]">
+           
+           {/* Direction Indicator */}
+           <motion.div 
+             animate={{ rotate: direction === 1 ? 360 : -360 }}
+             transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+             className="absolute md:inset-0 flex items-center justify-center pointer-events-none opacity-10"
+           >
+             <div className="w-64 h-64 md:w-96 md:h-96 rounded-full border-2 border-dashed border-white flex items-center justify-center">
+               <ArrowLeftRight className="w-20 h-20" />
+             </div>
+           </motion.div>
+
+           {/* Deck (Erario) */}
+           <div className="flex flex-col items-center gap-3 group relative">
+             <div className="absolute -inset-4 bg-brand-accent/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+             <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">{t('game.uno.label.deck')}</p>
+             <button 
+               onClick={drawCard}
+               disabled={turn !== 'player' || !!winner || isChoosingColor}
+               className={cn(
+                 "w-20 h-28 md:w-32 md:h-48 bg-zinc-900 border-2 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover:translate-y-[-5px]",
+                 turn === 'player' ? "border-brand-accent/50 cursor-pointer" : "border-zinc-800 opacity-50 grayscale"
+               )}
+             >
+               <div className="absolute inset-0 bg-gradient-to-tr from-black via-transparent to-white/10" />
+               <Coins className={cn("w-10 h-10 transition-transform duration-300", turn === 'player' && "group-hover:scale-110 text-brand-accent")} />
+               <span className="text-[10px] font-black uppercase text-zinc-500">{t('game.uno.label.draw')}</span>
+               <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand-accent/20" />
+             </button>
+           </div>
+
+           {/* Discard Pile (Tribuna) */}
+           <div className="flex flex-col items-center gap-3 relative">
+             <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">{t('game.uno.label.pile')}</p>
+             <div className="relative">
+                <AnimatePresence mode="wait">
+                  {topCard && (
+                    <motion.div
+                      key={topCard.id}
+                      initial={{ scale: 0.8, rotate: direction === 1 ? -15 : 15, opacity: 0 }}
+                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      <CardView card={topCard} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                {/* Visual shadow for "pile" depth */}
+                <div className="absolute -bottom-2 -right-2 w-full h-full bg-black/40 rounded-xl -z-10 blur-sm" />
+             </div>
+             <p className="text-zinc-400 font-black uppercase tracking-tighter text-[10px]">{t('game.uno.label.actual')}</p>
+           </div>
+
+           {/* Active Action Message Overlay (between piles) */}
+           <div className="absolute bottom-[-60px] md:bottom-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 pointer-events-none z-50">
+             <AnimatePresence mode="wait">
+               <motion.div 
+                 key={message}
+                 initial={{ opacity: 0, scale: 1.2, y: 20 }}
+                 animate={{ opacity: 1, scale: 1, y: 0 }}
+                 exit={{ opacity: 0, scale: 0.8 }}
+                 className={cn(
+                   "bg-black/80 backdrop-blur-md px-6 py-3 rounded-full border-2 shadow-2xl flex items-center gap-3 min-w-[200px] justify-center",
+                   turn === 'player' ? "border-brand-accent/50 text-brand-accent" : "border-red-500/50 text-red-400"
+                 )}
+               >
+                 {turn === 'player' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4 animate-pulse" />}
+                 <span className="text-[10px] md:text-xs uppercase font-black tracking-widest">{message}</span>
+               </motion.div>
+             </AnimatePresence>
+           </div>
+        </div>
+
+        {/* Player Area (Bottom) */}
+        <div className={cn(
+          "flex flex-col items-center gap-4 bg-white/[0.03] backdrop-blur-xl p-6 md:p-10 rounded-[3rem] border transition-all duration-700 w-full max-w-6xl mx-auto shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative",
+          turn === 'player' && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_50px_rgba(138,99,210,0.15)] ring-1 ring-brand-accent/20" : "border-white/5"
+        )}>
+          {/* Active Hand Indicator Glow */}
+          {turn === 'player' && !isChoosingColor && (
+            <div className="absolute inset-0 bg-brand-accent/5 rounded-[3rem] animate-pulse pointer-events-none" />
+          )}
+
+          <div className="flex items-center gap-6 mb-2 w-full justify-between items-end px-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-[0.5em] text-zinc-500 font-bold">{t('game.uno.label.bench')}</span>
+              <h3 className="text-xl md:text-2xl font-black text-white italic tracking-tighter uppercase">{t('game.uno.label.power')}</h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('game.uno.label.influences')}</span>
+              <span className="bg-brand-accent text-white px-4 py-1 rounded-full text-sm font-black shadow-lg shadow-brand-accent/20">
+                {playerHand.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex -space-x-10 md:-space-x-12 hover:-space-x-4 transition-all duration-500 pb-4 w-full overflow-x-auto overflow-y-visible px-10 min-h-[220px] md:min-h-[280px] scrollbar-hide snap-x">
+            <AnimatePresence>
+              {playerHand.map((card, i) => (
+                <div key={card.id} className="snap-center">
+                  <CardView 
+                    card={card} 
+                    onClick={() => playCard(i)} 
+                  />
+                </div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+
       </div>
 
-      {/* Player Hand */}
-      <div className="flex flex-col items-center w-full mt-4 max-w-full">
-        <p className="text-gray-500 mb-2">{t('game.uno.label.hand')}</p>
-        <div className="flex space-x-2 md:space-x-4 max-w-full overflow-x-auto p-4 bg-[#090b11] rounded-xl border border-[#222] w-[90vw] md:w-full">
-          {playerHand.map((card, i) => (
-            <CardView 
-              key={card.id} 
-              card={card} 
-              onClick={() => playCard(i)} 
-            />
-          ))}
-        </div>
-      </div>
+      {/* Wild Card Color Choice Overlay */}
+      <AnimatePresence>
+        {isChoosingColor && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+          >
+            <div className="flex flex-col items-center gap-8 p-12 bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl max-w-lg w-full">
+              <div className="text-center">
+                <h3 className="text-2xl font-black italic text-white uppercase mb-2">¡DEDAZO PRESIDENCIAL!</h3>
+                <p className="text-zinc-500 text-xs tracking-widest uppercase">Elige el color del próximo sexenio</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 w-full">
+                {colors.map(color => (
+                  <motion.button
+                    key={color}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleColorChoice(color)}
+                    className={cn(
+                      "group relative h-20 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all overflow-hidden border-2 border-white/5",
+                      `bg-gradient-to-br ${colorStyles[color]}`
+                    )}
+                  >
+                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors" />
+                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{t(getPartyKey(color))}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {winner && (
-        <button
-          onClick={initGame}
-          className="mt-8 bg-brand-accent text-white px-6 py-3 uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-        >
-          {t('game.uno.label.reset')}
-        </button>
-      )}
+      {/* Win/Loss Overlay */}
+      <AnimatePresence>
+        {winner && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl"
+          >
+            <motion.div 
+              initial={{ scale: 0.5, y: 100 }}
+              animate={{ scale: 1, y: 0 }}
+              className="flex flex-col items-center gap-8 p-12 text-center"
+            >
+              {winner === 'player' ? (
+                <>
+                  <CheckCircle2 className="w-32 h-32 text-brand-accent animate-bounce" />
+                  <h3 className="text-4xl md:text-6xl font-black italic text-white uppercase italic tracking-tighter">¡MAYORÍA ABSOLUTA!</h3>
+                  <p className="text-zinc-400 max-w-md uppercase tracking-[0.2em] leading-relaxed italic">{t('game.uno.msg.win')}</p>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-32 h-32 text-red-500 opacity-50" />
+                  <h3 className="text-4xl md:text-6xl font-black italic text-zinc-600 uppercase italic tracking-tighter">DESAFUERO</h3>
+                  <p className="text-zinc-600 max-w-md uppercase tracking-[0.2em] leading-relaxed italic">{t('game.uno.msg.lose')}</p>
+                </>
+              )}
+              
+              <button
+                onClick={initGame}
+                className="mt-4 bg-white text-black px-12 py-4 font-black uppercase tracking-[0.3em] hover:bg-brand-accent hover:text-white transition-all rounded-full flex items-center gap-2"
+              >
+                <ArrowLeftRight className="w-5 h-5" />
+                {t('game.uno.label.reset')}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

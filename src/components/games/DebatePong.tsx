@@ -19,13 +19,14 @@ export function DebatePong() {
     let animationFrameId: number;
     let hitText = "";
     let hitTextTimeout: ReturnType<typeof setTimeout>;
+    let shakeAmount = 0;
     
     const paddleWidth = 10;
     const paddleHeight = 60;
     const ballSize = 10;
     
     const player = { x: 20, y: canvas.height / 2 - paddleHeight / 2, dy: 0, score: 0 };
-    const cpu = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight / 2, dy: 3, score: 0 };
+    const cpu = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight / 2, dy: 3.5, score: 0 };
     const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 4, dy: 4 };
 
     const debateTerms = language === 'en' 
@@ -36,6 +37,7 @@ export function DebatePong() {
 
     const showHitText = () => {
       hitText = debateTerms[Math.floor(Math.random() * debateTerms.length)];
+      shakeAmount = 5;
       clearTimeout(hitTextTimeout);
       hitTextTimeout = setTimeout(() => { hitText = "" }, 800);
     };
@@ -59,48 +61,50 @@ export function DebatePong() {
         return;
       }
 
-      // Clear
-      ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw Net
-      ctx.fillStyle = '#333';
-      for (let i = 0; i < canvas.height; i += 20) {
-        ctx.fillRect(canvas.width / 2 - 1, i, 2, 10);
-      }
-
       // Physics
       ball.x += ball.dx;
       ball.y += ball.dy;
 
       // CPU AI
-      if (cpu.y + paddleHeight / 2 < ball.y) {
-        cpu.y += cpu.dy;
+      const cpuSpeed = 3.5 + (player.score * 0.5); // Gets harder as player scores
+      const targetPos = ball.y - paddleHeight / 2;
+      if (cpu.y < targetPos) {
+        cpu.y += cpuSpeed;
       } else {
-        cpu.y -= cpu.dy;
+        cpu.y -= cpuSpeed;
       }
 
       // Walls
-      if (ball.y < 0 || ball.y + ballSize > canvas.height) ball.dy *= -1;
+      if (ball.y < 0 || ball.y + ballSize > canvas.height) {
+        ball.dy *= -1;
+        shakeAmount = 2;
+      }
 
       // Paddles
       if (
         ball.x < player.x + paddleWidth &&
-        ball.y > player.y &&
+        ball.x > player.x &&
+        ball.y + ballSize > player.y &&
         ball.y < player.y + paddleHeight
       ) {
         ball.dx *= -1;
-        ball.dx += 0.5; // increase speed slightly
+        ball.dx = Math.abs(ball.dx) + 0.3; // increase speed 
+        // vary dy based on hit position
+        const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
+        ball.dy = hitOffset * 0.2;
         showHitText();
       }
 
       if (
         ball.x + ballSize > cpu.x &&
-        ball.y > cpu.y &&
+        ball.x + ballSize < cpu.x + paddleWidth &&
+        ball.y + ballSize > cpu.y &&
         ball.y < cpu.y + paddleHeight
       ) {
         ball.dx *= -1;
-        ball.dx -= 0.5; // increase speed towards player
+        ball.dx = -(Math.abs(ball.dx) + 0.3); // increase speed 
+        const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
+        ball.dy = hitOffset * 0.2;
         showHitText();
       }
 
@@ -109,15 +113,34 @@ export function DebatePong() {
         cpu.score++;
         setCpuScore(cpu.score);
         resetBall();
+        shakeAmount = 10;
       } else if (ball.x > canvas.width) {
         player.score++;
         setPlayerScore(player.score);
         resetBall();
+        shakeAmount = 10;
       }
 
       // Constrain paddles
       player.y = Math.max(0, Math.min(canvas.height - paddleHeight, player.y));
       cpu.y = Math.max(0, Math.min(canvas.height - paddleHeight, cpu.y));
+
+      // Clear & Shake
+      ctx.save();
+      if (shakeAmount > 0) {
+        ctx.translate((Math.random() - 0.5) * shakeAmount, (Math.random() - 0.5) * shakeAmount);
+        shakeAmount *= 0.9;
+        if (shakeAmount < 0.1) shakeAmount = 0;
+      }
+
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Net
+      ctx.fillStyle = '#333';
+      for (let i = 0; i < canvas.height; i += 20) {
+        ctx.fillRect(canvas.width / 2 - 1, i, 2, 10);
+      }
 
       // Draw
       ctx.fillStyle = '#f24a29'; // Player paddle
@@ -135,6 +158,7 @@ export function DebatePong() {
         ctx.textAlign = 'center';
         ctx.fillText(hitText, canvas.width / 2, canvas.height / 4);
       }
+      ctx.restore();
 
       animationFrameId = requestAnimationFrame(draw);
     };

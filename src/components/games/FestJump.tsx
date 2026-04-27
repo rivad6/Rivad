@@ -1,12 +1,112 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { motion, AnimatePresence } from 'motion/react';
+import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle } from 'lucide-react';
+
+interface Character {
+  id: string;
+  nameKey: string;
+  descKey: string;
+  price: number;
+  jumpForce: number;
+  speed: number;
+  color: string;
+  accent: string;
+}
+
+const CHARACTERS: Character[] = [
+  { 
+    id: 'default', 
+    nameKey: 'game.fest.char.default', 
+    descKey: 'game.fest.char.default.desc',
+    price: 0, 
+    jumpForce: -12, 
+    speed: 8, 
+    color: '#6EE7B7', 
+    accent: '#f43f5e' 
+  },
+  { 
+    id: 'punk', 
+    nameKey: 'game.fest.char.punk', 
+    descKey: 'game.fest.char.punk.desc',
+    price: 200, 
+    jumpForce: -13.5, 
+    speed: 10, 
+    color: '#f43f5e', 
+    accent: '#6EE7B7' 
+  },
+  { 
+    id: 'ghost', 
+    nameKey: 'game.fest.char.ghost', 
+    descKey: 'game.fest.char.ghost.desc',
+    price: 500, 
+    jumpForce: -11, 
+    speed: 12, 
+    color: '#ffffff', 
+    accent: '#3b82f6' 
+  },
+  { 
+    id: 'cyber', 
+    nameKey: 'game.fest.char.cyber', 
+    descKey: 'game.fest.char.cyber.desc',
+    price: 1000, 
+    jumpForce: -15, 
+    speed: 9, 
+    color: '#a855f7', 
+    accent: '#eab308' 
+  },
+];
+
+const CODES: Record<string, () => void> = {
+  'RIVAD2026': () => {}, // Handled in logic
+  'RICHART': () => {},
+  'GODMODE': () => {},
+};
 
 export function FestJump() {
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
   const [score, setScore] = useState(0);
+  const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
+  const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_chars') || '["default"]'));
+  const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('fest_selected_char') || 'default');
   const [unlockedCodes, setUnlockedCodes] = useState<string[]>([]);
+  const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
+
+  const selectedChar = useMemo(() => CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0], [selectedCharId]);
+
+  useEffect(() => {
+    localStorage.setItem('fest_coins', festCoins.toString());
+    localStorage.setItem('fest_chars', JSON.stringify(unlockedChars));
+    localStorage.setItem('fest_selected_char', selectedCharId);
+  }, [festCoins, unlockedChars, selectedCharId]);
+
+  const showMsg = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 2000);
+  };
+
+  const handleApplyCode = () => {
+    const code = codeInput.toUpperCase().trim();
+    if (code === 'RICHART') {
+      setFestCoins(prev => prev + 1000);
+      showMsg('+$1000 KARMAS', 'success');
+    } else if (code === 'GODMODE') {
+      showMsg('SECRET UNLOCKED: GHOST CHARACTER', 'success');
+      if (!unlockedChars.includes('ghost')) setUnlockedChars(prev => [...prev, 'ghost']);
+    } else if (code === 'RIVAD2026') {
+       setFestCoins(prev => prev + 5000);
+       showMsg('DEVELOPER GIFT: +$5000 KARMAS', 'success');
+    } else {
+      showMsg(t('game.fest.error'), 'error');
+    }
+    setCodeInput('');
+    setShowCodeInput(false);
+  };
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -17,35 +117,40 @@ export function FestJump() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let particles: {x: number, y: number, life: number}[] = [];
+    let particles: {x: number, y: number, life: number, color: string}[] = [];
+    let powerups: {x: number, y: number, type: 'spring' | 'rocket' | 'shield'}[] = [];
+    let enemies: {x: number, y: number, speed: number, width: number}[] = [];
 
-    const ELEPHANT_SIZE = 24;
     const PLATFORM_WIDTH = 60;
     const PLATFORM_HEIGHT = 12;
     const GRAVITY = 0.5;
-    const JUMP_FORCE = -12;
-
+    
     let player = {
       x: canvas.width / 2,
       y: canvas.height / 2,
       vx: 0,
       vy: 0,
-      width: ELEPHANT_SIZE,
-      height: ELEPHANT_SIZE
+      width: 24,
+      height: 24,
+      shield: 0,
+      jetpack: 0,
     };
 
-    let platforms = [
-      { x: canvas.width / 2 - PLATFORM_WIDTH / 2, y: canvas.height - 20 },
-      { x: Math.random() * (canvas.width - PLATFORM_WIDTH), y: canvas.height - 110 },
-      { x: Math.random() * (canvas.width - PLATFORM_WIDTH), y: canvas.height - 200 },
-      { x: Math.random() * (canvas.width - PLATFORM_WIDTH), y: canvas.height - 290 },
-      { x: Math.random() * (canvas.width - PLATFORM_WIDTH), y: canvas.height - 380 },
-      { x: Math.random() * (canvas.width - PLATFORM_WIDTH), y: canvas.height - 470 },
-      { x: Math.random() * (canvas.width - PLATFORM_WIDTH), y: canvas.height - 560 },
-    ];
+    let platforms = Array.from({ length: 8 }, (_, i) => {
+      const height = canvas.height - (i * 100 + 20);
+      return {
+        x: (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(height * 0.005) * 120,
+        y: height,
+        hasSpring: Math.random() > 0.9,
+      };
+    });
+
+    // Start platform
+    platforms[0] = { x: canvas.width / 2 - PLATFORM_WIDTH / 2, y: canvas.height - 20, hasSpring: false };
 
     let cameraY = 0;
     let maxScore = 0;
+    let shake = 0;
 
     const keys = { left: false, right: false };
 
@@ -58,55 +163,117 @@ export function FestJump() {
       if (e.key === 'ArrowRight') keys.right = false;
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
-      const mouseX = (e.clientX - rect.left) * scaleX;
-      player.x = mouseX - player.width / 2;
-      player.vx = 0;
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const touchX = (e.touches[0].clientX - rect.left) * scaleX;
-      player.x = touchX - player.width / 2;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const targetX = (clientX - rect.left) * scaleX - player.width / 2;
+      player.x = targetX;
       player.vx = 0;
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+    canvas.addEventListener('mousemove', handlePointerMove);
+    canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
 
-    const createParticles = (x: number, y: number) => {
-      for(let i=0; i<5; i++) {
-        particles.push({x: x + Math.random()*20, y: y + Math.random()*5, life: 1.0});
+    const createParticles = (x: number, y: number, color = '#ffffff') => {
+      for(let i=0; i<8; i++) {
+        particles.push({
+          x: x + Math.random()*20, 
+          y: y + Math.random()*5, 
+          life: 1.0,
+          color
+        });
       }
     };
 
-    const drawElephant = (x: number, y: number) => {
+    const spawnEnemy = () => {
+      if (maxScore > 1000 && Math.random() > 0.98) {
+        enemies.push({
+          x: Math.random() > 0.5 ? -40 : canvas.width + 40,
+          y: -100,
+          speed: (Math.random() * 2 + 1) * (Math.random() > 0.5 ? 1 : -1),
+          width: 32
+        });
+      }
+    };
+
+    const spawnPowerup = (platform: any) => {
+       if (Math.random() > 0.95) {
+         powerups.push({
+           x: platform.x + 10,
+           y: platform.y - 20,
+           type: Math.random() > 0.5 ? 'rocket' : 'shield'
+         });
+       }
+    };
+
+    const drawPlayer = (x: number, y: number) => {
+      ctx.save();
+      if (shake > 0) ctx.translate(Math.random()*shake - shake/2, Math.random()*shake - shake/2);
+      
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(x + 4, y + 4, player.width, player.height);
+
+      // Trail for ghost
+      if (selectedChar.id === 'ghost') {
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = selectedChar.color;
+        ctx.fillRect(x - player.vx, y - player.vy, player.width, player.height);
+        ctx.globalAlpha = 1;
+      }
+
       // Body
-      ctx.fillStyle = '#6EE7B7'; // neon green/teal
+      ctx.fillStyle = selectedChar.color;
       ctx.fillRect(x, y, player.width, player.height);
-      // Glasses (Neon sunglasses)
-      ctx.fillStyle = '#f43f5e'; // neon pink
+      
+      // Glasses/Accent
+      ctx.fillStyle = selectedChar.accent;
       ctx.fillRect(x + 2, y + 6, player.width - 4, 6);
+      
       // Trunk
-      ctx.fillStyle = '#34d399';
+      ctx.fillStyle = selectedChar.color;
+      ctx.globalAlpha = 0.8;
       ctx.fillRect(x + player.width/2 - 2, y + player.height, 4, 8);
+      ctx.globalAlpha = 1;
+
+      // Shield Effect
+      if (player.shield > 0) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 2;
+        ctx.arc(x + player.width/2, y + player.height/2, 20 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
+        ctx.stroke();
+      }
+
+      // Jetpack Effect
+      if (player.jetpack > 0) {
+        createParticles(x + player.width/2 - 4, y + player.height, '#f59e0b');
+      }
+
+      ctx.restore();
     };
 
     const update = () => {
+      if (shake > 0) shake *= 0.9;
+
       // Movement
       if (keys.left) player.vx -= 1;
       else if (keys.right) player.vx += 1;
-      else player.vx *= 0.8; // default friction
+      else player.vx *= 0.8;
 
-      // Limit max speed
-      player.vx = Math.max(-8, Math.min(8, player.vx));
+      player.vx = Math.max(-selectedChar.speed, Math.min(selectedChar.speed, player.vx));
 
       player.x += player.vx;
-      player.vy += GRAVITY;
+      
+      if (player.jetpack > 0) {
+        player.vy = -15;
+        player.jetpack--;
+      } else {
+        player.vy += GRAVITY;
+      }
       player.y += player.vy;
 
       // Screen wrap
@@ -121,41 +288,75 @@ export function FestJump() {
         maxScore = Math.floor(cameraY);
         setScore(maxScore);
 
-        // Check milestones
-        if (maxScore > 500) {
-           setUnlockedCodes(prev => prev.includes(t('game.fest.discount5')) ? prev : [...prev, t('game.fest.discount5')]);
-        }
-        if (maxScore > 2000) {
-           setUnlockedCodes(prev => prev.includes(t('game.fest.discount10')) ? prev : [...prev, t('game.fest.discount10')]);
-        }
-        if (maxScore > 5000) {
-           setUnlockedCodes(prev => prev.includes(t('game.fest.discountVIP')) ? prev : [...prev, t('game.fest.discountVIP')]);
-        }
+        // Codes logic
+        if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
+        if (maxScore > 2000) setUnlockedCodes(prev => prev.includes('BEATS10') ? prev : [...prev, 'BEATS10']);
+        if (maxScore > 5000) setUnlockedCodes(prev => prev.includes('VIPPRO') ? prev : [...prev, 'VIPPRO']);
 
-        platforms.forEach(p => {
+        platforms.forEach((p, idx) => {
           p.y += diff;
           if (p.y > canvas.height) {
             let minY = Math.min(...platforms.map(p2 => p2.y));
-            p.y = minY - (Math.random() * 40 + 60); // Distance between 60 to 100
-            p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
+            p.y = minY - (Math.random() * 30 + 70);
+            // Spiral math: Use sine wave to position platforms
+            p.x = (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(p.y * 0.005) * 120;
+            p.hasSpring = Math.random() > 0.92;
+            spawnPowerup(p);
+            spawnEnemy();
+          }
+        });
+
+        enemies.forEach(e => e.y += diff);
+        powerups.forEach(pw => pw.y += diff);
+      }
+
+      // Collisions Platforms
+      if (player.vy > 0) {
+        platforms.forEach(p => {
+          if (
+            player.x + 4 < p.x + PLATFORM_WIDTH &&
+            player.x + player.width - 4 > p.x &&
+            player.y + player.height >= p.y &&
+            player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy
+          ) {
+            player.vy = p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce;
+            if (p.hasSpring) shake = 10;
+            createParticles(player.x, player.y + player.height, selectedChar.color);
           }
         });
       }
 
-      // Collisions
-      if (player.vy > 0) {
-        platforms.forEach(p => {
-          if (
-            player.x + 8 < p.x + PLATFORM_WIDTH &&
-            player.x + player.width - 8 > p.x &&
-            player.y + player.height >= p.y &&
-            player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy
-          ) {
-            player.vy = JUMP_FORCE;
-            createParticles(player.x, player.y + player.height);
+      // Collisions Powerups
+      powerups = powerups.filter(pw => {
+        const hit = player.x < pw.x + 20 && player.x + player.width > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y;
+        if (hit) {
+          if (pw.type === 'rocket') player.jetpack = 120;
+          if (pw.type === 'shield') player.shield = 1;
+        }
+        return !hit && pw.y < canvas.height;
+      });
+
+      // Collisions Enemies
+      enemies.forEach((e, index) => {
+        e.x += e.speed;
+        if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
+
+        if (
+          player.x < e.x + e.width - 4 &&
+          player.x + player.width > e.x + 4 &&
+          player.y < e.y + e.width - 4 &&
+          player.y + player.height > e.y + 4
+        ) {
+          if (player.shield > 0) {
+            player.shield = 0;
+            enemies.splice(index, 1);
+            shake = 15;
+          } else {
+            setIsPlaying(false);
           }
-        });
-      }
+        }
+      });
+      enemies = enemies.filter(e => e.y < canvas.height);
 
       // Game Over
       if (player.y > canvas.height) {
@@ -164,43 +365,106 @@ export function FestJump() {
     };
 
     const draw = () => {
-      // Dynamic Background based on height
-      if (cameraY < 1000) {
-        ctx.fillStyle = '#111827'; // Dark street level
-      } else if (cameraY < 3000) {
-        ctx.fillStyle = '#064e3b'; // Jungle green
-      } else {
-        ctx.fillStyle = '#312e81'; // High altitude neon
-      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // BG with multiple layers and dynamic gradient
+      const bgColorTop = cameraY < 2000 ? '#0f172a' : cameraY < 6000 ? '#064e3b' : cameraY < 12000 ? '#312e81' : '#581c87';
+      const bgColorBot = cameraY < 2000 ? '#1e293b' : cameraY < 6000 ? '#065f46' : cameraY < 12000 ? '#4338ca' : '#000000';
+      
+      let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGrad.addColorStop(0, bgColorTop);
+      bgGrad.addColorStop(1, bgColorBot);
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Parallax effect or simple stars/lights
-      ctx.fillStyle = '#ffffff20';
-      for(let i=0; i<20; i++) {
-        let sy = (cameraY * 0.1 + i * 50) % canvas.height;
-        ctx.fillRect(10 + (i*47)%canvas.width, sy, 2, 2);
+      // Stars with depth parallax
+      for(let i=0; i<50; i++) {
+        const layer = (i % 3) + 1;
+        const speed = layer * 0.04;
+        let sy = (cameraY * speed + i * 60) % canvas.height;
+        let brightness = Math.sin(Date.now()*0.001 + i) * 0.5 + 0.5;
+        ctx.fillStyle = `rgba(255, 255, 255, ${brightness * 0.2 * layer})`;
+        ctx.fillRect((i * 137) % canvas.width, sy, layer, layer);
       }
 
-      // Platforms (Lotus/Neon)
+      // Cosmic Fog (Glowing auras)
+      ctx.globalAlpha = 0.12;
+      for (let i = 0; i < 3; i++) {
+        const offset = (cameraY * (0.1 + i * 0.05)) % (canvas.height * 1.5) - canvas.height/2;
+        ctx.fillStyle = i % 2 === 0 ? selectedChar.accent : selectedChar.color;
+        ctx.beginPath();
+        ctx.arc(canvas.width/2 + Math.sin(offset*0.005 + i)*150, offset, 180 + i*20, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Spiral Guide Rail (Dashed line with glow)
+      ctx.beginPath();
+      ctx.setLineDash([5, 15]);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 2;
+      for(let y = -50; y < canvas.height + 50; y += 5) {
+        const absY = cameraY - y + canvas.height;
+        const x = (canvas.width / 2) + Math.sin(absY * 0.005) * 120;
+        if (y === -50) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Platforms
       platforms.forEach(p => {
-        ctx.fillStyle = cameraY > 3000 ? '#e879f9' : '#a7f3d0'; // Neon pink / Lotus green
-        ctx.shadowColor = ctx.fillStyle;
-        ctx.shadowBlur = 10;
+        // Platform Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(p.x + 4, p.y + 4, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+
+        const pColor = p.hasSpring ? '#fde047' : (cameraY > 5000 ? '#e879f9' : '#a7f3d0');
+        ctx.fillStyle = pColor;
         ctx.fillRect(p.x, p.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
-        ctx.shadowBlur = 0;
+
+        // Reflection
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.fillRect(p.x, p.y, PLATFORM_WIDTH, 2);
+
+        if (p.hasSpring) {
+           ctx.fillStyle = '#ca8a04';
+           const jumpPulse = Math.sin(Date.now() * 0.015) * 1.5;
+           ctx.fillRect(p.x + PLATFORM_WIDTH/2 - 10, p.y - 4 + jumpPulse, 20, 4);
+        }
+      });
+
+      // Powerups
+      powerups.forEach(pw => {
+        ctx.fillStyle = pw.type === 'rocket' ? '#f59e0b' : '#3b82f6';
+        ctx.beginPath();
+        ctx.arc(pw.x + 10, pw.y + 10, 8, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.fillText(pw.type === 'rocket' ? '🚀' : '🛡️', pw.x + 2, pw.y + 15);
+      });
+
+      // Enemies
+      enemies.forEach(e => {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(e.x, e.y, e.width, e.width);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.fillText('👿', e.x + 4, e.y + 22);
       });
 
       // Particles
       particles = particles.filter(p => p.life > 0);
       particles.forEach(p => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
         ctx.fillRect(p.x, p.y, 4, 4);
-        p.life -= 0.05;
+        p.life -= 0.03;
         p.y += 1;
       });
+      ctx.globalAlpha = 1;
 
       // Player
-      drawElephant(player.x, player.y);
+      drawPlayer(player.x, player.y);
 
       update();
 
@@ -215,51 +479,192 @@ export function FestJump() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('mousemove', handlePointerMove);
+      canvas.removeEventListener('touchmove', handlePointerMove);
     };
+  }, [isPlaying, selectedChar]);
+
+  const handleGameOver = () => {
+     const earned = Math.floor(score / 50);
+     if (earned > 0) {
+       setFestCoins(prev => prev + earned);
+     }
+  };
+
+  useEffect(() => {
+    if (!isPlaying && score > 0) {
+      handleGameOver();
+    }
   }, [isPlaying]);
 
+  const buyChar = (char: Character) => {
+    if (festCoins >= char.price) {
+      setFestCoins(prev => prev - char.price);
+      setUnlockedChars(prev => [...prev, char.id]);
+      showMsg(`DESBLOQUEADO: ${t(char.nameKey)}`, 'success');
+    } else {
+      showMsg('KARMAS INSUFICIENTES', 'error');
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]">
+    <div className="flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)] select-none">
       <div className="flex justify-between items-end w-[400px] max-w-full px-4 mb-4 text-[#fcfcfc] text-[10px] md:text-sm h-16">
         <div>
-          <p className="text-brand-accent">{t('game.fest.title')}</p>
-          <p className="text-2xl mt-1">{score}m</p>
+          <p className="text-brand-accent flex items-center gap-2">
+            <User className="w-4 h-4" />
+            {t(selectedChar.nameKey)}
+          </p>
+          <p className="text-2xl mt-1 leading-none">{score}M</p>
         </div>
         <div className="text-right flex flex-col items-end justify-end h-full">
-          <p className="text-gray-400 mb-1">{t('game.fest.codes')}</p>
-          <div className="text-[8px] text-pink-400 flex flex-col items-end gap-1 min-h-[30px]">
-            {unlockedCodes.length === 0 ? t('game.fest.hint') : unlockedCodes.map(c => <span key={c}>{c}</span>)}
+          <div className="flex items-center gap-2 text-yellow-500 mb-1">
+            <Zap className="w-3 h-3" />
+            <span>{festCoins} KARMAS</span>
+          </div>
+          <div className="text-[8px] text-pink-400 flex flex-col items-end gap-1">
+            {unlockedCodes.map(c => <span key={c} className="bg-pink-500/10 px-2 py-0.5 border border-pink-500/20">{c}</span>)}
           </div>
         </div>
       </div>
       
-      <div className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full aspect-[3/4]">
-        {!isPlaying ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80 p-6 text-center">
-            <h3 className="text-pink-500 text-xl mb-2 leading-loose">FEST JUMP</h3>
-            <p className="text-[8px] text-gray-400 mb-6 max-w-[200px] leading-relaxed">
-              {t('game.fest.objective')}
-            </p>
-            <button 
-              onClick={() => {
-                setScore(0);
-                setIsPlaying(true);
-              }}
-              className="bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors"
+      <div className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-[400px] max-w-full aspect-[3/4] shadow-2xl">
+        <AnimatePresence>
+          {message && (
+            <motion.div 
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 20, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              className={`absolute top-0 inset-x-0 z-[60] flex justify-center pointer-events-none`}
             >
-              {t('game.insert')}
-            </button>
-            {score > 0 && <p className="text-red-500 mt-4 text-[10px]">{t('game.fest.over', { score: score.toString() })}</p>}
-          </div>
-        ) : null}
+              <div className={`px-4 py-2 border text-[10px] uppercase tracking-tighter ${
+                message.type === 'success' ? 'bg-green-500/20 border-green-500 text-green-400' : 
+                message.type === 'error' ? 'bg-red-500/20 border-red-500 text-red-400' : 
+                'bg-blue-500/20 border-blue-500 text-blue-400'
+              }`}>
+                {message.text}
+              </div>
+            </motion.div>
+          )}
+
+          {!isPlaying && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-black/90 p-6 text-center overflow-y-auto"
+            >
+              {!showShop && !showCodeInput ? (
+                <>
+                  <h3 className="text-brand-accent text-2xl mb-2 italic font-black">FEST JUMP II</h3>
+                  <div className="flex gap-4 mb-8">
+                    <button onClick={() => setIsPlaying(true)} className="bg-white text-black px-8 py-3 uppercase text-[10px] font-bold hover:bg-brand-accent hover:text-white transition-all">
+                      {t('game.insert')}
+                    </button>
+                    <button onClick={() => setShowShop(true)} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
+                      <ShoppingCart className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => setShowCodeInput(true)} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
+                      <Key className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {score > 0 && (
+                    <div className="text-zinc-500 text-[10px] uppercase space-y-1">
+                      <p className="text-red-500 text-sm mb-2">{t('game.fest.over', { score: score.toString() })}</p>
+                      <p>KARMAS GANADOS: +{Math.floor(score / 50)}</p>
+                    </div>
+                  )}
+                </>
+              ) : showShop ? (
+                <div className="w-full h-full flex flex-col pt-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-white text-xs tracking-widest">{t('game.fest.shop')}</h4>
+                    <button onClick={() => setShowShop(false)} className="text-zinc-500 text-[10px] uppercase hover:text-white">[ Volver ]</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pb-4">
+                    {CHARACTERS.map(char => {
+                      const isUnlocked = unlockedChars.includes(char.id);
+                      const isSelected = selectedCharId === char.id;
+                      return (
+                        <div key={char.id} className={`p-4 border-2 transition-all ${isSelected ? 'border-brand-accent bg-brand-accent/5' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}>
+                          <div className="w-full aspect-square mb-2 flex items-center justify-center relative bg-black/40 border border-white/5" style={{ backgroundColor: `${char.color}10` }}>
+                             <div className="w-8 h-8 relative z-10" style={{ backgroundColor: char.color }}></div>
+                             <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-full animate-pulse bg-gradient-to-t from-transparent to-white/10" />
+                             </div>
+                          </div>
+                          <p className="text-[10px] text-white mb-1 truncate font-bold">{t(char.nameKey)}</p>
+                          <p className="text-[7px] text-zinc-500 mb-2 h-8 leading-tight italic">{t(char.descKey)}</p>
+                          {isUnlocked ? (
+                            <button 
+                              disabled={isSelected}
+                              onClick={() => setSelectedCharId(char.id)}
+                              className={`w-full py-2 text-[8px] uppercase font-bold ${isSelected ? 'text-brand-accent' : 'bg-white text-black hover:bg-brand-accent hover:text-white'}`}
+                            >
+                              {isSelected ? t('game.fest.selected') : 'Seleccionar'}
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => buyChar(char)}
+                              className="w-full py-2 bg-yellow-500 text-black text-[8px] uppercase font-bold hover:bg-yellow-400"
+                            >
+                              {char.price} KARMAS
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full max-w-[240px]">
+                  <h4 className="text-white text-[10px] mb-4 uppercase tracking-[0.2em]">{t('game.fest.code.input')}</h4>
+                  <input 
+                    type="text" 
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value)}
+                    placeholder="XYZ123"
+                    className="w-full bg-zinc-900 border border-zinc-700 px-4 py-3 text-white text-center font-mono focus:outline-none focus:border-brand-accent uppercase mb-4"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={() => setShowCodeInput(false)} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">Atrás</button>
+                    <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 text-[10px] uppercase font-bold">Aplicar</button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <canvas 
           ref={canvasRef} 
           width={400} 
           height={500} 
-          className="block w-full h-full cursor-none touch-none"
+          className="block w-full h-full touch-none"
         />
+        
+        {/* HUD while playing */}
+        {isPlaying && (
+          <div className="absolute top-4 left-4 z-10 flex gap-2 pointer-events-none">
+            {/* Show active powerups indicators here if needed */}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-8 w-[400px] max-w-full px-4 text-[8px] text-zinc-500 uppercase tracking-widest font-mono">
+        <div className="space-y-2">
+          <p className="text-white mb-2 underline decoration-brand-accent underline-offset-4">Consejos Pro</p>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-yellow-400 rounded-full"></div> Resortes: Super Salto</div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> 🚀: Turbo-Arte</div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> 🛡️: Inmunidad</div>
+          <p className="mt-4 text-pink-500 font-bold opacity-80">LEAKED CODES:</p>
+          <p className="text-pink-400">RICHART, RIVAD2026, GODMODE</p>
+        </div>
+        <div className="space-y-2">
+           <p className="text-white mb-2 underline decoration-red-500 underline-offset-4">Amenazas</p>
+           <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> Críticos de Arte</div>
+           <p className="mt-4 leading-relaxed opacity-60 italic">Escala la espiral infinita del éxito y derrota el conformismo.</p>
+        </div>
       </div>
     </div>
   );
