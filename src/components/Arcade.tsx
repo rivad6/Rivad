@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
+import { ArtRPG } from './games/ArtRPG';
 
 import { useLanguage } from '../context/LanguageContext';
 
 export function Arcade() {
   const { t } = useLanguage();
-  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno'>('pong');
+  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg'>('rpg');
 
   const games = [
     { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={16} /> },
     { id: 'uno', title: t('arc.game2'), icon: <Layers size={16} /> },
     { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={16} /> },
+    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={16} /> },
   ] as const;
 
   return (
@@ -70,6 +72,7 @@ export function Arcade() {
                 {activeGame === 'pong' && <DebatePong />}
                 {activeGame === 'tictactoe' && <IdeasTicTacToe />}
                 {activeGame === 'uno' && <PoliticalUno />}
+                {activeGame === 'rpg' && <ArtRPG />}
               </motion.div>
             </AnimatePresence>
 
