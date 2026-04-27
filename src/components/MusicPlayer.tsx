@@ -69,7 +69,6 @@ export function MusicPlayer() {
         ref={audioRef} 
         src={audioSrc} 
         preload="auto" 
-        crossOrigin="anonymous"
         onProgress={handleProgress}
         onCanPlayThrough={handleCanPlayThrough}
         onError={(e) => console.error("Audio error:", e)}

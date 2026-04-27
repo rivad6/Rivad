@@ -20,7 +20,7 @@ export default defineConfig(({mode}) => {
       host: '0.0.0.0',
       strictPort: true,
       allowedHosts: true,
-      hmr: false,
+      hmr: process.env.DISABLE_HMR !== 'true',
     },
   };
 });
