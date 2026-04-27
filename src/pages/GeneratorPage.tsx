@@ -111,7 +111,7 @@ export function GeneratorPage() {
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
                     placeholder={t('orc.input.placeholder')}
-                    className="w-full bg-black/50 border border-[#333] rounded-2xl text-2xl md:text-4xl text-center py-6 px-6 focus:outline-none focus:border-pink-500 focus:bg-black/80 focus:shadow-[0_0_30px_rgba(236,72,153,0.2)] transition-all font-serif italic text-white placeholder:text-[#444]"
+                    className="w-full bg-black/50 border border-[#333] rounded-2xl text-2xl md:text-3xl text-center py-6 px-6 focus:outline-none focus:border-pink-500 focus:bg-black/80 focus:shadow-[0_0_30px_rgba(236,72,153,0.2)] transition-all font-display font-bold text-white placeholder:text-[#444]"
                   />
                 </div>
                 
@@ -135,7 +135,7 @@ export function GeneratorPage() {
                 className="flex flex-col space-y-10"
               >
                 <div className="text-center pb-10 border-b border-pink-900/30">
-                  <h4 className="text-3xl md:text-5xl font-serif text-white mb-3 tracking-wide">"{eventName || t('orc.default_name')}"</h4>
+                  <h4 className="text-2xl md:text-4xl font-serif font-bold text-white mb-3 tracking-tight">"{eventName || t('orc.default_name')}"</h4>
                   <p className="font-mono text-xs text-pink-500 uppercase tracking-[0.2em]">{t('orc.diag')}</p>
                 </div>
 
@@ -171,7 +171,7 @@ export function GeneratorPage() {
                     <div className="absolute -top-4 -left-4 bg-pink-500 text-white p-3 rounded-full shadow-[0_0_20px_rgba(236,72,153,0.5)]">
                       <MessageSquare size={20} />
                     </div>
-                    <p className="font-serif italic text-xl md:text-3xl text-pink-50 leading-relaxed text-balance indent-8">
+                    <p className="font-display font-medium text-xl md:text-2xl text-pink-50 leading-relaxed text-balance text-center">
                       "{response}"
                     </p>
                     

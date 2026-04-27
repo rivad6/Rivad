@@ -40,7 +40,7 @@ function ProjectCard({ title, category, description, icon, colSpan = 1, linkText
         </div>
         
         <div>
-          <h3 className="text-3xl lg:text-5xl font-serif font-light mb-6 text-white group-hover:text-blue-400 transition-all duration-500 leading-none">
+          <h3 className="text-3xl lg:text-5xl font-display font-medium mb-6 text-white group-hover:text-blue-400 transition-all duration-500 leading-none">
             {title}
           </h3>
           <p className="text-blue-200/40 group-hover:text-blue-100/70 font-sans text-sm md:text-base mb-10 leading-relaxed max-w-sm transition-colors duration-500">
@@ -92,7 +92,7 @@ export function Ecosystem() {
           <div>
             <h2 className="text-sm font-mono tracking-widest text-blue-500/50 uppercase mb-4">{t('eco.title')}</h2>
             <h3 className="text-6xl md:text-8xl font-display uppercase tracking-[-0.04em] leading-[0.8] text-indigo-50">
-              {t('eco.multiverse')} <br /> <span className="text-blue-400 italic font-serif tracking-normal text-[1.1em] lowercase ml-12 md:ml-24 leading-[0.8]">{t('eco.creative')}</span>
+              {t('eco.multiverse')} <br /> <span className="text-blue-400 font-display font-medium tracking-normal text-[0.8em] lowercase ml-12 md:ml-24 leading-[0.8]">{t('eco.creative')}</span>
             </h3>
           </div>
           <p className="text-blue-200/70 font-sans text-sm md:text-base font-light max-w-sm hidden lg:block border-l border-blue-500/30 pl-4 py-2">

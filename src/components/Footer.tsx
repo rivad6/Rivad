@@ -21,7 +21,7 @@ export function Footer() {
             {t('footer.title.main')}<br/>
             <span className="opacity-80">
               {t('footer.title.sub').split('{{highlight}}')[0]}
-              <span className="font-serif italic font-light tracking-normal text-red-600 lowercase relative inline-block">
+              <span className="font-display font-medium tracking-normal text-red-600 lowercase relative inline-block">
                 {t('footer.title.highlight')}
                 <span className="absolute -bottom-1 md:-bottom-2 left-0 w-full h-px md:h-1 bg-red-600/50 blur-[2px]"></span>
               </span>
@@ -87,7 +87,7 @@ export function Footer() {
           <div className="relative p-8 md:p-12 border border-white/5 bg-white/[0.02] backdrop-blur-3xl group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
             
-            <h3 className="text-2xl font-serif font-light mb-12 pb-6 border-b border-white/5 flex justify-between items-center text-red-50">
+            <h3 className="text-2xl font-display font-medium mb-12 pb-6 border-b border-white/5 flex justify-between items-center text-red-50">
               <span>{t('footer.direct')}</span>
               <span className="font-mono text-[9px] text-red-500 border border-red-500/30 bg-red-500/5 px-3 py-1.5 uppercase tracking-[0.3em]">{t('footer.online')}</span>
             </h3>

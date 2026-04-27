@@ -85,7 +85,7 @@ export function RandomFacts() {
                       transition={{ duration: 0.3 }}
                       className="w-full flex flex-col gap-8 flex-1 justify-center"
                     >
-                      <p className="font-serif text-xl md:text-3xl text-gray-100 leading-snug font-medium text-balance">
+                      <p className="font-display text-xl md:text-3xl text-gray-100 leading-snug font-medium text-balance">
                         "{t(`rf.fact${currentIndex}` as any)}"
                       </p>
 

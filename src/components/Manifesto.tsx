@@ -16,7 +16,7 @@ export function Manifesto() {
             </h2>
             <h3 className="text-6xl md:text-8xl font-display font-bold uppercase tracking-tighter mb-8 leading-[0.8] text-[#F5F5F5]">
               {t('mani.h3')} <br/>
-              <span className="text-brand-accent italic font-serif lowercase tracking-normal font-light drop-shadow-[0_0_30px_rgba(242,74,41,0.2)]">{t('mani.h3.sub')}</span>
+              <span className="text-brand-accent font-display lowercase tracking-normal font-light drop-shadow-[0_0_30px_rgba(242,74,41,0.2)]">{t('mani.h3.sub')}</span>
             </h3>
             <div className="relative group overflow-hidden">
               <div className="absolute inset-0 bg-brand-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -28,7 +28,7 @@ export function Manifesto() {
 
           <div className="lg:col-span-8 font-sans text-xl md:text-2xl leading-relaxed font-light text-gray-400">
             <div className="space-y-16">
-              <p className="hover:text-white transition-colors duration-700 text-balance first-letter:text-5xl first-letter:font-serif first-letter:mr-4 first-letter:float-left first-letter:text-brand-accent">
+              <p className="hover:text-white transition-colors duration-700 text-balance first-letter:text-5xl first-letter:font-display first-letter:font-bold first-letter:mr-4 first-letter:float-left first-letter:text-brand-accent">
                 {t('mani.p1')}
               </p>
               <div className="h-px w-24 bg-brand-accent/20"></div>
@@ -52,15 +52,15 @@ export function Manifesto() {
         <div className="mt-40 grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-white/5 relative z-10">
           <div className="p-10 border-r border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
             <div className="text-[9px] font-mono text-gray-600 group-hover:text-brand-accent/50 uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box1.title')}</div>
-            <div className="font-serif text-2xl text-gray-300 group-hover:text-white transition-colors">{t('mani.box1.desc')}</div>
+            <div className="font-display font-medium text-2xl text-gray-300 group-hover:text-white transition-colors">{t('mani.box1.desc')}</div>
           </div>
           <div className="p-10 border-r border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
             <div className="text-[9px] font-mono text-gray-600 group-hover:text-brand-accent/50 uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box2.title')}</div>
-            <div className="font-serif text-2xl text-gray-300 group-hover:text-white transition-colors">{t('mani.box2.desc')}</div>
+            <div className="font-display font-medium text-2xl text-gray-300 group-hover:text-white transition-colors">{t('mani.box2.desc')}</div>
           </div>
           <div className="p-10 border-b border-white/5 bg-brand-accent/[0.03] group hover:bg-brand-accent/[0.05] transition-colors">
             <div className="text-[9px] font-mono text-brand-accent uppercase tracking-[0.4em] mb-6 font-bold">{t('mani.box3.title')}</div>
-            <div className="font-serif text-2xl text-white">{t('mani.box3.desc')}</div>
+            <div className="font-display font-medium text-2xl text-white">{t('mani.box3.desc')}</div>
           </div>
         </div>
       </div>

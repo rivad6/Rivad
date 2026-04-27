@@ -53,7 +53,7 @@ export function PricingPopup() {
             </div>
           </div>
           
-          <h3 className="text-xl font-bold text-center text-white font-serif tracking-tight mb-2">
+          <h3 className="text-xl font-bold text-center text-white font-display tracking-tight mb-2">
             {t('popup.pricing.title') || 'Construye tu propio ecosistema'}
           </h3>
           

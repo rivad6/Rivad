@@ -14,6 +14,8 @@ import {
   Star
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 import { cn } from '../../lib/utils';
 
 interface Upgrade {
@@ -35,6 +37,8 @@ const UPGRADES: Upgrade[] = [
 
 export const SellOutGame: React.FC = () => {
   const { t } = useLanguage();
+  const { playSound } = useAudio();
+  const { unlockAchievement } = useAchievements();
   const [hype, setHype] = useState(0);
   const [audience, setAudience] = useState(10);
   const [relevance, setRelevance] = useState(100);
@@ -74,6 +78,8 @@ export const SellOutGame: React.FC = () => {
         const next = prev - (0.25 + (currentHype * 0.000003)); 
         if (next <= 0) {
           setGameState('lose');
+          playSound('lose');
+          unlockAchievement('brokeback');
           setMessage(t('game.sell.msg.lose'));
           return 0;
         }
@@ -82,6 +88,8 @@ export const SellOutGame: React.FC = () => {
 
       if (currentHype >= 1000000) {
         setGameState('win');
+        playSound('win');
+        unlockAchievement('sellout');
         setMessage(t('game.sell.msg.win'));
       }
     }, 100);
@@ -92,6 +100,7 @@ export const SellOutGame: React.FC = () => {
   const handleMainClick = (e: React.MouseEvent) => {
     if (gameState !== 'playing') return;
     
+    playSound('hover');
     setHype(prev => prev + totalHypePerClick);
     setAudience(prev => prev + 1);
     setRelevance(prev => Math.min(100, prev + 1.2));
@@ -106,9 +115,12 @@ export const SellOutGame: React.FC = () => {
   const buyUpgrade = (upgrade: Upgrade) => {
     const cost = Math.floor(upgrade.baseCost * Math.pow(1.2, inventory[upgrade.id] || 0));
     if (hype >= cost) {
+      playSound('purchase');
       setHype(prev => prev - cost);
       setInventory(prev => ({ ...prev, [upgrade.id]: (prev[upgrade.id] || 0) + 1 }));
       setAudience(prev => prev * 1.1);
+    } else {
+      playSound('alert');
     }
   };
 

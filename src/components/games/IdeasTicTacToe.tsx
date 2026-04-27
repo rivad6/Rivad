@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAudio } from '../../context/AudioContext';
 import { motion } from 'motion/react';
 
 type Player = 'X' | 'O' | null;
 
 export function IdeasTicTacToe() {
   const { t, language } = useLanguage();
+  const { playSound } = useAudio();
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [log, setLog] = useState<string>(t('game.ttt.log.start'));
@@ -31,8 +33,8 @@ export function IdeasTicTacToe() {
     ];
     for (let i = 0; i < lines.length; i++) {
       const [a, b, c] = lines[i];
-      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-        return squares[a];
+      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+        return board[a];
       }
     }
     return null;
@@ -40,6 +42,12 @@ export function IdeasTicTacToe() {
 
   const winner = calculateWinner(board);
   const isDraw = !winner && board.every((square) => square !== null);
+
+  useEffect(() => {
+    if (winner === 'X') playSound('win');
+    else if (winner === 'O') playSound('lose');
+    else if (isDraw) playSound('alert');
+  }, [winner, isDraw, playSound]);
 
   useEffect(() => {
     if (!xIsNext && !winner && !isDraw) {
@@ -74,14 +82,16 @@ export function IdeasTicTacToe() {
         setBoard(newBoard);
         setLog(philosophicalPhrasesO[Math.floor(Math.random() * philosophicalPhrasesO.length)]);
         setXIsNext(true);
+        playSound('click');
 
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [xIsNext, board, winner, isDraw]);
+  }, [xIsNext, board, winner, isDraw, playSound, language]);
 
   const handleClick = (i: number) => {
     if (board[i] || winner || !xIsNext) return;
+    playSound('click');
     const newBoard = [...board];
     newBoard[i] = 'X';
     setBoard(newBoard);

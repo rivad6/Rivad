@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shield, 
@@ -28,6 +30,8 @@ type Card = {
 
 export function PoliticalUno() {
   const { t } = useLanguage();
+  const { playSound } = useAudio();
+  const { unlockAchievement } = useAchievements();
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
   const [cpuHand, setCpuHand] = useState<Card[]>([]);
   const [topCard, setTopCard] = useState<Card | null>(null);
@@ -158,6 +162,7 @@ export function PoliticalUno() {
     const card = playerHand[index];
     
     if (isValidPlay(card)) {
+      playSound('click');
       setTopCard(card);
       const newHand = [...playerHand];
       newHand.splice(index, 1);
@@ -165,6 +170,8 @@ export function PoliticalUno() {
       
       if (newHand.length === 0) {
         setWinner('player');
+        playSound('win');
+        unlockAchievement('dictator');
         setMessage(t('game.uno.msg.win'));
         return;
       }
@@ -174,11 +181,13 @@ export function PoliticalUno() {
         setTurn(nextTurn);
       }
     } else {
+      playSound('alert');
       setMessage(t('game.uno.msg.error'));
     }
   };
 
   const handleColorChoice = (color: Color) => {
+    playSound('click');
     if (!topCard) return;
     setTopCard({ ...topCard, color });
     setIsChoosingColor(false);
@@ -186,6 +195,7 @@ export function PoliticalUno() {
   };
 
   const drawCard = () => {
+    playSound('hover');
     if (turn !== 'player' || winner || isChoosingColor) return;
     const newCard = generateCard();
     setPlayerHand([...playerHand, newCard]);
@@ -223,12 +233,15 @@ export function PoliticalUno() {
           
           if (newHand.length === 0) {
             setWinner('cpu');
+            playSound('lose');
             setMessage(t('game.uno.msg.lose'));
           } else {
+            playSound('click');
             const nextTurn = processAction(cardToPlay, 'cpu');
             setTurn(nextTurn);
           }
         } else {
+          playSound('hover');
           setCpuHand([...cpuHand, generateCard()]);
           setMessage(t('game.uno.msg.cpu_draw'));
           setTurn('player');
@@ -275,7 +288,7 @@ export function PoliticalUno() {
           
           <div className="flex flex-col items-center gap-1 opacity-90">
              {card.action === 'normal' ? (
-                <span className="text-2xl md:text-5xl font-serif">{card.value}</span>
+                <span className="text-2xl md:text-5xl font-display font-medium">{card.value}</span>
              ) : (
                 <CardIcon action={card.action} />
              )}

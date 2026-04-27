@@ -13,9 +13,15 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import { AudioProvider } from './context/AudioContext';
+import { AchievementsProvider } from './context/AchievementsContext';
 import { AnimatePresence, motion } from 'motion/react';
 import { PricingPopup } from './components/PricingPopup';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AchievementPopup } from './components/AchievementPopup';
+
+import { Volume2, VolumeX } from 'lucide-react';
+import { useAudio } from './context/AudioContext';
 
 const Home = React.lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
 const ArcadePage = React.lazy(() => import('./pages/ArcadePage').then(m => ({ default: m.ArcadePage })));
@@ -25,16 +31,25 @@ const GeneratorPage = React.lazy(() => import('./pages/GeneratorPage').then(m =>
 
 function Nav() {
   const { language, setLanguage } = useLanguage();
+  const { isMuted, toggleMute } = useAudio();
   return (
     <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-6 pointer-events-none">
       <Link to="/" className="pointer-events-auto font-display font-bold text-xl uppercase tracking-tighter text-white hover:text-brand-accent transition-colors flex items-center gap-2">
         <span className="w-6 h-6 bg-brand-accent rounded-sm"></span>
         Rivad
       </Link>
-      <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest backdrop-blur-md bg-black/40 p-1.5 border border-white/5 rounded-full pointer-events-auto shadow-xl">
-        <button onClick={() => setLanguage('es')} className={`px-3 py-1.5 rounded-full transition-all duration-300 ${language === 'es' ? 'text-white bg-brand-accent shadow-[0_0_15px_rgba(242,74,41,0.3)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>ES</button>
-        <button onClick={() => setLanguage('en')} className={`px-3 py-1.5 rounded-full transition-all duration-300 ${language === 'en' ? 'text-white bg-brand-accent shadow-[0_0_15px_rgba(242,74,41,0.3)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>EN</button>
-        <button onClick={() => setLanguage('fr')} className={`px-3 py-1.5 rounded-full transition-all duration-300 ${language === 'fr' ? 'text-white bg-brand-accent shadow-[0_0_15px_rgba(242,74,41,0.3)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>FR</button>
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={toggleMute}
+          className="text-gray-500 hover:text-white transition-colors pointer-events-auto p-2 bg-black/40 backdrop-blur-md rounded-full border border-white/5 shadow-xl"
+        >
+          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        </button>
+        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest backdrop-blur-md bg-black/40 p-1.5 border border-white/5 rounded-full pointer-events-auto shadow-xl">
+          <button onClick={() => setLanguage('es')} className={`px-3 py-1.5 rounded-full transition-all duration-300 ${language === 'es' ? 'text-white bg-brand-accent shadow-[0_0_15px_rgba(242,74,41,0.3)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>ES</button>
+          <button onClick={() => setLanguage('en')} className={`px-3 py-1.5 rounded-full transition-all duration-300 ${language === 'en' ? 'text-white bg-brand-accent shadow-[0_0_15px_rgba(242,74,41,0.3)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>EN</button>
+          <button onClick={() => setLanguage('fr')} className={`px-3 py-1.5 rounded-full transition-all duration-300 ${language === 'fr' ? 'text-white bg-brand-accent shadow-[0_0_15px_rgba(242,74,41,0.3)]' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>FR</button>
+        </div>
       </div>
     </nav>
   );
@@ -90,25 +105,30 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <LanguageProvider>
-        <BrowserRouter>
-          <div className="bg-brand-bg min-h-screen text-brand-ink selection:bg-brand-accent selection:text-[#000] flex flex-col relative overflow-x-hidden">
-            <div className="noise-bg"></div>
-            <ScrollToTop />
-            <Nav />
-            <MusicPlayer />
-            <FloatingBackButton />
-            <GameInvitePopup />
-            <PricingPopup />
-            <SpeedInsights />
-            <Analytics />
-            <div className="flex-1 relative z-10 w-full">
-              <AnimatedRoutes />
-            </div>
-            <Footer />
-          </div>
-        </BrowserRouter>
-      </LanguageProvider>
+      <AudioProvider>
+        <AchievementsProvider>
+          <LanguageProvider>
+            <BrowserRouter>
+              <div className="bg-brand-bg min-h-screen text-brand-ink selection:bg-brand-accent selection:text-[#000] flex flex-col relative overflow-x-hidden">
+                <div className="noise-bg"></div>
+                <ScrollToTop />
+                <Nav />
+                <MusicPlayer />
+                <FloatingBackButton />
+                <GameInvitePopup />
+                <PricingPopup />
+                <AchievementPopup />
+                <SpeedInsights />
+                <Analytics />
+                <div className="flex-1 relative z-10 w-full">
+                  <AnimatedRoutes />
+                </div>
+                <Footer />
+              </div>
+            </BrowserRouter>
+          </LanguageProvider>
+        </AchievementsProvider>
+      </AudioProvider>
     </ErrorBoundary>
   );
 }

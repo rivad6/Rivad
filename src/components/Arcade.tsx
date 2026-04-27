@@ -6,11 +6,13 @@ import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
 import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
+import { useAchievements } from '../context/AchievementsContext';
 
 import { useLanguage } from '../context/LanguageContext';
 
 export function Arcade() {
   const { t } = useLanguage();
+  const { unlockAchievement } = useAchievements();
   const [showPopup, setShowPopup] = useState(false);
   const games = [
     { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={16} /> },
@@ -23,11 +25,14 @@ export function Arcade() {
   const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg' | 'sellout'>('rpg');
 
   useEffect(() => {
+    // Unlock first blood achievement when entering the arcade
+    unlockAchievement('first_blood');
+    
     const interval = setInterval(() => {
       setShowPopup(true);
     }, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [unlockAchievement]);
 
   return (
     <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40 relative">
@@ -68,7 +73,7 @@ export function Arcade() {
             </h2>
             <h3 className="text-6xl md:text-8xl font-display uppercase tracking-tighter text-[#e2d5f8] leading-none">
               Arcade <br className="hidden md:block" />
-              <span className="font-serif italic text-[#b58df8] lowercase font-light tracking-normal ml-0 md:ml-12">{t('arc.sisyphus')}</span>
+              <span className="font-display text-[#b58df8] lowercase font-medium tracking-normal ml-0 md:ml-12">{t('arc.sisyphus')}</span>
             </h3>
           </div>
           <p className="text-[#a591c8] font-sans font-light max-w-sm text-sm md:text-base leading-relaxed border-l border-[#8a63d2]/30 pl-4 py-2">

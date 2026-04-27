@@ -72,7 +72,7 @@ export function Services() {
               </div>
               
               <div className="flex-1 pr-8 px-4 lg:px-0 z-10">
-                <h4 className="text-3xl md:text-5xl font-serif font-normal italic mb-6 text-[#1A1A1A] leading-tight">
+                <h4 className="text-3xl md:text-4xl font-display font-medium tracking-tight mb-6 text-[#1A1A1A] leading-tight">
                   {service.title}
                 </h4>
                 <p className="text-gray-700 font-sans text-sm md:text-base max-w-3xl leading-relaxed text-balance">

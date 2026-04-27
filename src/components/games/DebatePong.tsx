@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 
 export function DebatePong() {
   const { t, language } = useLanguage();
+  const { playSound } = useAudio();
+  const { unlockAchievement } = useAchievements();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [playerScore, setPlayerScore] = useState(0);
   const [cpuScore, setCpuScore] = useState(0);
@@ -58,6 +62,13 @@ export function DebatePong() {
     const draw = () => {
       if (player.score >= 5 || cpu.score >= 5) {
         setIsPlaying(false);
+        if (player.score >= 5) {
+          playSound('win');
+          unlockAchievement('pong_master');
+        } else {
+          playSound('lose');
+          unlockAchievement('pong_loser');
+        }
         return;
       }
 
@@ -92,6 +103,7 @@ export function DebatePong() {
           ball.dx = Math.min(10, Math.abs(ball.dx) + 0.4); 
           const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
+          playSound('hit');
           showHitText();
         }
       }
@@ -107,6 +119,7 @@ export function DebatePong() {
           ball.dx = -Math.min(10, Math.abs(ball.dx) + 0.4); 
           const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
+          playSound('hit');
           showHitText();
         }
       }

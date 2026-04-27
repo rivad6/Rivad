@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 
 type NodeId = string;
 
@@ -137,11 +139,25 @@ const storyMap: Record<string, StoryNode> = {
 
 export function ArtRPG() {
   const { t } = useLanguage();
+  const { playSound } = useAudio();
+  const { unlockAchievement } = useAchievements();
   const [currentNode, setCurrentNode] = useState<NodeId>('start');
 
   const node = storyMap[currentNode];
 
+  useEffect(() => {
+    if (node.isEnding) {
+      playSound('win');
+      unlockAchievement('red_pill');
+    }
+  }, [currentNode, node.isEnding, playSound, unlockAchievement]);
+
   const handleChoice = (next: NodeId) => {
+    if (next === 'start') {
+      playSound('hover');
+    } else {
+      playSound('click');
+    }
     setCurrentNode(next);
   };
 

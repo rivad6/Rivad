@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle } from 'lucide-react';
 
@@ -65,6 +67,7 @@ const CODES: Record<string, () => void> = {
 
 export function FestJump() {
   const { t } = useLanguage();
+  const { playSound } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showShop, setShowShop] = useState(false);
@@ -95,14 +98,18 @@ export function FestJump() {
     if (code === 'RICHART') {
       setFestCoins(prev => prev + 1000);
       showMsg('+$1000 KARMAS', 'success');
+      playSound('purchase');
     } else if (code === 'GODMODE') {
       showMsg('SECRET UNLOCKED: GHOST CHARACTER', 'success');
+      playSound('win');
       if (!unlockedChars.includes('ghost')) setUnlockedChars(prev => [...prev, 'ghost']);
     } else if (code === 'RIVAD2026') {
        setFestCoins(prev => prev + 5000);
        showMsg('DEVELOPER GIFT: +$5000 KARMAS', 'success');
+       playSound('purchase');
     } else {
       showMsg(t('game.fest.error'), 'error');
+      playSound('alert');
     }
     setCodeInput('');
     setShowCodeInput(false);
@@ -136,17 +143,22 @@ export function FestJump() {
       jetpack: 0,
     };
 
-    let platforms = Array.from({ length: 8 }, (_, i) => {
-      const height = canvas.height - (i * 100 + 20);
+    let platforms = Array.from({ length: 12 }, (_, i) => {
+      const height = canvas.height - (i * 80 + 20);
+      const typeRand = Math.random();
       return {
         x: (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(height * 0.005) * 120,
         y: height,
         hasSpring: Math.random() > 0.9,
+        type: (typeRand > 0.8 && i > 3) ? 'moving' : (typeRand > 0.6 && i > 5) ? 'breaking' : 'normal',
+        vx: (typeRand > 0.8 && i > 3) ? (Math.random() > 0.5 ? 2 : -2) : 0,
+        broken: false,
+        width: PLATFORM_WIDTH,
       };
     });
 
     // Start platform
-    platforms[0] = { x: canvas.width / 2 - PLATFORM_WIDTH / 2, y: canvas.height - 20, hasSpring: false };
+    platforms[0] = { x: canvas.width / 2 - PLATFORM_WIDTH / 2, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: PLATFORM_WIDTH };
 
     let cameraY = 0;
     let maxScore = 0;
@@ -213,25 +225,36 @@ export function FestJump() {
       ctx.save();
       if (shake > 0) ctx.translate(Math.random()*shake - shake/2, Math.random()*shake - shake/2);
       
+      // Body with squash/stretch
+      let stretchX = 1;
+      let stretchY = 1;
+      if (player.vy < -5) { stretchX = 0.8; stretchY = 1.2; }
+      else if (player.vy > 5) { stretchX = 0.9; stretchY = 1.1; }
+      
+      const pWidth = player.width * stretchX;
+      const pHeight = player.height * stretchY;
+      const pOffsetX = (player.width - pWidth) / 2;
+      const pOffsetY = (player.height - pHeight);
+
       // Shadow
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(x + 4, y + 4, player.width, player.height);
+      ctx.fillRect(x + 4 + pOffsetX, y + 4 + pOffsetY, pWidth, pHeight);
 
       // Trail for ghost
       if (selectedChar.id === 'ghost') {
         ctx.globalAlpha = 0.3;
         ctx.fillStyle = selectedChar.color;
-        ctx.fillRect(x - player.vx, y - player.vy, player.width, player.height);
+        ctx.fillRect(x - player.vx + pOffsetX, y - player.vy + pOffsetY, pWidth, pHeight);
         ctx.globalAlpha = 1;
       }
 
       // Body
       ctx.fillStyle = selectedChar.color;
-      ctx.fillRect(x, y, player.width, player.height);
+      ctx.fillRect(x + pOffsetX, y + pOffsetY, pWidth, pHeight);
       
       // Glasses/Accent
       ctx.fillStyle = selectedChar.accent;
-      ctx.fillRect(x + 2, y + 6, player.width - 4, 6);
+      ctx.fillRect(x + 2 + pOffsetX, y + pOffsetY + (6 * stretchY), pWidth - 4, 6 * stretchY);
       
       // Trunk
       ctx.fillStyle = selectedChar.color;
@@ -297,11 +320,27 @@ export function FestJump() {
           p.y += diff;
           if (p.y > canvas.height) {
             let minY = Math.min(...platforms.map(p2 => p2.y));
-            p.y = minY - (Math.random() * 30 + 70);
-            // Spiral math: Use sine wave to position platforms
-            p.x = (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(p.y * 0.005) * 120;
+            p.y = minY - (Math.random() * 40 + 60);
+            
+            // Advance generation patterns based on score
+            const isMoving = Math.random() < Math.min(0.5, maxScore / 20000);
+            const isBreaking = !isMoving && Math.random() < Math.min(0.4, maxScore / 25000);
+            
+            p.type = isMoving ? 'moving' : isBreaking ? 'breaking' : 'normal';
+            p.vx = isMoving ? (Math.random() > 0.5 ? (Math.random() * 2 + 1) : -(Math.random() * 2 + 1)) : 0;
+            p.broken = false;
+            
+            // Layout structures
+            if (Math.random() > 0.7) {
+               p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
+            } else {
+               p.x = (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(p.y * 0.005) * 120;
+            }
+            
             p.hasSpring = Math.random() > 0.92;
-            spawnPowerup(p);
+            if (p.type !== 'breaking') {
+              spawnPowerup(p);
+            }
             spawnEnemy();
           }
         });
@@ -313,15 +352,41 @@ export function FestJump() {
       // Collisions Platforms
       if (player.vy > 0) {
         platforms.forEach(p => {
+          if (p.broken) return;
+          
+          if (p.type === 'moving') {
+            p.x += p.vx;
+            if (p.x < 0 || p.x + p.width > canvas.width) p.vx *= -1;
+          }
+
           if (
-            player.x + 4 < p.x + PLATFORM_WIDTH &&
+            player.x + 4 < p.x + p.width &&
             player.x + player.width - 4 > p.x &&
             player.y + player.height >= p.y &&
             player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy
           ) {
             player.vy = p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce;
-            if (p.hasSpring) shake = 10;
-            createParticles(player.x, player.y + player.height, selectedChar.color);
+            if (p.type === 'breaking') {
+              p.broken = true;
+              createParticles(p.x + p.width/2, p.y + PLATFORM_HEIGHT/2, '#9ca3af');
+            } else {
+              if (p.hasSpring) {
+                shake = 10;
+                playSound('score');
+              } else {
+                playSound('click');
+              }
+              createParticles(player.x + player.width/2, player.y + player.height, selectedChar.color);
+            }
+          }
+        });
+      } else {
+        // Evaluate moving platforms even when going up, just so they keep moving
+        platforms.forEach(p => {
+          if (p.broken) return;
+          if (p.type === 'moving') {
+            p.x += p.vx;
+            if (p.x < 0 || p.x + p.width > canvas.width) p.vx *= -1;
           }
         });
       }
@@ -330,6 +395,7 @@ export function FestJump() {
       powerups = powerups.filter(pw => {
         const hit = player.x < pw.x + 20 && player.x + player.width > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y;
         if (hit) {
+          playSound('score');
           if (pw.type === 'rocket') player.jetpack = 120;
           if (pw.type === 'shield') player.shield = 1;
         }
@@ -351,7 +417,9 @@ export function FestJump() {
             player.shield = 0;
             enemies.splice(index, 1);
             shake = 15;
+            playSound('alert');
           } else {
+            playSound('hit');
             setIsPlaying(false);
           }
         }
@@ -360,6 +428,7 @@ export function FestJump() {
 
       // Game Over
       if (player.y > canvas.height) {
+        playSound('lose');
         setIsPlaying(false);
       }
     };
@@ -414,22 +483,42 @@ export function FestJump() {
 
       // Platforms
       platforms.forEach(p => {
+        if (p.broken) return; // don't draw broken platforms
+
         // Platform Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(p.x + 4, p.y + 4, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+        ctx.fillRect(p.x + 4, p.y + 4, p.width, PLATFORM_HEIGHT);
 
-        const pColor = p.hasSpring ? '#fde047' : (cameraY > 5000 ? '#e879f9' : '#a7f3d0');
+        let pColor = '#a7f3d0';
+        if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving
+        else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking
+        else if (cameraY > 5000) pColor = '#e879f9'; // Zone 2 colors
+        
+        if (p.hasSpring) pColor = '#fde047';
+
         ctx.fillStyle = pColor;
-        ctx.fillRect(p.x, p.y, PLATFORM_WIDTH, PLATFORM_HEIGHT);
+        ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
+
+        // Styling Details
+        if (p.type === 'breaking') {
+           ctx.beginPath();
+           ctx.strokeStyle = '#7f1d1d';
+           ctx.lineWidth = 1;
+           ctx.moveTo(p.x + 10, p.y);
+           ctx.lineTo(p.x + 15, p.y + PLATFORM_HEIGHT);
+           ctx.moveTo(p.x + 30, p.y);
+           ctx.lineTo(p.x + 25, p.y + PLATFORM_HEIGHT);
+           ctx.stroke();
+        }
 
         // Reflection
         ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.fillRect(p.x, p.y, PLATFORM_WIDTH, 2);
+        ctx.fillRect(p.x, p.y, p.width, 2);
 
         if (p.hasSpring) {
            ctx.fillStyle = '#ca8a04';
            const jumpPulse = Math.sin(Date.now() * 0.015) * 1.5;
-           ctx.fillRect(p.x + PLATFORM_WIDTH/2 - 10, p.y - 4 + jumpPulse, 20, 4);
+           ctx.fillRect(p.x + p.width/2 - 10, p.y - 4 + jumpPulse, 20, 4);
         }
       });
 
@@ -502,8 +591,10 @@ export function FestJump() {
       setFestCoins(prev => prev - char.price);
       setUnlockedChars(prev => [...prev, char.id]);
       showMsg(`DESBLOQUEADO: ${t(char.nameKey)}`, 'success');
+      playSound('purchase');
     } else {
       showMsg('KARMAS INSUFICIENTES', 'error');
+      playSound('alert');
     }
   };
 
@@ -558,13 +649,13 @@ export function FestJump() {
                 <>
                   <h3 className="text-brand-accent text-2xl mb-2 italic font-black">FEST JUMP II</h3>
                   <div className="flex gap-4 mb-8">
-                    <button onClick={() => setIsPlaying(true)} className="bg-white text-black px-8 py-3 uppercase text-[10px] font-bold hover:bg-brand-accent hover:text-white transition-all">
+                    <button onClick={() => { playSound('click'); setIsPlaying(true); }} className="bg-white text-black px-8 py-3 uppercase text-[10px] font-bold hover:bg-brand-accent hover:text-white transition-all">
                       {t('game.insert')}
                     </button>
-                    <button onClick={() => setShowShop(true)} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
+                    <button onClick={() => { playSound('hover'); setShowShop(true); }} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
                       <ShoppingCart className="w-5 h-5" />
                     </button>
-                    <button onClick={() => setShowCodeInput(true)} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
+                    <button onClick={() => { playSound('hover'); setShowCodeInput(true); }} className="bg-zinc-800 text-white p-3 hover:bg-zinc-700">
                       <Key className="w-5 h-5" />
                     </button>
                   </div>
@@ -579,7 +670,7 @@ export function FestJump() {
                 <div className="w-full h-full flex flex-col pt-8">
                   <div className="flex justify-between items-center mb-6">
                     <h4 className="text-white text-xs tracking-widest">{t('game.fest.shop')}</h4>
-                    <button onClick={() => setShowShop(false)} className="text-zinc-500 text-[10px] uppercase hover:text-white">[ Volver ]</button>
+                    <button onClick={() => { playSound('hover'); setShowShop(false); }} className="text-zinc-500 text-[10px] uppercase hover:text-white">[ Volver ]</button>
                   </div>
                   <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pb-4">
                     {CHARACTERS.map(char => {
@@ -598,7 +689,7 @@ export function FestJump() {
                           {isUnlocked ? (
                             <button 
                               disabled={isSelected}
-                              onClick={() => setSelectedCharId(char.id)}
+                              onClick={() => { playSound('hover'); setSelectedCharId(char.id); }}
                               className={`w-full py-2 text-[8px] uppercase font-bold ${isSelected ? 'text-brand-accent' : 'bg-white text-black hover:bg-brand-accent hover:text-white'}`}
                             >
                               {isSelected ? t('game.fest.selected') : 'Seleccionar'}
@@ -627,7 +718,7 @@ export function FestJump() {
                     className="w-full bg-zinc-900 border border-zinc-700 px-4 py-3 text-white text-center font-mono focus:outline-none focus:border-brand-accent uppercase mb-4"
                   />
                   <div className="flex gap-2">
-                    <button onClick={() => setShowCodeInput(false)} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">Atrás</button>
+                    <button onClick={() => { playSound('hover'); setShowCodeInput(false); }} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">Atrás</button>
                     <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 text-[10px] uppercase font-bold">Aplicar</button>
                   </div>
                 </div>

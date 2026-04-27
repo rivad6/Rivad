@@ -28,7 +28,7 @@ export function FestJumpPage() {
           <ArrowLeft size={14} /> {t('game.fest.back')}
         </Link>
         <div className="border border-gray-800 bg-gray-900/50 p-6 rounded-2xl">
-          <h1 className="text-2xl font-serif text-white mb-2">Fest Jump (MVP)</h1>
+          <h1 className="text-2xl font-display font-medium text-white mb-2">Fest Jump (MVP)</h1>
           <p className="text-xs text-gray-400 leading-relaxed">
             {t('game.fest.desc')}
           </p>
