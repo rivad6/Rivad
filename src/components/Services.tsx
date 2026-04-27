@@ -59,38 +59,52 @@ export function Services() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               key={service.id}
-              className="group flex flex-col lg:flex-row border-b border-[#1A1A1A]/20 py-12 lg:py-20 hover:bg-[#EAE5DF] transition-all duration-300 relative overflow-hidden"
             >
-              
-              <div className="w-full lg:w-48 mb-6 lg:mb-0 flex items-start px-4 lg:px-8 z-10">
-                <span className="font-display font-light text-4xl lg:text-6xl text-[#1A1A1A]/30 group-hover:text-[#4A25E1] transition-colors leading-none tracking-tighter">
-                  {service.id}
-                </span>
-                <span className="font-mono text-[10px] text-[#4A25E1] ml-2 uppercase font-bold tracking-widest leading-none mt-2">
-                  [ INT ]
-                </span>
-              </div>
-              
-              <div className="flex-1 pr-8 px-4 lg:px-0 z-10">
-                <h4 className="text-3xl md:text-4xl font-display font-medium tracking-tight mb-6 text-[#1A1A1A] leading-tight">
-                  {service.title}
-                </h4>
-                <p className="text-gray-700 font-sans text-sm md:text-base max-w-3xl leading-relaxed text-balance">
-                  {service.description}
-                </p>
-              </div>
-
-              <div className="hidden lg:flex items-center justify-center w-32 relative z-10">
-                <div className="w-16 h-16 rounded-full border border-[#1A1A1A] flex items-center justify-center group-hover:bg-[#4A25E1] group-hover:border-[#4A25E1] group-hover:text-white transition-all duration-500">
-                  <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-500" />
+              <a 
+                href="#contacto"
+                onClick={() => {
+                  const select = document.getElementById('topic') as HTMLSelectElement;
+                  if (select) {
+                    // Match the title with some options, or just set it generally
+                    if (service.title.toLowerCase().includes('web')) select.value = 'Servicios Web';
+                    else if (service.title.toLowerCase().includes('cultural')) select.value = 'Gestión Cultural y Conferencias';
+                    else if (service.title.toLowerCase().includes('música') || service.title.toLowerCase().includes('audio')) select.value = 'Colaboración Musical';
+                    else select.value = 'Otros asuntos';
+                  }
+                }}
+                className="group flex flex-col lg:flex-row border-b border-[#1A1A1A]/20 py-12 lg:py-20 hover:bg-[#EAE5DF] transition-all duration-300 relative overflow-hidden"
+              >
+                
+                <div className="w-full lg:w-48 mb-6 lg:mb-0 flex items-start px-4 lg:px-8 z-10">
+                  <span className="font-display font-light text-4xl lg:text-6xl text-[#1A1A1A]/30 group-hover:text-[#4A25E1] transition-colors leading-none tracking-tighter">
+                    {service.id}
+                  </span>
+                  <span className="font-mono text-[10px] text-[#4A25E1] ml-2 uppercase font-bold tracking-widest leading-none mt-2">
+                    [ INT ]
+                  </span>
                 </div>
-              </div>
+                
+                <div className="flex-1 pr-8 px-4 lg:px-0 z-10">
+                  <h4 className="text-3xl md:text-4xl font-display font-medium tracking-tight mb-6 text-[#1A1A1A] leading-tight">
+                    {service.title}
+                  </h4>
+                  <p className="text-gray-700 font-sans text-sm md:text-base max-w-3xl leading-relaxed text-balance">
+                    {service.description}
+                  </p>
+                </div>
 
-              {/* Hover large text background */}
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[15rem] font-display text-[#4A25E1] opacity-0 group-hover:opacity-5 transition-opacity duration-700 pointer-events-none select-none uppercase truncate tracking-tighter mix-blend-multiply">
-                {service.title.split(' ')[0]}
-              </div>
+                <div className="hidden lg:flex items-center justify-center w-32 relative z-10">
+                  <div className="w-16 h-16 rounded-full border border-[#1A1A1A] flex items-center justify-center group-hover:bg-[#4A25E1] group-hover:border-[#4A25E1] group-hover:text-white transition-all duration-500">
+                    <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-500" />
+                  </div>
+                </div>
 
+                {/* Hover large text background */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 text-[15rem] font-display text-[#4A25E1] opacity-0 group-hover:opacity-5 transition-opacity duration-700 pointer-events-none select-none uppercase truncate tracking-tighter mix-blend-multiply">
+                  {service.title.split(' ')[0]}
+                </div>
+
+              </a>
             </motion.div>
           ))}
         </div>

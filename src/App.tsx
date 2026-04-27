@@ -29,6 +29,8 @@ const FestJumpPage = React.lazy(() => import('./pages/FestJumpPage').then(m => (
 const SellOutPage = React.lazy(() => import('./pages/SellOutPage').then(m => ({ default: m.SellOutPage })));
 const GeneratorPage = React.lazy(() => import('./pages/GeneratorPage').then(m => ({ default: m.GeneratorPage })));
 
+import { ThemeSwitcher } from './components/ThemeSwitcher';
+
 function Nav() {
   const { language, setLanguage, t } = useLanguage();
   const { isMuted, toggleMute } = useAudio();
@@ -47,6 +49,7 @@ function Nav() {
         </Link>
       </div>
       <div className="flex items-center gap-4">
+        <ThemeSwitcher />
         <button 
           onClick={toggleMute}
           className="text-gray-400 hover:text-white transition-colors pointer-events-auto p-2.5 frosted-layer rounded-full"

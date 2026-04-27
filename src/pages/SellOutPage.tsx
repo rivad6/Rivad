@@ -18,7 +18,20 @@ export const SellOutPage: React.FC = () => {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="text-[10px] uppercase font-black tracking-widest">{t('game.fest.back')}</span>
           </Link>
-          <button className="text-zinc-500 hover:text-white transition-colors">
+          <button 
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                   title: document.title,
+                   url: window.location.href,
+                }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert("URL copiada al portapapeles.");
+              }
+            }}
+            className="text-zinc-500 hover:text-white transition-colors"
+          >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
