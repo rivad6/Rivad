@@ -12,16 +12,17 @@ export function MusicPlayer() {
   // === CONFIGURACIÓN DE TU MP3 ===
   // 1. Sube tu archivo .mp3 a la carpeta "public" en el panel izquierdo
   // 2. Cambia el nombre aquí si es necesario (ej: "/mi-cancion.mp3")
-  const audioSrc = "/Manual para la soledad.mp3"; 
+  const audioSrc = "manual_para_la_soledad.mp3"; 
   const songTitle = "Manual Para la Soledad"; 
   const artistName = "Rivad"; 
 
   const spotifyLink = "https://open.spotify.com/artist/3pCE7J12cRSJoJeDBwge8Q?si=q3B-n2NJQ8SY6EX3qDkgyA";
 
   useEffect(() => {
-    // Si el audio termina, vuelve a empezar
     if (audioRef.current) {
       audioRef.current.loop = true;
+      audioRef.current.volume = 0.7; // Volumen inicial decente
+      console.log("Audio source path:", audioRef.current.src);
     }
   }, []);
 
@@ -42,7 +43,14 @@ export function MusicPlayer() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2 font-mono">
       {/* Audio Nativo HTML5 */}
-      <audio ref={audioRef} src={audioSrc} preload="auto" />
+      <audio 
+        ref={audioRef} 
+        src={audioSrc} 
+        preload="auto" 
+        crossOrigin="anonymous"
+        onError={(e) => console.error("Audio error:", e)}
+        onCanPlay={() => console.log("Audio can play")}
+      />
 
       <AnimatePresence>
         {!isPlaying && (
