@@ -297,6 +297,11 @@ const translations: Record<Language, Record<string, string>> = {
     'footer.form.topic.opt6': 'Otros asuntos (quejas existenciales)',
     'footer.form.msg.label': 'Mensaje',
     'footer.form.msg.ph': 'Detalla tu idea o crisis...',
+    'footer.pricing': 'Tener tu propia web así te costaría aproximadamente desde $35,000 MXN (~{{usd}} / ~{{eur}} / ₿{{btc}} / Ξ{{eth}}) + mantenimiento anual de $3,500 MXN (~{{usd_maint}} / ~{{eur_maint}}).',
+    'pricing.loading': 'Calculando tipos de cambio...',
+    'popup.pricing.title': 'Construye tu propio ecosistema',
+    'popup.pricing.desc': '¿Te gustó esta experiencia? Un currículum tradicional ya no es suficiente. Destaca con un ecosistema interactivo a medida.',
+    'popup.pricing.close': 'Ignorar por ahora',
 
     // Oracle Page
     'orc.back': '[ Base Central ]',
@@ -893,6 +898,11 @@ const translations: Record<Language, Record<string, string>> = {
     'footer.form.topic.opt6': 'Other matters (existential complaints)',
     'footer.form.msg.label': 'Message',
     'footer.form.msg.ph': 'Detail your idea or crisis...',
+    'footer.pricing': 'Having your own web like this would cost approximately starting at $35,000 MXN (~{{usd}} / ~{{eur}} / ₿{{btc}} / Ξ{{eth}}) + an annual maintenance of $3,500 MXN (~{{usd_maint}} / ~{{eur_maint}}).',
+    'pricing.loading': 'Calculating exchange rates...',
+    'popup.pricing.title': 'Build your own ecosystem',
+    'popup.pricing.desc': 'Did you like this experience? A traditional resume is no longer enough. Stand out with a custom interactive ecosystem.',
+    'popup.pricing.close': 'Ignore for now',
 
     'orc.back': '[ Central Base ]',
     'orc.badge': 'Production Oracle',
@@ -1488,6 +1498,11 @@ const translations: Record<Language, Record<string, string>> = {
     'footer.form.topic.opt6': 'Autres affaires (plaintes existentielles)',
     'footer.form.msg.label': 'Message',
     'footer.form.msg.ph': 'Détaillez votre idée ou crise...',
+    'footer.pricing': 'Avoir votre propre site web comme celui-ci coûterait environ à partir de 35 000 MXN (~{{usd}} / ~{{eur}} / ₿{{btc}} / Ξ{{eth}}) + un entretien annuel de 3 500 MXN (~{{usd_maint}} / ~{{eur_maint}}).',
+    'pricing.loading': 'Calcul des taux de change...',
+    'popup.pricing.title': 'Construisez votre propre écosystème',
+    'popup.pricing.desc': 'Vous avez aimé cette expérience ? Un CV traditionnel ne suffit plus. Démarquez-vous avec un écosystème interactif sur mesure.',
+    'popup.pricing.close': 'Ignorer pour le moment',
 
     'orc.back': '[ Base Centrale ]',
     'orc.badge': 'Oracle de Production',

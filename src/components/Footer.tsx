@@ -1,5 +1,6 @@
 import { ArrowUpRight, Send } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { PricingText } from './PricingText';
 
 export function Footer() {
   const { t } = useLanguage();
@@ -169,8 +170,11 @@ export function Footer() {
               <p className="hover:text-red-500 transition-colors cursor-default">{t('footer.made')}</p>
             </div>
           </div>
-          <div className="pt-4 border-t border-white/5 w-full flex justify-center text-gray-700">
+          <div className="pt-4 border-t border-white/5 w-full flex flex-col justify-center gap-2 text-gray-700">
             <p>Digital Footprint / Huella Digital: <span className="text-red-900/50">SHA256:0x39A8B2C4F9E7D1...[RIVAD_AUTH_APP]</span></p>
+            <p className="text-[8px] text-gray-800 opacity-60 max-w-2xl mx-auto tracking-widest leading-loose">
+              <PricingText />
+            </p>
           </div>
         </div>
       </div>

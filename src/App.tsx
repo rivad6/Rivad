@@ -17,6 +17,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { AnimatePresence, motion } from 'motion/react';
+import { PricingPopup } from './components/PricingPopup';
 
 function Nav() {
   const { language, setLanguage } = useLanguage();
@@ -78,6 +79,7 @@ export default function App() {
           <MusicPlayer />
           <FloatingBackButton />
           <GameInvitePopup />
+          <PricingPopup />
           <SpeedInsights />
           <Analytics />
           <div className="flex-1 relative z-10 w-full">
