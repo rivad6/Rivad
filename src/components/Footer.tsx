@@ -54,7 +54,7 @@ export function Footer() {
                   </li>
                   <li className="flex flex-col text-gray-400 font-light">
                     <span className="text-[9px] font-mono uppercase text-gray-700 mb-2">{t('footer.base')}</span>
-                    <span className="font-sans text-xl text-gray-200">Puebla, México</span>
+                    <span className="font-sans text-xl text-gray-200">{t('footer.location')}</span>
                   </li>
                 </ul>
               </div>
@@ -99,7 +99,7 @@ export function Footer() {
               const formData = new FormData(e.currentTarget);
               const data = Object.fromEntries(formData.entries());
               const subject = `${t('footer.form.subject')} - ${data.name}`;
-              const body = `Nombre: ${data.name}\nEmail: ${data.email}\nMotivo: ${data.topic}\nMensaje: ${data.message}`;
+              const body = `${t('footer.form.body.name')}: ${data.name}\n${t('footer.form.body.email')}: ${data.email}\n${t('footer.form.body.topic')}: ${data.topic}\n${t('footer.form.body.msg')}: ${data.message}`;
               window.location.href = `mailto:oscarcesar0606@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

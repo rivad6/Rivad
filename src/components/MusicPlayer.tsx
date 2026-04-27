@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Music, Play, Pause, X, Disc2, ExternalLink } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export function MusicPlayer() {
+  const { t } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -54,10 +56,10 @@ export function MusicPlayer() {
               💿
             </div>
             <div className="flex-1">
-              <p className="text-white text-xs font-medium mb-1">Música del sitio</p>
-              <p className="text-gray-500 text-[10px] leading-tight mb-2">Escucha <b>{songTitle}</b> de {artistName}, ganadora del concurso "Canción del Buen Amor 2026".</p>
+              <p className="text-white text-xs font-medium mb-1">{t('music.label')}</p>
+              <p className="text-gray-500 text-[10px] leading-tight mb-2" dangerouslySetInnerHTML={{ __html: t('music.desc', { title: songTitle, artist: artistName }) }} />
               <a href={spotifyLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-[#8a63d2] hover:underline">
-                O ir a Spotify <ExternalLink size={10} />
+                {t('music.spotify')} <ExternalLink size={10} />
               </a>
             </div>
             <button 
@@ -90,7 +92,7 @@ export function MusicPlayer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-white transition-colors"
-                title="Abrir en Spotify"
+                title={t('music.spotify.title')}
               >
                 <ExternalLink size={14} />
               </a>
@@ -109,12 +111,12 @@ export function MusicPlayer() {
           {isPlaying ? (
             <>
               <Pause size={16} />
-              <span>Pausar</span>
+              <span>{t('music.pause')}</span>
             </>
           ) : (
             <>
               <Play size={16} className="text-[#8a63d2]" />
-              <span>Play BGM</span>
+              <span>{t('music.play')}</span>
             </>
           )}
         </button>

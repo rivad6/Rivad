@@ -135,7 +135,7 @@ export function GeneratorPage() {
                 className="flex flex-col space-y-10"
               >
                 <div className="text-center pb-10 border-b border-pink-900/30">
-                  <h4 className="text-3xl md:text-5xl font-serif text-white mb-3 tracking-wide">"{eventName || 'Proyectazo'}"</h4>
+                  <h4 className="text-3xl md:text-5xl font-serif text-white mb-3 tracking-wide">"{eventName || t('orc.default_name')}"</h4>
                   <p className="font-mono text-xs text-pink-500 uppercase tracking-[0.2em]">{t('orc.diag')}</p>
                 </div>
 

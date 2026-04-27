@@ -34,7 +34,7 @@ export function Hero() {
           </div>
           <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-400 border border-white/5 bg-white/5 px-5 py-2.5 rounded-full backdrop-blur-md self-start flex items-center gap-2">
             <span className="w-1 h-1 bg-brand-accent rounded-full"></span>
-            Est. 1994 // Puebla, MX
+            {t('hero.est')}
           </div>
         </motion.div>
 

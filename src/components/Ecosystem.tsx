@@ -141,7 +141,7 @@ export function Ecosystem() {
             <ProjectCard 
               index="04"
               category={t('eco.cat4')}
-              title="Arcade: Parodias 8-bit"
+              title={t('eco.proj4.title')}
               description={t('eco.proj4.desc')}
               icon={<Code2 size={200} />}
               linkText={t('eco.proj4.link')}

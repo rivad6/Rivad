@@ -86,6 +86,30 @@ const translations: Record<Language, Record<string, string>> = {
     'mani.box2.desc': '+600 Eventos / Gestión Dinámica',
     'mani.box3.title': 'Output Desplegado',
     'mani.box3.desc': '+500k Impactos en 10 Países',
+    
+    // Footer Extra
+    'footer.location': 'Puebla, México',
+    'footer.form.body.name': 'Nombre',
+    'footer.form.body.email': 'Email',
+    'footer.form.body.topic': 'Motivo',
+    'footer.form.body.msg': 'Mensaje',
+
+    // Ecosystem Extra
+    'eco.proj4.title': 'Arcade: Parodias 8-bit',
+
+    // Generator Extra
+    'orc.default_name': 'Proyectazo',
+
+    // Music Player
+    'music.label': 'Música del sitio',
+    'music.desc': 'Escucha <b>{{title}}</b> de {{artist}}, ganadora del concurso "Canción del Buen Amor 2026".',
+    'music.spotify': 'O ir a Spotify',
+    'music.pause': 'Pausar',
+    'music.play': 'Play BGM',
+    'music.spotify.title': 'Abrir en Spotify',
+
+    // Hero Extra
+    'hero.est': 'Est. 1994 // Puebla, MX',
 
     // Footer
     'footer.title.main': '¿Hablamos de negocios,',
@@ -279,6 +303,30 @@ const translations: Record<Language, Record<string, string>> = {
     'mani.box3.title': 'Deployed Output',
     'mani.box3.desc': '+500k Impacts in 10 Countries',
 
+    // Footer Extra
+    'footer.location': 'Puebla, Mexico',
+    'footer.form.body.name': 'Name',
+    'footer.form.body.email': 'Email',
+    'footer.form.body.topic': 'Reason',
+    'footer.form.body.msg': 'Message',
+
+    // Ecosystem Extra
+    'eco.proj4.title': 'Arcade: 8-bit Parodies',
+
+    // Generator Extra
+    'orc.default_name': 'Big Project',
+
+    // Music Player
+    'music.label': 'Site Music',
+    'music.desc': 'Listen to <b>{{title}}</b> by {{artist}}, winner of the "Song of Good Love 2026" contest.',
+    'music.spotify': 'Or go to Spotify',
+    'music.pause': 'Pause',
+    'music.play': 'Play BGM',
+    'music.spotify.title': 'Open on Spotify',
+
+    // Hero Extra
+    'hero.est': 'Est. 1994 // Puebla, MX',
+
     'footer.title.main': 'Shall we talk business,',
     'footer.title.sub': 'or the {{highlight}} of the world?',
     'footer.title.highlight': 'ruin',
@@ -468,6 +516,30 @@ const translations: Record<Language, Record<string, string>> = {
     'mani.box2.desc': '+600 Événements / Gestion Dynamique',
     'mani.box3.title': 'Sortie Déployée',
     'mani.box3.desc': '+500k Impacts dans 10 Pays',
+
+    // Footer Extra
+    'footer.location': 'Puebla, Mexique',
+    'footer.form.body.name': 'Nom',
+    'footer.form.body.email': 'Email',
+    'footer.form.body.topic': 'Motif',
+    'footer.form.body.msg': 'Message',
+
+    // Ecosystem Extra
+    'eco.proj4.title': 'Arcade : Parodies 8 bits',
+
+    // Generator Extra
+    'orc.default_name': 'Grand Projet',
+
+    // Music Player
+    'music.label': 'Musique du site',
+    'music.desc': 'Écoutez <b>{{title}}</b> de {{artist}}, gagnant du concours "Chanson du Bon Amour 2026".',
+    'music.spotify': 'Ou aller sur Spotify',
+    'music.pause': 'Pause',
+    'music.play': 'Play BGM',
+    'music.spotify.title': 'Ouvrir sur Spotify',
+
+    // Hero Extra
+    'hero.est': 'Basé à Puebla, MX // 1994',
 
     'footer.title.main': 'Parlons-nous affaires,',
     'footer.title.sub': 'ou de la {{highlight}} du monde ?',
