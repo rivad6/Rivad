@@ -7,10 +7,10 @@ import { useAudio } from "../../context/AudioContext";
 type GameState = "start" | "playing" | "gameover" | "win" | "takeoff" | "asteroids" | "asteroids_win";
 
 const CHARACTERS = [
-  { id: 'classic', nameKey: 'game.invaders.char.classic', descKey: 'Basic Ship', price: 0, speed: 7, fireRateBase: 1, color: '#fbbf24', tailColor: '#f59e0b' },
-  { id: 'rapid', nameKey: 'game.invaders.char.rapid', descKey: 'Rapid Fire', price: 200, speed: 8, fireRateBase: 1.5, color: '#6ee7b7', tailColor: '#10b981' },
-  { id: 'tank', nameKey: 'game.invaders.char.tank', descKey: 'Starting Shield', price: 500, speed: 6, fireRateBase: 1, color: '#93c5fd', tailColor: '#3b82f6' },
-  { id: 'laser', nameKey: 'game.invaders.char.laser', descKey: 'Fast lasers + Speed', price: 1000, speed: 10, fireRateBase: 2, color: '#c084fc', tailColor: '#a855f7' }
+  { id: 'classic', nameKey: 'game.invaders.char.classic', descKey: 'game.invaders.char.classic.desc', price: 0, speed: 7, fireRateBase: 1, color: '#fbbf24', tailColor: '#f59e0b' },
+  { id: 'rapid', nameKey: 'game.invaders.char.rapid', descKey: 'game.invaders.char.rapid.desc', price: 200, speed: 8, fireRateBase: 1.5, color: '#6ee7b7', tailColor: '#10b981' },
+  { id: 'tank', nameKey: 'game.invaders.char.tank', descKey: 'game.invaders.char.tank.desc', price: 500, speed: 6, fireRateBase: 1, color: '#93c5fd', tailColor: '#3b82f6' },
+  { id: 'laser', nameKey: 'game.invaders.char.laser', descKey: 'game.invaders.char.laser.desc', price: 1000, speed: 10, fireRateBase: 2, color: '#c084fc', tailColor: '#a855f7' }
 ];
 
 export function CreativeInvaders() {
@@ -28,13 +28,15 @@ export function CreativeInvaders() {
   const [hudTurbo, setHudTurbo] = useState(0);
 
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
+  const [highScore, setHighScore] = useState(() => Number(localStorage.getItem('invaders_highscore') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('invaders_chars') || '["classic"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
   const [storeTab, setStoreTab] = useState<"chars" | "upgrades">("chars");
   const [upgrades, setUpgrades] = useState(() => {
     const saved = localStorage.getItem('invaders_upgrades');
-    return saved ? JSON.parse(saved) : { shield: 0, power: 0, speed: 0 };
+    return saved ? JSON.parse(saved) : { shield: 0, power: 0, speed: 0, rear_turret: 0 };
   });
+  const [levelUpTimer, setLevelUpTimer] = useState(0);
 
   const selectedChar = CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
 
@@ -43,7 +45,8 @@ export function CreativeInvaders() {
     localStorage.setItem('invaders_chars', JSON.stringify(unlockedChars));
     localStorage.setItem('invaders_selected_char', selectedCharId);
     localStorage.setItem('invaders_upgrades', JSON.stringify(upgrades));
-  }, [festCoins, unlockedChars, selectedCharId, upgrades]);
+    localStorage.setItem('invaders_highscore', highScore.toString());
+  }, [festCoins, unlockedChars, selectedCharId, upgrades, highScore]);
 
   const buyChar = (char: typeof CHARACTERS[0]) => {
     if (festCoins >= char.price) {
@@ -157,6 +160,7 @@ export function CreativeInvaders() {
       width: 40,
       height: 40,
       speed: 7,
+      angle: 0,
       isMovingLeft: false,
       isMovingRight: false,
       isMovingUp: false,
@@ -186,6 +190,7 @@ export function CreativeInvaders() {
       hp: number;
       maxHp: number;
       offset: number;
+      hitFlash?: number;
     }[],
     drops: [] as { x: number; y: number; type: "power" | "shield" | "speed" }[],
     stars: Array.from({length: 100}).map(() => ({
@@ -211,8 +216,12 @@ export function CreativeInvaders() {
       isCoin?: boolean;
     }[],
     level: 1,
+    wave: 1,
     lastHitEdgeTime: 0,
     bgType: "grid" as "grid" | "deep",
+    planets: [] as { x: number; y: number; size: number; color: string; speed: number }[],
+    shake: 0,
+    playerFlash: 0,
   });
 
   const loadAsteroidsLevel = useCallback(() => {
@@ -222,6 +231,15 @@ export function CreativeInvaders() {
     state.current.player.x = GAME_WIDTH / 2;
     state.current.player.y = GAME_HEIGHT / 2;
     state.current.bgType = "deep";
+    
+    // Add distant planets/moons
+    state.current.planets = Array.from({length: 3}).map(() => ({
+        x: Math.random() * GAME_WIDTH,
+        y: Math.random() * GAME_HEIGHT,
+        size: 30 + Math.random() * 70,
+        color: ['#1e3a8a', '#3730a3', '#1e1b4b', '#111827'][Math.floor(Math.random() * 4)],
+        speed: 0.1 + Math.random() * 0.3
+    }));
     
     // Create 5 large asteroids
     for(let i = 0; i < 5; i++) {
@@ -241,50 +259,57 @@ export function CreativeInvaders() {
   }, []);
 
   const loadLevel = useCallback((level: number) => {
+    console.log("LOADING LEVEL", level);
     state.current.enemies = [];
     state.current.drops = [];
     state.current.enemyDirection = 1;
-    state.current.enemySpeedBase = 1.0 + level * 0.3;
+    state.current.enemySpeedBase = 1.0 + (level * 0.2) + (state.current.wave * 0.5);
     state.current.player.x = GAME_WIDTH / 2;
     state.current.projectiles = [];
     state.current.bgType = "grid";
     
-    if (level === 4) {
+    // Normalize level for map selection
+    const currentMapLevel = ((level - 1) % 4) + 1;
+
+    if (currentMapLevel === 4) {
       // Boss level
+      const bossHp = 100 + (level * 20);
       state.current.enemies.push({
         x: GAME_WIDTH / 2 - 100,
         y: 50,
         width: 200,
         height: 150,
         type: "boss",
-        hp: 100,
-        maxHp: 100,
+        hp: bossHp,
+        maxHp: bossHp,
         offset: 0,
       });
       return;
     }
 
-    const rows = 3 + level;
-    const cols = 7 + level;
+    const rows = 3 + (currentMapLevel > 3 ? 3 : currentMapLevel);
+    const cols = 7 + (currentMapLevel > 3 ? 3 : currentMapLevel);
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         let type: "routine" | "block" | "distraction" | "boss" = "routine";
         let hp = 1;
         
-        if (level === 1) {
+        if (currentMapLevel === 1) {
            type = "routine";
-        } else if (level === 2) {
-           if (r === 0) { type = "block"; hp = 3; }
-        } else if (level === 3) {
-           if (r === 0) { type = "block"; hp = 4; }
-           else if (r === 1 || r === 2) { type = "distraction"; hp = 1; }
+        } else if (currentMapLevel === 2) {
+           if (r === 0) { type = "block"; hp = 2 + Math.floor(level/2); }
+           else { type = "routine"; hp = 1; }
+        } else if (currentMapLevel === 3) {
+           if (r === 0) { type = "block"; hp = 3 + Math.floor(level/2); }
+           else if (r === 1) { type = "distraction"; hp = 1; }
+           else { type = "routine"; hp = 1; }
         }
 
         state.current.enemies.push({
-          x: c * (GAME_WIDTH / cols * 0.7) + 50,
-          y: r * 45 + 50,
-          width: 35,
-          height: 35,
+          x: c * (GAME_WIDTH / cols * 0.8) + 40,
+          y: r * 45 + 60,
+          width: 32,
+          height: 32,
           type,
           hp,
           maxHp: hp,
@@ -310,6 +335,7 @@ export function CreativeInvaders() {
         powerTimer: 0,
         shield: (selectedChar.id === 'tank' ? 3 : 0) + upgrades.shield,
         speedBoostTimer: selectedChar.id === 'rapid' ? 500 : 0,
+        angle: 0,
       },
       projectiles: [],
       enemies: [],
@@ -320,6 +346,7 @@ export function CreativeInvaders() {
         speed: Math.random() * 2 + 0.5,
         size: Math.random() * 2 + 1
       })),
+      planets: [],
       enemyDirection: 1,
       enemySpeedBase: 1.5,
       enemyMoveTimer: 0,
@@ -328,12 +355,18 @@ export function CreativeInvaders() {
       lastFireTime: 0,
       particles: [],
       level: 1,
+      wave: 1,
+      bgType: "grid",
+      shake: 0,
+      playerFlash: 0,
+      lastHitEdgeTime: 0
     };
 
+    console.log("INIT GAME");
     loadLevel(1);
     setScore(0);
     setGameState("playing");
-  }, [loadLevel, selectedChar]);
+  }, [loadLevel, selectedChar, GAME_WIDTH, GAME_HEIGHT, upgrades]);
 
   const fire = useCallback(() => {
     const s = state.current;
@@ -344,43 +377,45 @@ export function CreativeInvaders() {
 
     if (now - s.lastFireTime > fireDelay) {
       playSound('fire');
+      
+      const fireBullet = (angleOffset: number, color: string, vxOffset: number = 0, vyOffset: number = -10) => {
+        const angle = gameState === 'asteroids' ? s.player.angle + angleOffset : angleOffset;
+        const speed = 10;
+        const vx = gameState === 'asteroids' ? Math.cos(angle) * speed : vxOffset;
+        const vy = gameState === 'asteroids' ? Math.sin(angle) * speed : vyOffset;
+        
+        s.projectiles.push({
+          x: s.player.x + s.player.width / 2,
+          y: s.player.y + s.player.height / 2,
+          vx: vx,
+          vy: vy,
+          speed: speed,
+          color: color,
+        });
+      };
+
       if (s.player.power === 1) {
-        s.projectiles.push({
-          x: s.player.x + s.player.width / 2 - 3,
-          y: s.player.y,
-          vx: 0,
-          vy: -10,
-          speed: 10,
-          color: "#facc15",
-        });
+        fireBullet(gameState === 'asteroids' ? 0 : 0, "#facc15", 0, -10);
       } else if (s.player.power >= 2) {
-        s.projectiles.push({
-          x: s.player.x + 10,
-          y: s.player.y,
-          vx: -2,
-          vy: -10,
-          speed: 10,
-          color: "#38bdf8",
-        });
-        s.projectiles.push({
-          x: s.player.x + s.player.width - 10,
-          y: s.player.y,
-          vx: 2,
-          vy: -10,
-          speed: 10,
-          color: "#38bdf8",
-        });
+        fireBullet(gameState === 'asteroids' ? -0.2 : 0, "#38bdf8", -2, -10);
+        fireBullet(gameState === 'asteroids' ? 0.2 : 0, "#38bdf8", 2, -10);
         if (s.player.power >= 3) {
-          s.projectiles.push({
-            x: s.player.x + s.player.width / 2,
-            y: s.player.y - 10,
-            vx: 0,
-            vy: -10,
-            speed: 10,
-            color: "#facc15",
-          });
+          fireBullet(gameState === 'asteroids' ? 0 : 0, "#facc15", 0, -10);
         }
       }
+
+      // Rear turret firing
+      if (gameState === 'asteroids' && upgrades.rear_turret > 0) {
+        const spread = upgrades.rear_turret > 1 ? 0.3 : 0;
+        fireBullet(Math.PI - spread, "#ef4444");
+        if (upgrades.rear_turret > 1) {
+          fireBullet(Math.PI + spread, "#ef4444");
+        }
+        if (upgrades.rear_turret > 2) {
+            fireBullet(Math.PI, "#facc15");
+        }
+      }
+
       s.lastFireTime = now;
 
       // Muzzle flash particle
@@ -396,7 +431,7 @@ export function CreativeInvaders() {
         });
       }
     }
-  }, []);
+  }, [selectedChar, gameState, upgrades, playSound]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -451,9 +486,16 @@ export function CreativeInvaders() {
     const s = state.current;
     if (gameState !== "playing" && gameState !== "asteroids" && gameState !== "takeoff") return;
 
+    if (s.shake > 0) s.shake *= 0.9;
+    if (s.playerFlash > 0) s.playerFlash--;
+    if (levelUpTimer > 0) setLevelUpTimer(prev => prev - 1);
+
     if (gameState === "takeoff") {
         s.player.y -= 10;
         
+        // Tilt player in takeoff
+        s.player.angle = Math.sin(s.time) * 0.1;
+
         // Speed up stars for effect
         for (const star of s.stars) {
           star.y += star.speed * 8;
@@ -516,6 +558,15 @@ export function CreativeInvaders() {
       if (s.player.x > GAME_WIDTH) s.player.x = -s.player.width;
       if (s.player.y < -s.player.height) s.player.y = GAME_HEIGHT;
       if (s.player.y > GAME_HEIGHT) s.player.y = -s.player.height;
+
+      // Update planets for parallax
+      for (const planet of s.planets) {
+          planet.y += planet.speed;
+          if (planet.y > GAME_HEIGHT + 100) {
+              planet.y = -100;
+              planet.x = Math.random() * GAME_WIDTH;
+          }
+      }
     } else {
       if (s.player.x < 0) s.player.x = 0;
       if (s.player.x > GAME_WIDTH - s.player.width) s.player.x = GAME_WIDTH - s.player.width;
@@ -665,13 +716,18 @@ export function CreativeInvaders() {
              if (s.player.shield > 0) {
                  playSound('shield');
                  s.player.shield--;
+                 s.shake = 10;
+                 s.playerFlash = 10;
                  hit = true;
              } else if (s.player.power > 1) {
                 playSound('hit');
                 s.player.power = 1; // lose power
+                s.shake = 15;
+                s.playerFlash = 15;
                 hit = true;
              } else {
                 playSound('explosion');
+                s.shake = 30;
                 setGameState("gameover");
              }
          }
@@ -686,6 +742,7 @@ export function CreativeInvaders() {
           ) {
           hit = true;
           enemy.hp -= 1;
+          enemy.hitFlash = 5;
 
           if (enemy.hp <= 0) {
             playSound('explosion');
@@ -747,6 +804,7 @@ export function CreativeInvaders() {
             s.enemies.splice(j, 1);
             s.score += enemy.maxHp * 10;
             setScore(s.score);
+            if (s.score > highScore) setHighScore(s.score);
             
             // Earn Karmas (FestCoins)
             const earnedKarmas = Math.ceil(enemy.maxHp / 2) + (s.level);
@@ -807,29 +865,40 @@ export function CreativeInvaders() {
       if (p.life >= p.maxLife) s.particles.splice(i, 1);
     }
 
-    if (s.enemies.length === 0) {
-       if (gameState === "playing") {
-         if (s.level < 4) {
-            s.level++;
-            loadLevel(s.level);
-         } else {
-            setGameState("takeoff");
-         }
-       } else if (gameState === "asteroids") {
-         setGameState("asteroids_win");
-       }
+    if (s.enemies.length === 0 && levelUpTimer === 0) {
+      if (gameState === "playing") {
+        state.current.level++;
+        console.log("LEVEL UP to", state.current.level);
+        setLevelUpTimer(100);
+        if (state.current.level % 5 === 0) {
+          setGameState("takeoff");
+        } else {
+          loadLevel(state.current.level);
+        }
+      } else if (gameState === "asteroids") {
+        state.current.wave++;
+        console.log("WAVE COMPLETED, returning to playing mode");
+        loadLevel(state.current.level);
+        setGameState("playing");
+        playSound("win");
+      }
     }
 
     // Sync HUD
     setHudShield(s.player.shield);
     setHudPower(s.player.power);
     setHudTurbo(s.player.speedBoostTimer);
-  }, [gameState, loadLevel]);
+  }, [gameState, loadLevel, playSound, upgrades, t]);
 
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = "#0a0a0B";
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     const s = state.current;
+    
+    ctx.save();
+    if (s.shake > 1) {
+      ctx.translate((Math.random() - 0.5) * s.shake, (Math.random() - 0.5) * s.shake);
+    }
 
     // Draw grid background for 'creative space' feel
     if (s.bgType === "grid") {
@@ -861,6 +930,54 @@ export function CreativeInvaders() {
       ctx.globalAlpha = 1;
     }
 
+    // Draw Atmosphere/Earth in takeoff
+    if (gameState === "takeoff") {
+      const gradient = ctx.createLinearGradient(0, GAME_HEIGHT, 0, GAME_HEIGHT - 400);
+      gradient.addColorStop(0, "#38bdf840");
+      gradient.addColorStop(0.5, "#38bdf810");
+      gradient.addColorStop(1, "transparent");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+      
+      // Clouds
+      ctx.fillStyle = "#ffffff15";
+      for (let i = 0; i < 8; i++) {
+        const off = (s.time * 2 + i * 100) % (GAME_HEIGHT + 200);
+        ctx.beginPath();
+        ctx.ellipse((Math.sin(i) * 0.5 + 0.5) * GAME_WIDTH, GAME_HEIGHT - off + 200, 150, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = "#1e293b";
+      ctx.beginPath();
+      ctx.ellipse(GAME_WIDTH / 2, GAME_HEIGHT + 800, 1200, 900, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Earth details (continents silouette)
+      ctx.fillStyle = "#16653430";
+      ctx.beginPath();
+      ctx.ellipse(GAME_WIDTH / 2 + 100, GAME_HEIGHT + 850, 400, 200, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw planets in deep space
+    if (gameState === "asteroids") {
+        for (const planet of s.planets) {
+            ctx.fillStyle = planet.color;
+            ctx.globalAlpha = planet.speed * 2;
+            ctx.beginPath();
+            ctx.arc(planet.x, planet.y, planet.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Add a small detail
+            ctx.fillStyle = "#ffffff10";
+            ctx.beginPath();
+            ctx.arc(planet.x - planet.size*0.3, planet.y - planet.size*0.3, planet.size*0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
     // Draw stars
     ctx.fillStyle = "#4b5563"; // Dim gray instead of white
     for (const star of s.stars) {
@@ -870,10 +987,32 @@ export function CreativeInvaders() {
     ctx.globalAlpha = 1;
 
     // Player
-    const playerPalette = ['#1e293b', '#d4d4d4', '#475569', s.player.power > 1 ? '#a855f7' : selectedChar.color, '#9ca3af', selectedChar.tailColor];
-    ctx.shadowBlur = s.player.power > 1 ? 20 : (s.player.speedBoostTimer > 0 ? 15 : 0);
-    ctx.shadowColor = s.player.power > 1 ? "#a78bfa" : (s.player.speedBoostTimer > 0 ? "#fde047" : "transparent");
-    drawSprite(ctx, sprites.player, s.player.x, s.player.y, s.player.width, s.player.height, playerPalette);
+    const playerBaseColor = s.playerFlash > 0 ? "#ffffff" : (s.player.power > 1 ? '#a855f7' : selectedChar.color);
+    const playerPalette = ['#1e293b', '#d4d4d4', '#475569', playerBaseColor, '#9ca3af', selectedChar.tailColor];
+    ctx.shadowBlur = s.player.power > 1 ? 20 : (s.player.speedBoostTimer > 0 ? 15 : 10);
+    ctx.shadowColor = s.player.power > 1 ? "#a78bfa" : (s.player.speedBoostTimer > 0 ? "#fde047" : (s.playerFlash > 0 ? "#ffffff" : selectedChar.color + "50"));
+    
+    // Support rotation
+    if (gameState === "asteroids" || gameState === "takeoff") {
+      ctx.save();
+      ctx.translate(s.player.x + s.player.width / 2, s.player.y + s.player.height / 2);
+      ctx.rotate(s.player.angle + Math.PI / 2); // Sprite faces up normally, so adjust
+      drawSprite(ctx, sprites.player, -s.player.width / 2, -s.player.height / 2, s.player.width, s.player.height, playerPalette);
+      
+      // Draw rear turret if upgraded
+      if (upgrades.rear_turret > 0) {
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(-5, s.player.height / 2 - 5, 10, 10);
+        if (upgrades.rear_turret > 1) {
+            ctx.fillRect(-12, s.player.height / 2 - 2, 6, 6);
+            ctx.fillRect(6, s.player.height / 2 - 2, 6, 6);
+        }
+      }
+      ctx.restore();
+    } else {
+      drawSprite(ctx, sprites.player, s.player.x, s.player.y, s.player.width, s.player.height, playerPalette);
+    }
+    
     ctx.shadowBlur = 0;
 
     if (s.player.shield > 0) {
@@ -886,16 +1025,23 @@ export function CreativeInvaders() {
 
     // Enemies
     for (const enemy of s.enemies) {
+      if (enemy.hitFlash && enemy.hitFlash > 0) enemy.hitFlash--;
+      const isHit = (enemy.hitFlash || 0) > 0;
+      
       if (enemy.type === "routine") {
-        drawSprite(ctx, sprites.routine, enemy.x, enemy.y, enemy.width, enemy.height, ['#1e293b', '#9ca3af', '#4b5563']);
+        const palette = isHit ? ['#ffffff', '#ffffff', '#ffffff'] : ['#1e293b', '#9ca3af', '#4b5563'];
+        drawSprite(ctx, sprites.routine, enemy.x, enemy.y, enemy.width, enemy.height, palette);
       } else if (enemy.type === "block") {
         const boxColor = enemy.hp === 1 ? '#f87171' : enemy.hp === 2 ? '#ef4444' : '#b91c1c';
-        drawSprite(ctx, sprites.block, enemy.x, enemy.y, enemy.width, enemy.height, ['#1e293b', '#d4d4d4', boxColor]);
+        const palette = isHit ? ['#ffffff', '#ffffff', '#ffffff'] : ['#1e293b', '#d4d4d4', boxColor];
+        drawSprite(ctx, sprites.block, enemy.x, enemy.y, enemy.width, enemy.height, palette);
       } else if (enemy.type === "distraction") {
-        drawSprite(ctx, sprites.distraction, enemy.x, enemy.y, enemy.width, enemy.height, ['#1e293b', '#3b82f6', '#ef4444', '#1e293b']);
+        const palette = isHit ? ['#ffffff', '#ffffff', '#ffffff', '#ffffff'] : ['#1e293b', '#3b82f6', '#ef4444', '#1e293b'];
+        drawSprite(ctx, sprites.distraction, enemy.x, enemy.y, enemy.width, enemy.height, palette);
       } else if (enemy.type === "boss") {
-        const metalColor = enemy.hp > 50 ? '#d4d4d4' : '#fca5a5';
-        drawSprite(ctx, sprites.boss, enemy.x, enemy.y, enemy.width, enemy.height, ['#1e293b', metalColor]);
+        const metalColor = enemy.hp / enemy.maxHp > 0.5 ? '#d4d4d4' : '#fca5a5';
+        const palette = isHit ? ['#ffffff', '#ffffff'] : ['#1e293b', metalColor];
+        drawSprite(ctx, sprites.boss, enemy.x, enemy.y, enemy.width, enemy.height, palette);
         // Health bar
         ctx.fillStyle = "#333";
         ctx.fillRect(enemy.x, enemy.y - 15, enemy.width, 10);
@@ -953,7 +1099,18 @@ export function CreativeInvaders() {
       }
       ctx.globalAlpha = 1.0;
     }
-  }, []);
+
+    if (levelUpTimer > 0) {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 40px sans-serif";
+      ctx.textAlign = "center";
+      ctx.globalAlpha = Math.min(1, levelUpTimer / 50);
+      ctx.fillText(`${t('game.invaders.level_up')} ${state.current.level}`, GAME_WIDTH / 2, GAME_HEIGHT / 2);
+      ctx.globalAlpha = 1.0;
+    }
+    
+    ctx.restore();
+  }, [levelUpTimer]);
 
   const tick = useCallback(() => {
     update();
@@ -1001,29 +1158,29 @@ export function CreativeInvaders() {
               {hudShield > 0 && (
                 <div className="flex flex-col items-center">
                   <Shield className="w-4 h-4 text-blue-400 animate-pulse" />
-                  <span className="text-[8px] text-blue-400 font-mono uppercase">Shield</span>
+                  <span className="text-[8px] text-blue-400 font-mono uppercase">{t('game.invaders.shield')}</span>
                 </div>
               )}
               {hudTurbo > 0 && (
                 <div className="flex flex-col items-center">
                   <Zap className="w-4 h-4 text-yellow-400 animate-bounce" />
-                  <span className="text-[8px] text-yellow-400 font-mono uppercase">Turbo</span>
+                  <span className="text-[8px] text-yellow-400 font-mono uppercase">{t('game.invaders.turbo')}</span>
                 </div>
               )}
               {hudPower > 1 && (
                 <div className="flex flex-col items-center">
                   <Star className="w-4 h-4 text-purple-400 animate-pulse" />
-                  <span className="text-[8px] text-purple-400 font-mono uppercase">Pwr {hudPower}</span>
+                  <span className="text-[8px] text-purple-400 font-mono uppercase">{t('game.invaders.pwr')} {hudPower}</span>
                 </div>
               )}
            </div>
            <div className="text-right">
              <p className="text-white/50 text-xs font-mono tracking-widest uppercase mb-1">
-               {t('game.invaders.level') || 'Level'}
+               {gameState === 'asteroids' ? t('game.invaders.wave') : (t('game.invaders.level') || 'Level')}
              </p>
              <div className="bg-black/50 border border-white/20 px-4 py-2 rounded-md">
                <p className="text-3xl font-mono text-white tracking-widest">
-                 {gameState === 'playing' ? state.current.level : gameState === 'asteroids' ? 'DEEP SPACE' : 1}
+                 {gameState === 'playing' ? state.current.level : gameState === 'asteroids' ? state.current.wave : 1}
                </p>
              </div>
            </div>
@@ -1053,9 +1210,19 @@ export function CreativeInvaders() {
               const scaleY = GAME_HEIGHT / rect.height;
               let x = (e.clientX - rect.left) * scaleX;
               let y = (e.clientY - rect.top) * scaleY;
-              state.current.player.x = x - state.current.player.width / 2;
+              
               if (gameState === "asteroids") {
+                  const dx = x - (state.current.player.x + state.current.player.width / 2);
+                  const dy = y - (state.current.player.y + state.current.player.height / 2);
+                  
+                  if (Math.sqrt(dx*dx + dy*dy) > 10) {
+                      state.current.player.angle = Math.atan2(dy, dx);
+                  }
+                  
+                  state.current.player.x = x - state.current.player.width / 2;
                   state.current.player.y = y - state.current.player.height / 2;
+              } else {
+                  state.current.player.x = x - state.current.player.width / 2;
               }
             }
           }}
@@ -1075,9 +1242,19 @@ export function CreativeInvaders() {
               const scaleY = GAME_HEIGHT / rect.height;
               let x = (e.touches[0].clientX - rect.left) * scaleX;
               let y = (e.touches[0].clientY - rect.top) * scaleY;
-              state.current.player.x = x - state.current.player.width / 2;
+              
               if (gameState === "asteroids") {
+                  const dx = x - (state.current.player.x + state.current.player.width / 2);
+                  const dy = y - (state.current.player.y + state.current.player.height / 2);
+                  
+                  if (Math.sqrt(dx*dx + dy*dy) > 10) {
+                      state.current.player.angle = Math.atan2(dy, dx);
+                  }
+                  
+                  state.current.player.x = x - state.current.player.width / 2;
                   state.current.player.y = y - state.current.player.height / 2;
+              } else {
+                  state.current.player.x = x - state.current.player.width / 2;
               }
             }
           }}
@@ -1100,27 +1277,35 @@ export function CreativeInvaders() {
                   {t("game.invaders.subtitle")}
                 </h3>
                 <p className="text-white/60 text-xs font-mono max-w-xs mb-4 leading-relaxed">
-                  {t("game.invaders.instructions")} Destroy{" "}
-                  <span className="text-red-500 font-bold">BLOCKS</span>, shatter{" "}
-                  <span className="text-yellow-500 font-bold">DISTRACTIONS</span>,
-                  and break the{" "}
-                  <span className="text-gray-400 font-bold">ROUTINE</span>.
+                  {t("game.invaders.instruction.desc", {
+                    blocks: t('game.invaders.instruction.blocks'),
+                    distractions: t('game.invaders.instruction.distractions'),
+                    routine: t('game.invaders.instruction.routine')
+                  }).split(/(\{\{.*?\}\})/).map((part, i) => {
+                    if (part === "{{blocks}}") return <span key={i} className="text-red-500 font-bold">{t('game.invaders.instruction.blocks')}</span>;
+                    if (part === "{{distractions}}") return <span key={i} className="text-yellow-500 font-bold">{t('game.invaders.instruction.distractions')}</span>;
+                    if (part === "{{routine}}") return <span key={i} className="text-gray-400 font-bold">{t('game.invaders.instruction.routine')}</span>;
+                    return part;
+                  })}
                 </p>
                 <div className="text-yellow-500 font-mono text-sm tracking-widest flex items-center gap-2 mt-auto">
-                   <Zap className="w-4 h-4" /> {festCoins} KARMAS
+                   <Zap className="w-4 h-4" /> {festCoins} {t('game.invaders.karmas')}
+                </div>
+                <div className="text-brand-accent font-mono text-[10px] tracking-widest flex items-center gap-2 mt-2">
+                   {t('game.invaders.highscore')} {highScore}
                 </div>
                 <div className="flex gap-2 mt-4">
                   <button 
                     onClick={() => setStoreTab("chars")}
                     className={`px-4 py-2 text-[10px] uppercase font-bold tracking-widest transition-all border-b-2 ${storeTab === "chars" ? "border-brand-accent text-brand-accent bg-brand-accent/10" : "border-transparent text-white/40"}`}
                   >
-                    Naves
+                    {t('game.invaders.naves')}
                   </button>
                   <button 
                     onClick={() => setStoreTab("upgrades")}
                     className={`px-4 py-2 text-[10px] uppercase font-bold tracking-widest transition-all border-b-2 ${storeTab === "upgrades" ? "border-brand-accent text-brand-accent bg-brand-accent/10" : "border-transparent text-white/40"}`}
                   >
-                    Mejoras
+                    {t('game.invaders.mejoras')}
                   </button>
                 </div>
               </div>
@@ -1173,7 +1358,7 @@ export function CreativeInvaders() {
                            }} 
                            className="w-full bg-brand-accent text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center gap-3 hover:bg-brand-accent/80 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(242,74,41,0.4)] cursor-pointer pointer-events-auto"
                          >
-                           <Play size={18} /> [ START GAME ]
+                           <Play size={18} /> {t('game.invaders.start_game')}
                          </button>
                        ) : (
                          <button 
@@ -1183,7 +1368,7 @@ export function CreativeInvaders() {
                            }} 
                            className={`w-full font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex justify-center items-center transition-all cursor-pointer pointer-events-auto ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400 hover:scale-105' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}
                          >
-                           UNLOCK - {selectedChar.price} KARMAS
+                           {t('game.invaders.unlock')} - {selectedChar.price} {t('game.invaders.karmas')}
                          </button>
                        )}
                      </div>
@@ -1191,9 +1376,10 @@ export function CreativeInvaders() {
                  ) : (
                    <div className="flex flex-col gap-4 text-left">
                      {[
-                       { id: 'shield', icon: Shield, name: 'Escudo Permanente', price: 1000 * (upgrades.shield + 1) },
-                       { id: 'power', icon: Zap, name: 'Potencia Inicial', price: 2000 * (upgrades.power + 1) },
-                       { id: 'speed', icon: Star, name: 'Velocidad Extra', price: 1500 * (upgrades.speed + 1) }
+                       { id: 'shield', icon: Shield, name: t('game.invaders.upgrade.shield'), price: 1000 * (upgrades.shield + 1) },
+                       { id: 'power', icon: Zap, name: t('game.invaders.upgrade.power'), price: 2000 * (upgrades.power + 1) },
+                       { id: 'speed', icon: Star, name: t('game.invaders.upgrade.speed'), price: 1500 * (upgrades.speed + 1) },
+                      { id: 'rear_turret', icon: RefreshCw, name: t('game.invaders.upgrade.rear_turret'), price: 3000 * (upgrades.rear_turret + 1) }
                      ].map(upg => (
                        <div key={upg.id} className="flex items-center justify-between bg-black/30 p-3 border border-white/5 rounded-lg">
                          <div className="flex items-center gap-3">
@@ -1202,7 +1388,7 @@ export function CreativeInvaders() {
                            </div>
                            <div>
                              <p className="text-[10px] text-white font-bold uppercase tracking-widest">{upg.name}</p>
-                             <p className="text-[8px] text-zinc-400">Level {upgrades[upg.id as keyof typeof upgrades]}</p>
+                             <p className="text-[8px] text-zinc-400">{t('game.invaders.level')} {upgrades[upg.id as keyof typeof upgrades]}</p>
                            </div>
                          </div>
                          <button 
@@ -1222,7 +1408,7 @@ export function CreativeInvaders() {
                          </button>
                        </div>
                      ))}
-                     <p className="text-[7px] text-zinc-500 text-center mt-2 italic uppercase">Mejoras permanentes para todas las naves</p>
+                     <p className="text-[7px] text-zinc-500 text-center mt-2 italic uppercase">{t('game.invaders.upgrade.desc')}</p>
                    </div>
                  )}
               </div>
@@ -1254,10 +1440,10 @@ export function CreativeInvaders() {
         {gameState === "takeoff" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
                 <h3 className="text-4xl font-display text-brand-accent animate-pulse uppercase tracking-[0.2em] drop-shadow-[0_0_15px_rgba(242,74,41,0.6)]">
-                    ENTERING DEEP SPACE
+                    {t('game.invaders.entering_deep_space')}
                 </h3>
                 <p className="text-white/50 font-mono mt-4 uppercase tracking-[0.4em] text-[10px] animate-bounce">
-                    Stabilizing propulsion...
+                    {t('game.invaders.stabilizing')}
                 </p>
             </div>
         )}

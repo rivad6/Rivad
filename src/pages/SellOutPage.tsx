@@ -27,7 +27,8 @@ export const SellOutPage: React.FC = () => {
                 }).catch(() => {});
               } else {
                 navigator.clipboard.writeText(window.location.href);
-                alert("URL copiada al portapapeles.");
+                // Notification via console or we could add a toast, for now localized print
+                console.log(t('game.sell.copied'));
               }
             }}
             className="text-zinc-500 hover:text-white transition-colors"
@@ -74,13 +75,13 @@ export const SellOutPage: React.FC = () => {
         {/* Parody Footer Info */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-[10px] uppercase tracking-widest font-bold">
            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-zinc-500 italic">
-              "El éxito no es lo que haces, sino cuánto Hype puedes generar antes de que te descubran."
+              "{t('game.sell.quote1')}"
            </div>
            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-zinc-500 italic text-center">
-              "Si una obra no es viral, ¿realmente existe en el tejido sociocultural contemporáneo?"
+              "{t('game.sell.quote2')}"
            </div>
            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-zinc-500 italic text-right">
-              "La autenticidad es solo una etiqueta que puedes comprar por 500 Karmas."
+              "{t('game.sell.quote3')}"
            </div>
         </div>
 
