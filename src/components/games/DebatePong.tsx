@@ -25,6 +25,7 @@ export function DebatePong() {
     let hitText = "";
     let hitTextTimeout: ReturnType<typeof setTimeout>;
     let shakeAmount = 0;
+    let particles: {x: number, y: number, vx: number, vy: number, text: string, life: number}[] = [];
     
     const paddleWidth = 10;
     const paddleHeight = 60;
@@ -40,9 +41,23 @@ export function DebatePong() {
       ? ["Ad Hominem", "Homme de Paille", "Syllogisme", "Appel à l'Autorité", "Sophisme", "Fausse Dichotomie", "Axiome"]
       : ["Ad Hominem", "Hombre de Paja", "Silogismo", "Apelación a la Autoridad", "Sofisma", "Falsa Dicotomía", "Axioma"];
 
-    const showHitText = () => {
-      hitText = debateTerms[Math.floor(Math.random() * debateTerms.length)];
-      shakeAmount = 5;
+    const showHitText = (x: number, y: number) => {
+      const term = debateTerms[Math.floor(Math.random() * debateTerms.length)];
+      hitText = term;
+      shakeAmount = 8;
+      
+      // Add particles
+      for (let i = 0; i < 5; i++) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 4,
+          vy: (Math.random() - 0.5) * 4,
+          text: term.split(' ')[0], // First word of term
+          life: 1.0
+        });
+      }
+
       clearTimeout(hitTextTimeout);
       hitTextTimeout = setTimeout(() => { hitText = "" }, 800);
     };
@@ -105,7 +120,7 @@ export function DebatePong() {
           const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
           playSound('hit');
-          showHitText();
+          showHitText(ball.x, ball.y);
         }
       }
 
@@ -121,7 +136,7 @@ export function DebatePong() {
           const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
           playSound('hit');
-          showHitText();
+          showHitText(ball.x, ball.y);
         }
       }
 
@@ -187,6 +202,18 @@ export function DebatePong() {
         ctx.textAlign = 'center';
         ctx.fillText(hitText, canvas.width / 2, 40);
       }
+
+      // Draw particles
+      particles = particles.filter(p => p.life > 0);
+      particles.forEach(p => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
+        ctx.font = '6px "Press Start 2P"';
+        ctx.fillText(p.text, p.x, p.y);
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.02;
+      });
+
       ctx.restore();
 
       animationFrameId = requestAnimationFrame(draw);

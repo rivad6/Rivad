@@ -205,6 +205,7 @@ export function CreativeInvaders() {
     }[],
     level: 1,
     lastHitEdgeTime: 0,
+    bgType: "grid" as "grid" | "deep",
   });
 
   const loadAsteroidsLevel = useCallback(() => {
@@ -213,6 +214,7 @@ export function CreativeInvaders() {
     state.current.drops = [];
     state.current.player.x = GAME_WIDTH / 2;
     state.current.player.y = GAME_HEIGHT / 2;
+    state.current.bgType = "deep";
     
     // Create 5 large asteroids
     for(let i = 0; i < 5; i++) {
@@ -238,6 +240,7 @@ export function CreativeInvaders() {
     state.current.enemySpeedBase = 1.0 + level * 0.3;
     state.current.player.x = GAME_WIDTH / 2;
     state.current.projectiles = [];
+    state.current.bgType = "grid";
     
     if (level === 4) {
       // Boss level
@@ -462,6 +465,9 @@ export function CreativeInvaders() {
         if (s.player.y < -s.player.height) {
             setGameState("asteroids");
             loadAsteroidsLevel();
+            // Explosion at the center of 'Deep Space' transition
+            createExplosion(GAME_WIDTH / 2, GAME_HEIGHT / 2, "#38bdf8", 100);
+            playSound('win');
         }
         
         // draw player taking off
@@ -536,8 +542,6 @@ export function CreativeInvaders() {
 
     if (gameState === "playing") {
       for (const enemy of s.enemies) {
-        if (enemy.type === "block") continue; // Blocks don't trigger edge hits
-
         let enemySpeedX = currentSpeed;
         if (enemy.type === "block") enemySpeedX *= 0.3;
         else if (enemy.type === "distraction") enemySpeedX *= 1.5;
@@ -822,19 +826,33 @@ export function CreativeInvaders() {
     const s = state.current;
 
     // Draw grid background for 'creative space' feel
-    ctx.strokeStyle = "#ffffff05";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < GAME_WIDTH; i += 40) {
+    if (s.bgType === "grid") {
+      ctx.strokeStyle = "#ffffff05";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < GAME_WIDTH; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, GAME_HEIGHT);
+        ctx.stroke();
+      }
+      for (let i = 0; i < GAME_HEIGHT; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(GAME_WIDTH, i);
+        ctx.stroke();
+      }
+    } else {
+      // Nebula effect in deep space
+      ctx.globalAlpha = 0.1;
+      ctx.fillStyle = "#1e1b4b";
       ctx.beginPath();
-      ctx.moveTo(i, 0);
-      ctx.lineTo(i, GAME_HEIGHT);
-      ctx.stroke();
-    }
-    for (let i = 0; i < GAME_HEIGHT; i += 40) {
+      ctx.arc(GAME_WIDTH * 0.2, GAME_HEIGHT * 0.3, 400, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#312e81";
       ctx.beginPath();
-      ctx.moveTo(0, i);
-      ctx.lineTo(GAME_WIDTH, i);
-      ctx.stroke();
+      ctx.arc(GAME_WIDTH * 0.8, GAME_HEIGHT * 0.7, 300, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     // Draw stars
