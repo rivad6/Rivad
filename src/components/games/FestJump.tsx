@@ -67,7 +67,7 @@ const CODES: Record<string, () => void> = {
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function FestJump() {
+export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -95,6 +95,7 @@ export function FestJump() {
   const [gameStats, setGameStats] = useState<{earned: number, total: number, enemies: number, items: number} | null>(null);
   const [currentTheme, setCurrentTheme] = useState<'vaporwave' | 'matrix' | 'classic'>('classic');
   const keysRef = useRef({ left: false, right: false });
+  const pausedRef = useRef(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   const selectedChar = useMemo(() => CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0], [selectedCharId]);
@@ -416,6 +417,7 @@ export function FestJump() {
     let itemsCollected = 0;
 
     const update = (dt: number) => {
+      if (isPausedGlobal || pausedRef.current) return;
       const normalDt = dt / 16.666; // Normalized to 60fps
       
       if (gameState === 'ready') {
@@ -1315,6 +1317,12 @@ export function FestJump() {
               >
                 <Settings className="w-2 h-2" /> {showMobileControls ? 'ON' : 'OFF'}
               </button>
+              <button 
+                onClick={() => { pausedRef.current = !pausedRef.current; playSound('click'); }}
+                className="p-1 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white"
+              >
+                <Rocket size={14} />
+              </button>
           </div>
         </div>
           <div className="flex items-baseline gap-1">
@@ -1336,6 +1344,32 @@ export function FestJump() {
       <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <AnimatePresence>
+          {((isPlaying) && (isPausedGlobal || pausedRef.current)) && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-8"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Rocket className="w-16 h-16 text-brand-accent animate-pulse" />
+                <h2 className="text-white font-black text-4xl uppercase tracking-[0.2em]">
+                  {isPausedGlobal ? 'SIGNAL LOST' : 'PAUSED'}
+                </h2>
+              </div>
+              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-sm">
+                {isPausedGlobal ? t('game.paused.system', 'The high-altitude signal is temporarily interrupted.') : t('game.paused.manual', 'Take a breath. The stage will still be there when you return.')}
+              </p>
+              {!isPausedGlobal && (
+                <button
+                  onClick={() => { pausedRef.current = false; playSound('start'); }}
+                  className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_0_30_rgba(242,74,41,0.4)] active:scale-95"
+                >
+                  RESUME JUMPING
+                </button>
+              )}
+            </motion.div>
+          )}
           {message && (
             <motion.div 
               initial={{ y: -20, opacity: 0 }}

@@ -332,13 +332,13 @@ export function Arcade() {
                     transition={{ duration: 0.3 }}
                     className="w-full h-full flex justify-center p-0 md:p-4 bg-black"
                   >
-                    {activeGame === 'pong' && <DebatePong />}
-                    {activeGame === 'tictactoe' && <IdeasTicTacToe />}
-                    {activeGame === 'uno' && <PoliticalUno />}
-                    {activeGame === 'rpg' && <ArtRPG />}
-                    {activeGame === 'sellout' && <SellOutGame />}
-                    {activeGame === 'invaders' && <CreativeInvaders />}
-                    {activeGame === 'race' && <MeetingRace />}
+                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} />}
+                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} />}
+                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} />}
+                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} />}
+                    {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} />}
+                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} />}
+                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} />}
                   </motion.div>
                 )}
               </AnimatePresence>

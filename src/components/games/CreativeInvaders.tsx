@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAchievements } from "../../context/AchievementsContext";
-import { Play, RefreshCw, Zap, Shield, Star, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Crosshair, Settings } from "lucide-react";
+import { Play, RefreshCw, Zap, Shield, Star, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Crosshair, Settings, Target } from "lucide-react";
 import { useAudio } from "../../context/AudioContext";
+import { motion, AnimatePresence } from 'motion/react';
 
 type GameState = "start" | "playing" | "gameover" | "win" | "takeoff" | "asteroids" | "asteroids_win";
 
@@ -15,7 +16,7 @@ const CHARACTERS = [
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function CreativeInvaders() {
+export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
   const { playSound, playMusic } = useAudio();
@@ -48,7 +49,8 @@ export function CreativeInvaders() {
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
   const [storeTab, setStoreTab] = useState<"chars" | "upgrades">("chars");
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('invaders_mobile_controls') === 'true');
-  const [pendingCoins, setPendingCoins] = useState(0);
+  const pendingCoinsRef = useRef(0);
+  const pausedRef = useRef(false);
 
   const [upgrades, setUpgrades] = useState(() => {
     const saved = localStorage.getItem('invaders_upgrades');
@@ -530,6 +532,7 @@ export function CreativeInvaders() {
   const update = useCallback((dt: number) => {
     const s = state.current;
     if (gameState !== "playing" && gameState !== "asteroids" && gameState !== "takeoff") return;
+    if (isPausedGlobal || pausedRef.current) return;
     
     const normalDt = dt / 16.666; // Normalize to 60fps
 
@@ -1245,6 +1248,36 @@ export function CreativeInvaders() {
       </div>
 
       <div className="relative border-x-2 border-b-2 border-zinc-800 rounded-b-xl bg-black overflow-hidden w-full max-w-4xl flex-grow h-full max-h-[800px] touch-none shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)]">
+        
+        {/* Pause Overlay */}
+        <AnimatePresence>
+          {((gameState === 'playing' || gameState === 'asteroids') && (isPausedGlobal || pausedRef.current)) && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-8"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Target className="w-16 h-16 text-brand-accent animate-pulse" />
+                <h2 className="text-white font-black text-4xl uppercase tracking-[0.2em]">
+                  {isPausedGlobal ? 'LINK SUSPENDED' : 'PAUSED'}
+                </h2>
+              </div>
+              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-24 leading-relaxed max-w-md">
+                {isPausedGlobal ? t('game.paused.system', 'The link to the creative universe is currently interrupted.') : t('game.paused.manual', 'Prepare your creativity. The void waits for no one.')}
+              </p>
+              {!isPausedGlobal && (
+                <button
+                  onClick={() => { pausedRef.current = false; playSound('start'); }}
+                  className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
+                >
+                  RESUME MISSION
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
         <canvas
           ref={canvasRef}
           width={GAME_WIDTH}

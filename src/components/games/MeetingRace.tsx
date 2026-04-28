@@ -41,7 +41,7 @@ interface Particle {
   size: number;
 }
 
-export function MeetingRace() {
+export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,10 +50,10 @@ export function MeetingRace() {
   const [selectedCarId, setSelectedCarId] = useState('taxi');
 
   const cars: CarConfig[] = [
-    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 420, handling: 4, maxHp: 3, color: '#ec4899' },
-    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 580, handling: 6, maxHp: 2, color: '#ef4444' },
-    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 320, handling: 3, maxHp: 6, color: '#3b82f6' },
-    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 520, handling: 8, maxHp: 1, color: '#f59e0b' },
+    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 410, handling: 5, maxHp: 3, color: '#ec4899' },
+    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 560, handling: 7, maxHp: 2, color: '#ef4444' },
+    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 310, handling: 4, maxHp: 6, color: '#3b82f6' },
+    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 500, handling: 9, maxHp: 1, color: '#06b6d4' },
   ];
 
   const currentCar = cars.find(c => c.id === selectedCarId) || cars[0];
@@ -73,6 +73,7 @@ export function MeetingRace() {
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('race_mobile_controls') === 'true');
   const scoreRefDOM = useRef<HTMLSpanElement>(null);
   const keysGamepad = useRef({ left: false, right: false });
+  const pausedRef = useRef(false);
 
   useEffect(() => {
     localStorage.setItem('race_mobile_controls', showMobileControls.toString());
@@ -89,6 +90,7 @@ export function MeetingRace() {
     let animFrame: number;
     let lastTime = performance.now();
     let isGameOver = false;
+    let countdownTimer = 0;
 
     // Physics constants
     const GAME_W = 400;
@@ -216,11 +218,11 @@ export function MeetingRace() {
         speedVar = 0;
       } else if (typeRand > 0.4) {
         type = 'taco';
-        width = 28; height = 18;
+        width = 32; height = 20;
         color = '#fde047';
       } else if (typeRand > 0.25) {
         type = 'bache';
-        width = 35 + Math.random() * 25; height = 20 + Math.random() * 15;
+        width = 40 + Math.random() * 20; height = 25 + Math.random() * 10;
         color = '#1c1917';
         speedVar = 0;
       } else {
@@ -230,8 +232,21 @@ export function MeetingRace() {
         speedVar = -20;
       }
 
-      const x = Math.max(15, Math.min(GAME_W - width - 15, Math.random() * GAME_W));
+      // Lane-aware spawning to prevent blockages
+      const lanes = [20, 110, 200, 290, 360];
+      const laneIndex = Math.floor(Math.random() * lanes.length);
+      const laneX = lanes[laneIndex];
+      const x = Math.max(15, Math.min(GAME_W - width - 15, laneX + (Math.random() - 0.5) * 40));
       
+      // Safety check: don't spawn if another obstacle is too close vertically in the same horizontal vicinity
+      const tooClose = obstacles.some(o => 
+        o.y < 150 && 
+        Math.abs(o.x - x) < 60 &&
+        o.type !== 'tree' && o.type !== 'building'
+      );
+      
+      if (tooClose && type !== 'nitro' && type !== 'shield') return;
+
       obstacles.push({
         id: nextObstacleId++,
         x, y: -height, width, height,
@@ -251,45 +266,81 @@ export function MeetingRace() {
       const by = -h/2;
       
       // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(bx + 4, by + 4, w, h);
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowOffsetY = 10;
 
       if (selectedCarId === 'moto') {
-        // Motorcycle body
-        ctx.fillStyle = currentCar.color;
-        ctx.fillRect(bx + w/2 - 4, by + 5, 8, h - 10);
-        // Tires
-        ctx.fillStyle = '#111';
-        ctx.fillRect(bx + w/2 - 4, by, 8, 10);
-        ctx.fillRect(bx + w/2 - 4, by + h - 10, 8, 10);
+        // High-vis Moto
+        ctx.fillStyle = '#111'; // Tires
+        ctx.fillRect(bx + w/2 - 4, by, 8, 12);
+        ctx.fillRect(bx + w/2 - 4, by + h - 12, 8, 12);
+        
+        ctx.fillStyle = currentCar.color; // Body
+        ctx.beginPath();
+        ctx.roundRect(bx + w/2 - 5, by + 10, 10, h - 20, 5);
+        ctx.fill();
+
+        // Details
+        ctx.fillStyle = '#ff7b00'; // Accents
+        ctx.fillRect(bx + w/2 - 3, by + 15, 6, 4);
+        
         // Handlebars
-        ctx.fillStyle = '#333';
-        ctx.fillRect(bx, by + 15, w, 4);
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(bx, by + 20);
+        ctx.lineTo(bx + w, by + 20);
+        ctx.stroke();
       } else if (selectedCarId === 'truck') {
-        // Truck body
+        ctx.fillStyle = '#1e293b'; // Tires
+        ctx.fillRect(bx - 3, by + 10, 4, 15);
+        ctx.fillRect(bx + w - 1, by + 10, 4, 15);
+        ctx.fillRect(bx - 3, by + h - 25, 4, 15);
+        ctx.fillRect(bx + w - 1, by + h - 25, 4, 15);
+
         ctx.fillStyle = currentCar.color;
         ctx.beginPath(); ctx.roundRect(bx, by, w, h, 4); ctx.fill();
-        // Bed
+        
+        // Cargo bed details
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(bx + 4, by + h/2, w - 8, h/2 - 4);
+        ctx.fillRect(bx + 4, by + h/2 - 5, w - 8, h/2);
+        
         // Cabin
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(bx + 4, by + 10, w - 8, 15);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(bx + 2, by + 5, w - 4, 18);
+        ctx.fillStyle = '#334155'; // Window
+        ctx.fillRect(bx + 6, by + 8, w - 12, 8);
       } else {
         // Car style (Taxi or Sport)
-        ctx.fillStyle = selectedCarId === 'taxi' ? '#ffffff' : currentCar.color; 
-        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
+        ctx.fillStyle = selectedCarId === 'taxi' ? '#fbbf24' : currentCar.color; 
+        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 8); ctx.fill();
         
         if (selectedCarId === 'taxi') {
-          ctx.fillStyle = '#ec4899'; // Pink top
-          ctx.beginPath(); ctx.roundRect(bx, by, w, h/2 + 5, [6, 6, 0, 0]); ctx.fill();
-          // Copete
-          ctx.fillStyle = '#fbbf24'; ctx.fillRect(bx + w/2 - 6, by + h/2 - 10, 12, 8);
+          // Checkered patterns
+          ctx.fillStyle = '#000';
+          for(let i=0; i<w; i+=8) {
+            ctx.fillRect(bx + i, by + h/2 - 4, 4, 4);
+            ctx.fillRect(bx + i + 4, by + h/2, 4, 4);
+          }
+          // TAXI sign
+          ctx.fillStyle = '#000';
+          ctx.fillRect(bx + w/2 - 8, by + h/2 - 12, 16, 6);
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 4px monospace'; ctx.fillText('TAXI', bx + w/2 - 6, by + h/2 - 8);
+        } else if (selectedCarId === 'sport') {
+          // Racing stripe
+          ctx.fillStyle = 'white';
+          ctx.fillRect(bx + w/2 - 3, by, 6, h);
+          // Spoiler
+          ctx.fillStyle = '#444';
+          ctx.fillRect(bx - 2, by + h - 6, w + 4, 4);
         }
 
-        // Windshield
+        // Windshield and windows
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(bx + 4, by + 8, w - 8, h*0.2);
+        ctx.fillRect(bx + 4, by + 8, w - 8, 12); // Front
+        ctx.fillRect(bx + 2, by + 25, 3, 15); // Side L
+        ctx.fillRect(bx + w - 5, by + 25, 3, 15); // Side R
       }
 
       // Shield effect
@@ -461,6 +512,23 @@ export function MeetingRace() {
 
     const loop = (timestamp: number) => {
       if (isGameOver) return;
+      if (isPausedGlobal || pausedRef.current) {
+        if (!isPausedGlobal && countdownTimer > 0) {
+           countdownTimer -= (timestamp - lastTime) / 1000;
+           if (countdownTimer <= 0) {
+             pausedRef.current = false;
+           }
+        }
+        lastTime = timestamp;
+        
+        // Draw Pause Screen partial
+        ctx.fillStyle = 'rgba(0,0,0,0.02)';
+        ctx.fillRect(0, 0, GAME_W, GAME_H);
+        
+        animFrame = requestAnimationFrame(loop);
+        return;
+      }
+      
       const dt = Math.min((timestamp - lastTime) / 1000, 0.05); 
       lastTime = timestamp;
       const normalDt = dt * 60; // normalized delta
@@ -771,13 +839,17 @@ export function MeetingRace() {
 
     animFrame = requestAnimationFrame(loop);
 
+    const onBlur = () => { pausedRef.current = true; };
+    window.addEventListener('blur', onBlur);
+
     return () => {
       cancelAnimationFrame(animFrame);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       canvas.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('blur', onBlur);
     };
-  }, [isPlaying, playSound]);
+  }, [isPlaying, playSound, isPausedGlobal]);
 
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
@@ -792,6 +864,12 @@ export function MeetingRace() {
               <Zap className="w-3 h-3" /> {showMobileControls ? 'CONTROLS ON' : 'OFF'}
             </button>
             <span className="flex items-center gap-2">
+               <button 
+                 onClick={() => { pausedRef.current = !pausedRef.current; playSound('click'); }}
+                 className="p-1 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white"
+               >
+                 <TerminalSquare size={16} />
+               </button>
                <span>{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
                {hp > 0 && Array.from({length: hp}).map((_, i) => <Heart key={i} size={12} className="text-red-500 fill-red-500" />)}
             </span>
@@ -803,6 +881,33 @@ export function MeetingRace() {
         
         {/* CRT Scanline Overlay */}
         <div className="absolute inset-0 z-10 pointer-events-none opacity-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,1)_50%)] bg-[length:100%_4px]" />
+
+        <AnimatePresence>
+          {(isPlaying && (isPausedGlobal || pausedRef.current)) && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+            >
+              <div className="text-white font-black text-4xl uppercase tracking-tighter flex items-center gap-4">
+                <TerminalSquare className="w-10 h-10 animate-pulse text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]" />
+                {isPausedGlobal ? 'SYSTEM PAUSE' : 'GAME PAUSED'}
+              </div>
+              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+                {isPausedGlobal ? t('game.paused.system', 'The game is paused due to a system interruption.') : t('game.paused.manual', 'Press the button or take a breath to resume.')}
+              </p>
+              {!isPausedGlobal && (
+                <button
+                  onClick={() => { pausedRef.current = false; playSound('start'); }}
+                  className="bg-orange-500 text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
+                >
+                  RESUME
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {isPlaying && showMobileControls && (
           <>
