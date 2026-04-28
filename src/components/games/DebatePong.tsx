@@ -3,10 +3,11 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { User, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function DebatePong() {
+export function DebatePong({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -125,6 +126,7 @@ export function DebatePong() {
     window.addEventListener('keyup', handleKeyUp);
 
     const draw = () => {
+      if (isPausedGlobal) return;
       if (player.score >= 5 || cpu.score >= 5) {
         setIsPlaying(false);
         if (player.score >= 5) {
@@ -371,6 +373,28 @@ export function DebatePong() {
       
       <div ref={containerRef} className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-full h-full min-h-[400px] flex justify-center items-center mx-auto shadow-2xl flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+        
+        {/* Universal Pause Overlay */}
+        <AnimatePresence>
+          {isPausedGlobal && isPlaying && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <Zap className="w-12 h-12 text-brand-accent animate-pulse" />
+                <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                  {t('game.paused.system', 'DEBATE SUSPENDED')}
+                </h2>
+              </div>
+              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+                {t('game.paused.desc', 'The moderator has called for a temporary recess.')}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {!isPlaying ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80">
             <h3 className="text-white text-lg mb-2 text-center leading-loose">

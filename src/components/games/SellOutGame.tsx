@@ -36,7 +36,7 @@ const UPGRADES: Upgrade[] = [
   { id: 'nft', nameKey: 'game.sell.action.nft', baseCost: 10000, hypeBoost: 500, icon: <DollarSign />, unlockedAt: 80 },
 ];
 
-export const SellOutGame: React.FC = () => {
+export const SellOutGame: React.FC<{ isPausedGlobal?: boolean }> = ({ isPausedGlobal = false }) => {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -81,7 +81,7 @@ export const SellOutGame: React.FC = () => {
   };
 
   useEffect(() => {
-    if (gameState !== 'playing') return;
+    if (gameState !== 'playing' || isPausedGlobal) return;
 
     const timer = setInterval(() => {
       const currentHype = hypeRef.current;
@@ -117,7 +117,7 @@ export const SellOutGame: React.FC = () => {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [gameState, totalPassiveHype, t]);
+  }, [gameState, totalPassiveHype, t, isPausedGlobal]);
 
   const handlePrestige = () => {
     if (hype < 1000000) return;
@@ -128,7 +128,7 @@ export const SellOutGame: React.FC = () => {
   };
 
   const handleMainClick = (e: React.MouseEvent) => {
-    if (gameState !== 'playing') return;
+    if (gameState !== 'playing' || isPausedGlobal) return;
     
     playSound('hover');
     setHype(prev => prev + totalHypePerClick);
@@ -165,6 +165,29 @@ export const SellOutGame: React.FC = () => {
   return (
     <div ref={containerRef} className="flex flex-col items-center w-full h-full max-w-5xl mx-auto p-4 md:p-8 font-[var(--font-mono)] select-none relative bg-[#050505] min-h-[350px] overflow-y-auto custom-scrollbar [&.is-fullscreen]:bg-black">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      
+      {/* Universal Pause Overlay */}
+      <AnimatePresence>
+        {isPausedGlobal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <RefreshCw className="w-12 h-12 text-brand-accent animate-spin-slow" />
+              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                {t('game.paused.system', 'MARKET SUSPENDED')}
+              </h2>
+            </div>
+            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+              {t('game.paused.desc', 'The algorithm is currently refreshing. Please stand by.')}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="w-full flex flex-col">
       
       {/* Top Banner: Progress to 1M */}

@@ -41,7 +41,9 @@ export function Arcade() {
     
     // 60 seconds popup
     const popupInterval = setInterval(() => {
-      setShowPopup(true);
+      if (!document.fullscreenElement && !showPopup && powerState === 'playing') {
+        setShowPopup(true);
+      }
     }, 60000);
     
     return () => {
@@ -155,35 +157,6 @@ export function Arcade() {
 
   return (
     <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40 relative">
-      {/* 60s Interruption Popup */}
-      <AnimatePresence>
-        {showPopup && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-zinc-950 border border-brand-accent/30 p-8 rounded-3xl max-w-md w-full shadow-[0_0_50px_rgba(138,99,210,0.2)] flex flex-col items-center text-center gap-6"
-            >
-              <div className="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center text-brand-accent">
-                <MessageCircle size={32} />
-              </div>
-              <h4 className="text-brand-accent text-[10px] font-black tracking-[0.3em] uppercase">
-                {t('arc.popup.title')}
-              </h4>
-              <p className="text-white font-mono text-sm leading-relaxed uppercase tracking-wider italic">
-                "{t('arc.popup.text')}"
-              </p>
-              <button
-                onClick={() => setShowPopup(false)}
-                className="w-full bg-brand-accent text-white py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all font-mono text-xs"
-              >
-                {t('arc.popup.btn')}
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
       <div className="w-full max-w-5xl mx-auto px-6 md:px-0">
         <div className="mb-12 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-12 md:mt-4">
           <div>
@@ -200,7 +173,43 @@ export function Arcade() {
           </p>
         </div>
 
-        <div ref={arcadeCabinetRef} className={`flex flex-col items-center ${isFullscreen ? 'h-screen w-screen bg-[#110f1c] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
+        <div ref={arcadeCabinetRef} className={`flex flex-col items-center relative ${isFullscreen ? 'h-screen w-screen bg-[#110f1c] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
+          {/* 60s Interruption Popup - Moved inside the machine container */}
+          <AnimatePresence>
+            {showPopup && (
+              <div className="absolute inset-0 z-[100] flex items-center justify-center p-4 md:p-12">
+                <div className="absolute inset-0 bg-black/90 backdrop-blur-md rounded-xl" />
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                  className="bg-zinc-950 border border-brand-accent/30 p-8 rounded-3xl max-w-sm w-full shadow-[0_0_50px_rgba(138,99,210,0.4)] flex flex-col items-center text-center gap-6 relative z-10"
+                >
+                  <div className="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center text-brand-accent border border-brand-accent/20">
+                    <MessageCircle size={32} className="animate-pulse" />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <h4 className="text-brand-accent text-[10px] font-black tracking-[0.3em] uppercase">
+                      {t('arc.popup.title')}
+                    </h4>
+                    <div className="h-px w-12 bg-brand-accent/30 mx-auto" />
+                  </div>
+                  <p className="text-white font-mono text-xs md:text-sm leading-relaxed uppercase tracking-wider italic px-4">
+                    "{t('arc.popup.text')}"
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowPopup(false);
+                      playSound('powerup');
+                    }}
+                    className="w-full bg-brand-accent text-white py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all font-mono text-xs shadow-[0_4px_0_#6b21a8] active:translate-y-1 active:shadow-none"
+                  >
+                    {t('arc.popup.btn', 'CONTINUAR')}
+                  </button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
           {/* Physical Cartridges outside the machine */}
           {!isFullscreen && (
             <div className="mb-8 relative z-20 w-full">

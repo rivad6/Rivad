@@ -149,7 +149,7 @@ const getMoodColors = (nodeId: string) => {
   return { bg: 'bg-[#0a0a0B]', border: 'border-white/10', accent: 'text-brand-accent' }; // Default
 }
 
-export function ArtRPG() {
+export function ArtRPG({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -162,13 +162,13 @@ export function ArtRPG() {
 
   useEffect(() => {
     const isPlaying = currentNode !== 'start' && !storyMap[currentNode]?.isEnding;
-    if (isPlaying) {
+    if (isPlaying && !isPausedGlobal) {
       playMusic('rpg');
     } else {
       playMusic('none');
     }
     return () => playMusic('none');
-  }, [currentNode, playMusic]);
+  }, [currentNode, playMusic, isPausedGlobal]);
 
   const node = storyMap[currentNode];
 
@@ -181,6 +181,7 @@ export function ArtRPG() {
   }, [currentNode, node.isEnding, playSound, unlockAchievement]);
 
   const handleChoice = (next: NodeId, choiceIndex?: number) => {
+    if (isPausedGlobal) return;
     if (next === 'start') {
       playSound('hover');
       setStats({ budget: 50, sanity: 50, reputation: 50 });
@@ -222,6 +223,7 @@ export function ArtRPG() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isPausedGlobal) return;
       if (node.isEnding) {
         if (e.key === 'Enter' || e.key === ' ') {
           handleChoice('start');
@@ -297,6 +299,28 @@ export function ArtRPG() {
   return (
     <div ref={containerRef} className={cn("w-full h-full flex flex-col justify-between p-4 sm:p-10 transition-colors duration-1000 relative overflow-hidden font-mono [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none", mood.bg)}>
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      
+      {/* Universal Pause Overlay */}
+      <AnimatePresence>
+        {isPausedGlobal && currentNode !== 'start' && !node.isEnding && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <div className={cn("w-12 h-12 rounded-full animate-pulse", mood.accent.replace('text-', 'bg-'))} />
+              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                {t('game.paused.system', 'SIMULATION HALTED')}
+              </h2>
+            </div>
+            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+              {t('game.paused.desc', 'The creative timeline is temporarily frozen. Please wait.')}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Dynamic Background Glow */}
       <div className={cn("absolute -top-40 -right-40 w-96 h-96 blur-[150px] opacity-20 rounded-full transition-colors duration-1000", mood.accent.replace('text-', 'bg-'))} />

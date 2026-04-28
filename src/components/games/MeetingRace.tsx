@@ -50,9 +50,9 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
   const [selectedCarId, setSelectedCarId] = useState('taxi');
 
   const cars: CarConfig[] = [
-    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 410, handling: 5, maxHp: 3, color: '#ec4899' },
+    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 410, handling: 5, maxHp: 3, color: '#facc15' },
     { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 560, handling: 7, maxHp: 2, color: '#ef4444' },
-    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 310, handling: 4, maxHp: 6, color: '#3b82f6' },
+    { id: 'patrol', name: t('game.car.patrol.name', 'Patrulla'), desc: t('game.car.patrol.desc', 'Blindada e imparable'), speed: 380, handling: 6, maxHp: 5, color: '#1e293b' },
     { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 500, handling: 9, maxHp: 1, color: '#06b6d4' },
   ];
 
@@ -133,7 +133,8 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       height: selectedCarId === 'moto' ? 45 : 60, 
       targetX: GAME_W / 2 - (selectedCarId === 'moto' ? 10 : 18), 
       tilt: 0,
-      speed: 400
+      speed: 400,
+      vx: 0
     };
     
     const obstacles: Obstacle[] = [];
@@ -188,39 +189,40 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       let speedVar = 50;
       let vx = 0;
       
-      if (typeRand > 0.96) {
+      // Adjusted item probabilities
+      if (typeRand > 0.95) {
         type = 'nitro';
         width = 24; height = 24;
         color = '#3b82f6';
-      } else if (typeRand > 0.92) {
+      } else if (typeRand > 0.88) {
         type = 'shield';
         width = 30; height = 30;
         color = '#818cf8';
-      } else if (typeRand > 0.85) {
+      } else if (typeRand > 0.75) {
         type = 'enemy';
         width = 40; height = 70;
         color = '#450a0a';
         speedVar = 80;
         vx = (Math.random() - 0.5) * 50;
-      } else if (typeRand > 0.75) {
+      } else if (typeRand > 0.60) {
         type = 'msg';
         width = 65; height = 30;
         color = '#25D366';
-      } else if (typeRand > 0.65) {
+      } else if (typeRand > 0.50) {
         type = 'oil';
         width = 50; height = 30;
         color = '#000';
         speedVar = 0;
-      } else if (typeRand > 0.5) {
+      } else if (typeRand > 0.40) {
         type = 'cone';
         width = 18; height = 24;
         color = '#f97316';
         speedVar = 0;
-      } else if (typeRand > 0.4) {
+      } else if (typeRand > 0.25) {
         type = 'taco';
         width = 32; height = 20;
         color = '#fde047';
-      } else if (typeRand > 0.25) {
+      } else if (typeRand > 0.15) {
         type = 'bache';
         width = 40 + Math.random() * 20; height = 25 + Math.random() * 10;
         color = '#1c1917';
@@ -232,24 +234,29 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
         speedVar = -20;
       }
 
-      // Lane-aware spawning to prevent blockages
-      const lanes = [20, 110, 200, 290, 360];
+      // Lane-aware spawning with 6 linear slots
+      const lanes = [40, 105, 170, 235, 300, 365]; 
       const laneIndex = Math.floor(Math.random() * lanes.length);
       const laneX = lanes[laneIndex];
-      const x = Math.max(15, Math.min(GAME_W - width - 15, laneX + (Math.random() - 0.5) * 40));
+      const x = Math.max(15, Math.min(GAME_W - width - 15, laneX - width/2));
       
-      // Safety check: don't spawn if another obstacle is too close vertically in the same horizontal vicinity
+      // Safety check: ensure at least one lane is ALWAYS open
+      const currentWave = obstacles.filter(o => o.y < 120);
+      if (currentWave.length >= lanes.length - 1 && (type !== 'shield' && type !== 'nitro' && type !== 'taco')) {
+        return; // Skip spawning to keep a gap
+      }
+
+      // Proximity check
       const tooClose = obstacles.some(o => 
-        o.y < 150 && 
-        Math.abs(o.x - x) < 60 &&
-        o.type !== 'tree' && o.type !== 'building'
+        o.y < 180 && 
+        Math.abs(o.x - x) < 70
       );
       
       if (tooClose && type !== 'nitro' && type !== 'shield') return;
 
       obstacles.push({
         id: nextObstacleId++,
-        x, y: -height, width, height,
+        x, y: -height - 20, width, height,
         speed: speedVar, 
         type, color, markedForDeletion: false,
         vx
@@ -286,31 +293,51 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
         ctx.fillRect(bx + w/2 - 3, by + 15, 6, 4);
         
         // Handlebars
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(bx, by + 20);
-        ctx.lineTo(bx + w, by + 20);
+        ctx.moveTo(bx + 5, by + 22);
+        ctx.lineTo(bx + w - 5, by + 22);
         ctx.stroke();
-      } else if (selectedCarId === 'truck') {
-        ctx.fillStyle = '#1e293b'; // Tires
-        ctx.fillRect(bx - 3, by + 10, 4, 15);
-        ctx.fillRect(bx + w - 1, by + 10, 4, 15);
-        ctx.fillRect(bx - 3, by + h - 25, 4, 15);
-        ctx.fillRect(bx + w - 1, by + h - 25, 4, 15);
+      } else if (selectedCarId === 'patrol') {
+        // Tires
+        ctx.fillStyle = '#000';
+        ctx.fillRect(bx - 3, by + 10, 6, 12);
+        ctx.fillRect(bx + w - 3, by + 10, 6, 12);
+        ctx.fillRect(bx - 3, by + h - 22, 6, 12);
+        ctx.fillRect(bx + w - 3, by + h - 22, 6, 12);
 
-        ctx.fillStyle = currentCar.color;
+        // Body
+        ctx.fillStyle = '#111827';
         ctx.beginPath(); ctx.roundRect(bx, by, w, h, 4); ctx.fill();
         
-        // Cargo bed details
-        ctx.fillStyle = 'rgba(0,0,0,0.2)';
-        ctx.fillRect(bx + 4, by + h/2 - 5, w - 8, h/2);
+        // White doors for classic police look
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(bx + 4, by + h/4, w - 8, h/2);
         
-        // Cabin
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(bx + 2, by + 5, w - 4, 18);
-        ctx.fillStyle = '#334155'; // Window
-        ctx.fillRect(bx + 6, by + 8, w - 12, 8);
+        // Police text (smaller, more professional)
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 8px Arial';
+        ctx.textAlign = 'center';
+        ctx.save();
+        ctx.translate(bx + w/2, by + h/2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('POLICE', 0, 3);
+        ctx.restore();
+
+        // High-quality light bar
+        const isFlicker = Math.floor(Date.now() / 80) % 2 === 0;
+        const leftColor = isFlicker ? '#ef4444' : '#1e1b4b';
+        const rightColor = !isFlicker ? '#3b82f6' : '#1e1b4b';
+        
+        ctx.fillStyle = leftColor;
+        ctx.shadowBlur = isFlicker ? 15 : 0; ctx.shadowColor = '#ef4444';
+        ctx.fillRect(bx + w/2 - 12, by + h/2 - 2, 10, 5);
+        
+        ctx.fillStyle = rightColor;
+        ctx.shadowBlur = !isFlicker ? 15 : 0; ctx.shadowColor = '#3b82f6';
+        ctx.fillRect(bx + w/2 + 2, by + h/2 - 2, 10, 5);
+        ctx.shadowBlur = 0;
       } else {
         // Car style (Taxi or Sport)
         ctx.fillStyle = selectedCarId === 'taxi' ? '#fbbf24' : currentCar.color; 
@@ -536,15 +563,17 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       // Logic Updates
       dayNightCycle = (dayNightCycle + dt * 0.01) % 1;
 
+      // Speed & Handling balance
+      const progressScale = Math.min(1, currentScore / 5000);
+      speedMultiplier = 1 + progressScale * 0.8;
+
       if (slowMoTimer > 0) {
         slowMoTimer -= dt;
-        speedMultiplier = 0.5;
+        speedMultiplier *= 0.5;
       } else if (nitroTimer > 0) {
         nitroTimer -= dt;
-        speedMultiplier = 2.2;
+        speedMultiplier *= 2;
         currentScore += dt * 800;
-      } else {
-        speedMultiplier = 1 + Math.floor(currentScore / 1000) * 0.12;
       }
 
       if (shieldTimer > 0) shieldTimer -= dt;
@@ -554,23 +583,27 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
       if (damageTimer > 0) damageTimer -= dt;
 
-      const handling = currentCar.handling * (nitroTimer > 0 ? 0.6 : 1);
-      const moveSpeed = player.speed * (slowMoTimer > 0 ? 0.7 : 1);
+      // Handling based on 6 Lanes
+      const lanes = [40, 105, 170, 235, 300, 365];
+      const laneWidth = GAME_W / 6;
       
-      if (keys.ArrowLeft || keys.a || keysGamepad.current.left) player.targetX -= moveSpeed * handling * dt;
-      if (keys.ArrowRight || keys.d || keysGamepad.current.right) player.targetX += moveSpeed * handling * dt;
-      
-      player.targetX = Math.max(14, Math.min(GAME_W - player.width - 14, player.targetX));
+      let moveDir = 0;
+      if (keys.ArrowLeft || keys.a || keysGamepad.current.left) moveDir -= 1;
+      if (keys.ArrowRight || keys.d || keysGamepad.current.right) moveDir += 1;
 
-      // Improved Lerp for smoother lateral movement
-      const diff = player.targetX - player.x;
-      const followFactor = 10; 
-      const lerpStep = diff * (1 - Math.pow(1 - 0.25, normalDt));
-      player.x += lerpStep;
+      // targetX is interpolated for smoothness but stays within the continuous range
+      const speedScale = moveDir * currentCar.handling * 200 * dt;
+      player.targetX += speedScale;
+      player.targetX = Math.max(20, Math.min(GAME_W - player.width - 20, player.targetX));
       
-      // Dynamic tilt
-      player.tilt = (lerpStep / (normalDt * 4)) * 0.5;
-      player.tilt = Math.max(-0.2, Math.min(0.2, player.tilt));
+      // Real-time smoothing
+      const diff = player.targetX - player.x;
+      player.vx = diff * 12; // Snap factor
+      player.x += player.vx * dt;
+      
+      // Visual Tilt for "Steering Wheel" effect
+      player.tilt = (player.vx / 400) * 0.4;
+      player.tilt = Math.max(-0.25, Math.min(0.25, player.tilt));
 
       if (isRaining) {
         rainDrops.forEach(drop => {
@@ -745,11 +778,19 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
       // Road lines
       ctx.fillStyle = isNight ? '#a16207' : '#f59e0b';
-      for (let i = 0; i < 7; i++) {
-        const lineY = ((roadOffset + (i * 100)) % GAME_H) - 100;
-        ctx.fillRect(GAME_W / 2 - 4, lineY, 8, 50);
+      for (let i = -1; i < 7; i++) {
+        const lineY = ((roadOffset + (i * 100)) % (GAME_H + 100)) - 100;
+        ctx.fillRect(GAME_W / 2 - 4, lineY, 8, 60);
       }
       
+      // Side markers for speed perception
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      for (let i = -1; i < 12; i++) {
+        const markerY = ((roadOffset * 2 + (i * 60)) % (GAME_H + 60)) - 60;
+        ctx.fillRect(15, markerY, 5, 2);
+        ctx.fillRect(GAME_W - 20, markerY, 5, 2);
+      }
+
       ctx.fillStyle = isNight ? '#71717a' : '#cbd5e1';
       ctx.fillRect(8, 0, 6, GAME_H);
       ctx.fillRect(GAME_W - 14, 0, 6, GAME_H);
@@ -770,6 +811,17 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
       // Draw Player
       drawPlayer(ctx, player.x, player.y, player.width, player.height, player.tilt, damageTimer > 0);
+
+      // Nitro speed lines
+      if (nitroTimer > 0) {
+        ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 10; i++) {
+          const rx = Math.random() * GAME_W;
+          const ry = Math.random() * GAME_H;
+          ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(rx, ry + 40); ctx.stroke();
+        }
+      }
 
       // Draw Particles
       for (const p of particles) {

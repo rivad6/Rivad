@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
@@ -23,7 +23,7 @@ const calculateWinner = (squares: Player[]) => {
   return null;
 };
 
-export function IdeasTicTacToe() {
+export function IdeasTicTacToe({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const [personality, setPersonality] = useState<'rationalist' | 'traditionalist' | 'postmodernist'>('rationalist');
@@ -70,7 +70,7 @@ export function IdeasTicTacToe() {
   };
 
   useEffect(() => {
-    if (!xIsNext && !winner && !isDraw) {
+    if (!xIsNext && !winner && !isDraw && !isPausedGlobal) {
       const timer = setTimeout(() => {
         const availableMoves = board.map((square, index) => square === null ? index : null).filter((val) => val !== null) as number[];
         
@@ -122,7 +122,7 @@ export function IdeasTicTacToe() {
   }, [xIsNext, board, winner, isDraw, personality, playSound, language]);
 
   const handleClick = (i: number) => {
-    if (board[i] || winner || !xIsNext) return;
+    if (board[i] || winner || !xIsNext || isPausedGlobal) return;
     playSound('click');
     const newBoard = [...board];
     newBoard[i] = 'X';
@@ -144,6 +144,28 @@ export function IdeasTicTacToe() {
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center font-[var(--font-pixel)] w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-hidden [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:max-w-none">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      
+      {/* Universal Pause Overlay */}
+      <AnimatePresence>
+        {isPausedGlobal && !winner && !isDraw && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-12 rounded-full bg-brand-accent animate-pulse" />
+              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                {t('game.paused.system', 'THOUGHT PAUSED')}
+              </h2>
+            </div>
+            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+              {t('game.paused.desc', 'Logical cycles are currently reconfiguring.')}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="mb-1 text-center w-full">
          <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase">{t('game.objective')}{t('game.ttt.goal')}</p>
       </div>

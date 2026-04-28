@@ -29,7 +29,7 @@ type Card = {
   partyNameKey?: string;
 };
 
-export function PoliticalUno() {
+export function PoliticalUno({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -221,7 +221,7 @@ export function PoliticalUno() {
   };
 
   const playCard = (index: number) => {
-    if (turn !== 'player' || winner || isChoosingColor) return;
+    if (turn !== 'player' || winner || isChoosingColor || isPausedGlobal) return;
     const card = playerHand[index];
     
     if (isValidPlay(card)) {
@@ -264,7 +264,7 @@ export function PoliticalUno() {
 
   const drawCard = () => {
     playSound('hover');
-    if (turn !== 'player' || winner || isChoosingColor) return;
+    if (turn !== 'player' || winner || isChoosingColor || isPausedGlobal) return;
     const newCard = generateCard();
     setPlayerHand([...playerHand, newCard]);
     setMessage(t('game.uno.msg.draw'));
@@ -272,7 +272,7 @@ export function PoliticalUno() {
   };
 
   useEffect(() => {
-    if (turn === 'cpu' && !winner) {
+    if (turn === 'cpu' && !winner && !isPausedGlobal) {
       const cpuTurn = setTimeout(() => {
         // Advanced CPU Logic: 
         // 1. If player has few cards (<=3), prioritize aggressive cards (moche, fake_news)
@@ -384,6 +384,28 @@ export function PoliticalUno() {
   return (
     <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-16 relative overflow-hidden bg-[#0a0a0A] [&.is-fullscreen]:bg-black">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+
+      {/* Universal Pause Overlay */}
+      <AnimatePresence>
+        {isPausedGlobal && !winner && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6 text-center"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Megaphone className="w-12 h-12 text-brand-accent animate-bounce" />
+              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                {t('game.paused.system', 'SESSION SUSPENDED')}
+              </h2>
+            </div>
+            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+              {t('game.paused.desc', 'The legislative chamber is closed for maintenance.')}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden [&.is-fullscreen]:hidden">
