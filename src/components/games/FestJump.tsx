@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle, ChevronLeft, ChevronRight, Settings, Music, Target } from 'lucide-react';
 
 interface Character {
   id: string;
@@ -1343,6 +1343,7 @@ export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean 
       
       <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+        
         <AnimatePresence>
           {((isPlaying) && (isPausedGlobal || pausedRef.current)) && (
             <motion.div 
@@ -1352,20 +1353,24 @@ export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean 
               className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-8"
             >
               <div className="flex flex-col items-center gap-2">
-                <Rocket className="w-16 h-16 text-brand-accent animate-pulse" />
+                {isPausedGlobal ? (
+                  <Music size={48} className="text-brand-accent animate-pulse" />
+                ) : (
+                  <Rocket className="w-16 h-16 text-brand-accent animate-pulse" />
+                )}
                 <h2 className="text-white font-black text-4xl uppercase tracking-[0.2em]">
-                  {isPausedGlobal ? 'SIGNAL LOST' : 'PAUSED'}
+                  {isPausedGlobal ? t('game.paused.system', 'FESTIVAL SUSPENDED') : 'PAUSED'}
                 </h2>
               </div>
               <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-sm">
-                {isPausedGlobal ? t('game.paused.system', 'The high-altitude signal is temporarily interrupted.') : t('game.paused.manual', 'Take a breath. The stage will still be there when you return.')}
+                {isPausedGlobal ? t('game.paused.desc', 'The artist is taking a break. The encore will begin shortly.') : t('game.paused.manual', 'Take a breath. The stage will still be there when you return.')}
               </p>
               {!isPausedGlobal && (
                 <button
                   onClick={() => { pausedRef.current = false; playSound('start'); }}
-                  className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_0_30_rgba(242,74,41,0.4)] active:scale-95"
+                  className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
                 >
-                  RESUME JUMPING
+                  RESUME SHOW
                 </button>
               )}
             </motion.div>

@@ -1218,6 +1218,38 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
     <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[500px] font-mono text-white p-2 md:p-4 relative bg-[#050505] rounded-xl flex-grow overflow-hidden border-2 border-zinc-900 shadow-2xl [&.is-fullscreen]:bg-black [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-[70] transition-opacity opacity-20 hover:opacity-100" />
       
+      {/* Universal/Manual Pause Overlay */}
+      <AnimatePresence>
+        {((gameState === 'playing' || gameState === 'asteroids' || gameState === 'takeoff') && (isPausedGlobal || pausedRef.current)) && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Target className="w-16 h-16 text-brand-accent animate-pulse" />
+              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                {isPausedGlobal ? t('game.paused.system', 'SYSTEM HALTED') : 'MISSION PAUSED'}
+              </h2>
+            </div>
+            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+              {isPausedGlobal 
+                ? t('game.paused.desc', 'The creative flow has been temporarily suspended.')
+                : t('game.paused.manual', 'Prepare your creativity. The void waits for no one.')}
+            </p>
+            {!isPausedGlobal && (
+              <button
+                onClick={() => { pausedRef.current = false; playSound('start'); }}
+                className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
+              >
+                RESUME MISSION
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       {/* Top HUD */}
       <div className="flex justify-between items-center w-full max-w-4xl mb-2 px-6 py-2 text-[10px] font-bold bg-zinc-900/50 rounded-t-xl border-x-2 border-t-2 border-zinc-800 backdrop-blur-sm shadow-lg shrink-0">
          <div className="flex items-center gap-6">
@@ -1248,36 +1280,6 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
       </div>
 
       <div className="relative border-x-2 border-b-2 border-zinc-800 rounded-b-xl bg-black overflow-hidden w-full max-w-4xl flex-grow h-full max-h-[800px] touch-none shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)]">
-        
-        {/* Pause Overlay */}
-        <AnimatePresence>
-          {((gameState === 'playing' || gameState === 'asteroids') && (isPausedGlobal || pausedRef.current)) && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-8"
-            >
-              <div className="flex flex-col items-center gap-2">
-                <Target className="w-16 h-16 text-brand-accent animate-pulse" />
-                <h2 className="text-white font-black text-4xl uppercase tracking-[0.2em]">
-                  {isPausedGlobal ? 'LINK SUSPENDED' : 'PAUSED'}
-                </h2>
-              </div>
-              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-24 leading-relaxed max-w-md">
-                {isPausedGlobal ? t('game.paused.system', 'The link to the creative universe is currently interrupted.') : t('game.paused.manual', 'Prepare your creativity. The void waits for no one.')}
-              </p>
-              {!isPausedGlobal && (
-                <button
-                  onClick={() => { pausedRef.current = false; playSound('start'); }}
-                  className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
-                >
-                  RESUME MISSION
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
         <canvas
           ref={canvasRef}
           width={GAME_WIDTH}

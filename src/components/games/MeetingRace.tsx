@@ -907,6 +907,42 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
     <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50 transition-opacity opacity-20 hover:opacity-100" />
       
+      {/* Universal/Manual Pause Overlay */}
+      <AnimatePresence>
+        {(isPlaying && (isPausedGlobal || pausedRef.current)) && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+          >
+            <div className="flex flex-col items-center gap-2">
+               {isPausedGlobal ? (
+                 <Zap size={48} className="text-brand-accent animate-pulse" />
+               ) : (
+                 <TerminalSquare className="w-16 h-16 animate-pulse text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]" />
+               )}
+               <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+                 {isPausedGlobal ? t('game.paused.system', 'RACE SUSPENDED') : 'RACE PAUSED'}
+               </h2>
+            </div>
+            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+              {isPausedGlobal 
+                ? t('game.paused.desc', 'Red flag on the track. The race will resume when clear.')
+                : t('game.paused.manual', 'Pit stop in progress. Take a breath to resume.')}
+            </p>
+            {!isPausedGlobal && (
+              <button
+                onClick={() => { pausedRef.current = false; playSound('start'); }}
+                className="bg-orange-500 text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
+              >
+                RESUME
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg shrink-0">
          <div className="flex items-center gap-4">
             <button 
@@ -933,33 +969,6 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
         
         {/* CRT Scanline Overlay */}
         <div className="absolute inset-0 z-10 pointer-events-none opacity-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,1)_50%)] bg-[length:100%_4px]" />
-
-        <AnimatePresence>
-          {(isPlaying && (isPausedGlobal || pausedRef.current)) && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center flex-col gap-6"
-            >
-              <div className="text-white font-black text-4xl uppercase tracking-tighter flex items-center gap-4">
-                <TerminalSquare className="w-10 h-10 animate-pulse text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]" />
-                {isPausedGlobal ? 'SYSTEM PAUSE' : 'GAME PAUSED'}
-              </div>
-              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
-                {isPausedGlobal ? t('game.paused.system', 'The game is paused due to a system interruption.') : t('game.paused.manual', 'Press the button or take a breath to resume.')}
-              </p>
-              {!isPausedGlobal && (
-                <button
-                  onClick={() => { pausedRef.current = false; playSound('start'); }}
-                  className="bg-orange-500 text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
-                >
-                  RESUME
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {isPlaying && showMobileControls && (
           <>
