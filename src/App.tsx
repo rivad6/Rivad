@@ -43,9 +43,9 @@ function Nav() {
           </span>
           Rivad
         </Link>
-        <Link to="/juegos" className="pointer-events-auto hidden sm:flex items-center gap-2 group px-3 py-1.5 rounded-full border border-white/10 hover:border-brand-accent/50 bg-black/20 hover:bg-brand-accent/10 transition-all">
-          <Gamepad2 size={16} className="text-brand-accent group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-mono text-white/70 group-hover:text-white transition-colors uppercase tracking-widest">{t('nav.minigames')}</span>
+        <Link to="/juegos" className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 group px-2.5 sm:px-3 py-1.5 rounded-full border border-white/10 hover:border-brand-accent/50 bg-black/20 hover:bg-brand-accent/10 transition-all">
+          <Gamepad2 size={16} className="text-brand-accent group-hover:scale-110 transition-transform w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="text-[9px] sm:text-xs font-mono text-white/70 group-hover:text-white transition-colors uppercase tracking-widest whitespace-nowrap">{t('nav.minigames')}</span>
         </Link>
       </div>
       <div className="flex items-center gap-4">

@@ -323,7 +323,7 @@ export function DebatePong() {
         </div>
       </div>
       
-      <div ref={containerRef} className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-full h-full min-h-[400px] flex justify-center items-center mx-auto shadow-2xl flex-grow">
+      <div ref={containerRef} className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-full h-full min-h-[400px] flex justify-center items-center mx-auto shadow-2xl flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         {!isPlaying ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80">

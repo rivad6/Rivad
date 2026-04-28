@@ -150,7 +150,7 @@ export function ArtRPG() {
   const [lastStatDelta, setLastStatDelta] = useState<{b: number, s: number, r: number} | null>(null);
 
   useEffect(() => {
-    const isPlaying = currentNode !== 'start' && !STORY_GRAPH[currentNode]?.isEnding;
+    const isPlaying = currentNode !== 'start' && !storyMap[currentNode]?.isEnding;
     if (isPlaying) {
       playMusic('rpg');
     } else {

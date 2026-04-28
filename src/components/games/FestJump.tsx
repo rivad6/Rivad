@@ -88,6 +88,7 @@ export function FestJump() {
   const [coupon, setCoupon] = useState<{code: string, discount: string} | null>(null);
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
   const [unlockedCodes, setUnlockedCodes] = useState<string[]>([]);
+  const [gameStats, setGameStats] = useState<{earned: number, total: number, enemies: number, items: number} | null>(null);
   const keysRef = useRef({ left: false, right: false });
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
@@ -149,9 +150,10 @@ export function FestJump() {
 
     let animationFrameId: number;
     let particles: {x: number, y: number, life: number, color: string}[] = [];
-    let powerups: {x: number, y: number, type: 'vip' | 'merch' | 'glowstick' | 'beer'}[] = [];
+    let powerups: {x: number, y: number, type: 'vip' | 'merch' | 'glowstick' | 'beer' | 'magnet'}[] = [];
     let enemies: {x: number, y: number, speed: number, width: number, isBouncer?: boolean, minX?: number, maxX?: number}[] = [];
     let floatingTexts: {x: number, y: number, text: string, alpha: number, color: string, color2: string}[] = [];
+    let bullets: {x: number, y: number, vy: number}[] = [];
     let comboMultiplier = 1;
     let comboTimer = 0;
 
@@ -168,6 +170,8 @@ export function FestJump() {
       height: 24,
       shield: 0,
       jetpack: 0,
+      magnet: 0,
+      lastShot: 0,
     };
 
     let platforms = Array.from({ length: 12 }, (_, i) => {
@@ -181,11 +185,13 @@ export function FestJump() {
         vx: (typeRand > 0.8 && i > 3) ? (Math.random() > 0.5 ? 2 : -2) : 0,
         broken: false,
         width: PLATFORM_WIDTH,
+        isStepped: false,
+        crackValue: 0,
       };
     });
 
     // Start platform: make it full width and indestructible so player never falls through instantly
-    platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width };
+    platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width, isStepped: false, crackValue: 0 };
 
     let cameraY = 0;
     let maxScore = 0;
@@ -193,6 +199,7 @@ export function FestJump() {
     let shake = 0;
 
     const keys = keysRef.current; // Use the ref
+    let isShooting = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -200,10 +207,19 @@ export function FestJump() {
       }
       if (e.key === 'ArrowLeft') keys.left = true;
       if (e.key === 'ArrowRight') keys.right = true;
+      if (e.key === ' ' || e.key === 'ArrowUp') isShooting = true;
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') keys.left = false;
       if (e.key === 'ArrowRight') keys.right = false;
+      if (e.key === ' ' || e.key === 'ArrowUp') isShooting = false;
+    };
+
+    const handlePointerDown = (e: any) => {
+       isShooting = true;
+    };
+    const handlePointerUp = (e: any) => {
+       isShooting = false;
     };
 
     const handlePointerMove = (e: any) => {
@@ -230,6 +246,10 @@ export function FestJump() {
     window.addEventListener('keyup', handleKeyUp);
     canvas.addEventListener('mousemove', handlePointerMove);
     canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
+    canvas.addEventListener('mousedown', handlePointerDown);
+    canvas.addEventListener('mouseup', handlePointerUp);
+    canvas.addEventListener('touchstart', handlePointerDown, { passive: true });
+    canvas.addEventListener('touchend', handlePointerUp);
 
     const createParticles = (x: number, y: number, color = '#ffffff') => {
       for(let i=0; i<8; i++) {
@@ -275,11 +295,17 @@ export function FestJump() {
            y: platform.y - 20,
            type: 'vip'
          });
-       } else if (rand > 0.95) {
+       } else if (rand > 0.96) {
          powerups.push({
            x: platform.x + 10,
            y: platform.y - 20,
            type: 'merch'
+         });
+       } else if (rand > 0.94) {
+         powerups.push({
+           x: platform.x + 10,
+           y: platform.y - 20,
+           type: 'magnet'
          });
        } else if (rand > 0.90) {
          powerups.push({
@@ -347,6 +373,17 @@ export function FestJump() {
           ctx.stroke();
         }
 
+        // Magnet Effect
+        if (player.magnet > 0) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#a855f7';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([2, 4]);
+          ctx.arc(ix + player.width/2, iy + player.height/2, 30 + Math.cos(Date.now()*0.01)*5, 0, Math.PI*2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
         // Jetpack Effect
         if (player.jetpack > 0) {
           createParticles(ix + player.width/2 - 4, iy + player.height, '#f59e0b');
@@ -360,8 +397,40 @@ export function FestJump() {
       if (x + player.width > canvas.width) drawInstance(x - canvas.width, y);
     };
 
+    let gameState: 'ready' | 'playing' | 'gameover' = 'ready';
+    let readyTimer = 120; // 2 seconds at 60fps
+
+    let screenFlash = 0;
+    let enemiesDefeated = 0;
+    let itemsCollected = 0;
+
     const update = () => {
+      if (gameState === 'ready') {
+        readyTimer--;
+        if (readyTimer <= 0) gameState = 'playing';
+        return;
+      }
+      if (gameState === 'gameover') return;
+
       if (shake > 0) shake *= 0.9;
+      if (screenFlash > 0) screenFlash *= 0.8;
+
+      // Shooting
+      if (isShooting && Date.now() - player.lastShot > 300) {
+         player.lastShot = Date.now();
+         bullets.push({
+           x: player.x + player.width / 2,
+           y: player.y,
+           vy: -15
+         });
+         playSound('score'); // small click sound
+      }
+
+      // Bullets
+      bullets.forEach(b => {
+         b.y += b.vy;
+      });
+      bullets = bullets.filter(b => b.y > -50);
 
       // Movement
       if (keys.left) player.vx -= 1;
@@ -385,8 +454,9 @@ export function FestJump() {
       if (player.x >= canvas.width) player.x -= canvas.width;
 
       // Camera follow
+      let diff = 0;
       if (player.y < canvas.height / 2) {
-        let diff = canvas.height / 2 - player.y;
+        diff = canvas.height / 2 - player.y;
         cameraY += diff;
         player.y = canvas.height / 2;
         maxScore = Math.floor(cameraY);
@@ -397,7 +467,7 @@ export function FestJump() {
          scoreRefDOM.current.innerText = displayScore.toString();
       }
 
-      if (player.y < canvas.height / 2) {
+      if (diff > 0) {
         // Codes logic
         if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
         if (maxScore > 2000) setUnlockedCodes(prev => prev.includes('BEATS10') ? prev : [...prev, 'BEATS10']);
@@ -412,10 +482,13 @@ export function FestJump() {
             // Advance generation patterns based on score
             const isMoving = Math.random() < Math.min(0.5, maxScore / 20000);
             const isBreaking = !isMoving && Math.random() < Math.min(0.4, maxScore / 25000);
+            const isGlass = !isMoving && !isBreaking && Math.random() < Math.min(0.3, maxScore / 30000);
             
-            p.type = isMoving ? 'moving' : isBreaking ? 'breaking' : 'normal';
+            p.type = isMoving ? 'moving' : isBreaking ? 'breaking' : isGlass ? 'glass' : 'normal';
             p.vx = isMoving ? (Math.random() > 0.5 ? (Math.random() * 2 + 1) : -(Math.random() * 2 + 1)) : 0;
             p.broken = false;
+            p.crackValue = 0; // for glass
+            p.isStepped = false;
             
             // Layout structures
             if (maxScore < 2000) {
@@ -435,6 +508,7 @@ export function FestJump() {
 
         enemies.forEach(e => e.y += diff);
         powerups.forEach(pw => pw.y += diff);
+        bullets.forEach(b => b.y += diff);
       }
 
       const playerRects = [
@@ -496,6 +570,9 @@ export function FestJump() {
             if (p.type === 'breaking') {
               p.broken = true;
               createParticles(p.x + p.width/2, p.y + PLATFORM_HEIGHT/2, '#9ca3af');
+            } else if (p.type === 'glass') {
+              p.isStepped = true;
+              playSound('click');
             } else {
               if (p.hasSpring) {
                 shake = 10;
@@ -511,6 +588,13 @@ export function FestJump() {
         // Evaluate moving platforms even when going up, just so they keep moving
         platforms.forEach(p => {
           if (p.broken) return;
+          if (p.isStepped && p.type === 'glass') {
+             p.crackValue = (p.crackValue || 0) + 0.05;
+             if (p.crackValue >= 1) {
+                p.broken = true;
+                createParticles(p.x + p.width/2, p.y, '#93c5fd');
+             }
+          }
           if (p.type === 'moving') {
             p.x += p.vx;
             if (p.x < -p.width) p.x += canvas.width + p.width;
@@ -520,6 +604,21 @@ export function FestJump() {
       }
 
       // Collisions Powerups
+      if (player.magnet > 0) {
+        player.magnet--;
+        powerups.forEach(pw => {
+          if (pw.type === 'glowstick' || pw.type === 'beer') {
+            const dx = player.x + player.width / 2 - (pw.x + 10);
+            const dy = player.y + player.height / 2 - (pw.y + 10);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+               pw.x += (dx / dist) * 8;
+               pw.y += (dy / dist) * 8;
+            }
+          }
+        });
+      }
+
       powerups = powerups.filter(pw => {
         let hit = false;
         for (const pr of playerRects) {
@@ -535,6 +634,7 @@ export function FestJump() {
             playSound('powerup');
             createParticles(pw.x, pw.y, '#10b981'); // Green glowstick
             comboTimer = 180;
+            itemsCollected++;
           } else if (pw.type === 'beer') {
             bonusScore += 100 * comboMultiplier;
             addFloatingText(pw.x, pw.y, `+${100*comboMultiplier} PTS!`, '#f59e0b');
@@ -542,8 +642,15 @@ export function FestJump() {
             createParticles(pw.x, pw.y, '#f59e0b');
             comboTimer = 180;
             comboMultiplier++;
+            itemsCollected++;
+          } else if (pw.type === 'magnet') {
+            player.magnet = 300; // 5 seconds
+            playSound('score');
+            addFloatingText(pw.x, pw.y, 'MAGNET!', '#a855f7');
+            itemsCollected++;
           } else {
             playSound('score');
+            itemsCollected++;
             if (pw.type === 'vip') {
                player.jetpack = 120;
                addFloatingText(pw.x, pw.y, 'BACKSTAGE PASS!', '#f59e0b');
@@ -575,6 +682,27 @@ export function FestJump() {
            if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
         }
 
+        // Check for bullet hit
+        let shot = false;
+        bullets.forEach((b, bIndex) => {
+           if (b.x > e.x && b.x < e.x + e.width && b.y > e.y && b.y < e.y + e.width) {
+              shot = true;
+              bullets.splice(bIndex, 1);
+           }
+        });
+        
+        if (shot) {
+            enemies.splice(index, 1);
+            bonusScore += 200 * comboMultiplier;
+            addFloatingText(e.x, e.y, `BAM! +${200*comboMultiplier}`, '#facc15');
+            createParticles(e.x + e.width/2, e.y, '#ef4444');
+            playSound('score');
+            comboMultiplier++;
+            comboTimer = 180;
+            enemiesDefeated++;
+            return;
+        }
+
         let hit = false;
         for (const pr of playerRects) {
           if (
@@ -601,17 +729,32 @@ export function FestJump() {
              shake = 5;
              comboMultiplier++;
              comboTimer = 180;
+             enemiesDefeated++;
           } else if (player.shield > 0) {
             player.shield = 0;
             enemies.splice(index, 1);
             shake = 15;
+            screenFlash = 1;
             playSound('alert');
           } else if (player.jetpack > 0) {
             enemies.splice(index, 1);
             createParticles(e.x + e.width/2, e.y, '#ef4444');
             playSound('score');
+            enemiesDefeated++;
           } else {
             playSound('hit');
+            screenFlash = 1;
+            shake = 20;
+            const finalScore = maxScore + bonusScore;
+            const earned = Math.floor(finalScore / 50);
+            setScore(finalScore);
+            if (finalScore > highScore) setHighScore(finalScore);
+            setGameStats({
+               earned,
+               total: finalScore,
+               enemies: enemiesDefeated,
+               items: itemsCollected
+            });
             setIsPlaying(false);
           }
         }
@@ -621,16 +764,36 @@ export function FestJump() {
       // Game Over
       if (player.y > canvas.height) {
         playSound('lose');
-        setScore(maxScore + bonusScore);
-        if ((maxScore + bonusScore) > highScore) setHighScore(maxScore + bonusScore);
+        const finalScore = maxScore + bonusScore;
+        const earned = Math.floor(finalScore / 50);
+        setScore(finalScore);
+        if (finalScore > highScore) setHighScore(finalScore);
+        setGameStats({
+           earned,
+           total: finalScore,
+           enemies: enemiesDefeated,
+           items: itemsCollected
+        });
         setIsPlaying(false);
       }
     };
 
+    // Parallax layers
+    const parallaxLayers = Array.from({ length: 3 }, (_, i) => {
+      return Array.from({ length: 5 }, (_, j) => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: 50 + i * 100,
+        speed: 0.1 + i * 0.1,
+        color: i === 0 ? 'rgba(255,255,255,0.03)' : i === 1 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+        type: Math.random() > 0.5 ? 'speaker' : 'mountain'
+      }));
+    });
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // BG with multiple layers and dynamic gradient
+      // BG with dynamic gradient
       const bgColorTop = cameraY < 2000 ? '#0a0a1a' : cameraY < 6000 ? '#022c22' : cameraY < 12000 ? '#1e1b4b' : '#3b0764';
       const bgColorBot = cameraY < 2000 ? '#1e1b4b' : cameraY < 6000 ? '#065f46' : cameraY < 12000 ? '#3730a3' : '#000000';
       
@@ -639,6 +802,28 @@ export function FestJump() {
       bgGrad.addColorStop(1, bgColorBot);
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Parallax Silhouettes
+      parallaxLayers.forEach((layer, i) => {
+        const speed = 0.1 + i * 0.15;
+        layer.forEach(p => {
+          let y = (p.y + cameraY * speed) % (canvas.height + p.size) - p.size;
+          ctx.fillStyle = p.color;
+          if (p.type === 'speaker') {
+            ctx.fillRect(p.x, y, p.size, p.size * 1.5);
+            ctx.beginPath();
+            ctx.arc(p.x + p.size/2, y + p.size/3, p.size/4, 0, Math.PI*2);
+            ctx.arc(p.x + p.size/2, y + p.size, p.size/3, 0, Math.PI*2);
+            ctx.fill();
+          } else {
+            ctx.beginPath();
+            ctx.moveTo(p.x, y + p.size);
+            ctx.lineTo(p.x + p.size/2, y);
+            ctx.lineTo(p.x + p.size, y + p.size);
+            ctx.fill();
+          }
+        });
+      });
 
       // Stars with depth parallax
       for(let i=0; i<80; i++) {
@@ -776,18 +961,33 @@ export function FestJump() {
           let pColor = '#a7f3d0';
           if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving (Main Stage)
           else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking (Fragile setup)
+          else if (p.type === 'glass') pColor = `rgba(147, 197, 253, ${0.8 - (p.crackValue || 0)})`;
           else if (cameraY > 5000) pColor = '#e879f9'; // Zone 2 colors
           
           if (p.hasSpring) pColor = '#fde047';
 
           // Base structure
-          ctx.fillStyle = '#171717'; // Dark stage base
+          ctx.fillStyle = p.type === 'glass' ? 'rgba(0,0,0,0)' : '#171717'; // Dark stage base
           ctx.fillRect(pX, p.y, p.width, PLATFORM_HEIGHT);
 
           // Top Stage surface
           ctx.fillStyle = pColor;
-          ctx.fillRect(pX, p.y, p.width, 3);
+          ctx.fillRect(pX, p.y, p.width, p.type === 'glass' ? PLATFORM_HEIGHT : 3);
           
+          if (p.type === 'glass') {
+             ctx.strokeStyle = `rgba(255,255,255,${0.5 - (p.crackValue || 0)})`;
+             ctx.strokeRect(pX, p.y, p.width, PLATFORM_HEIGHT);
+             if (p.crackValue > 0) {
+                // Draw cracks
+                ctx.beginPath();
+                ctx.moveTo(pX + 10, p.y);
+                ctx.lineTo(pX + 20, p.y + PLATFORM_HEIGHT);
+                ctx.moveTo(pX + p.width - 15, p.y);
+                ctx.lineTo(pX + p.width - 25, p.y + PLATFORM_HEIGHT);
+                ctx.stroke();
+             }
+          }
+
           // Speaker Details
           if (p.width >= 40) {
              ctx.fillStyle = 'black';
@@ -841,6 +1041,14 @@ export function FestJump() {
             ctx.fillStyle = 'white';
             ctx.font = '16px Arial';
             ctx.fillText('🍺', pwX + 2, pw.y + 18);
+          } else if (pw.type === 'magnet') {
+            ctx.fillStyle = '#a855f7';
+            ctx.beginPath();
+            ctx.arc(pwX + 10, pw.y + 10, 10, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.fillText('🧲', pwX + 2, pw.y + 14);
           } else {
             ctx.fillStyle = pw.type === 'vip' ? '#f59e0b' : '#3b82f6';
             ctx.beginPath();
@@ -884,6 +1092,20 @@ export function FestJump() {
       // Player
       drawPlayer(player.x, player.y);
 
+      // Bullets
+      bullets.forEach(b => {
+        drawWithWrap(b.x, (bX) => {
+          ctx.beginPath();
+          ctx.arc(bX, b.y, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#facc15';
+          ctx.fill();
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#eab308';
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+      });
+
       // Floating Texts
       floatingTexts.forEach(ft => {
          ctx.globalAlpha = ft.alpha;
@@ -911,6 +1133,26 @@ export function FestJump() {
       }
 
       update();
+
+      if (screenFlash > 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash * 0.4})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      if (gameState === 'ready') {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 40px monospace';
+        ctx.fillStyle = '#fcfcfc';
+        const msg = readyTimer > 40 ? t('game.fest.ready') : t('game.fest.go');
+        ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
+        
+        ctx.font = '10px monospace';
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fillText(t('game.fest.instruction_short'), canvas.width / 2, canvas.height / 2 + 60);
+      }
     };
 
     let lastTime = performance.now();
@@ -1018,7 +1260,7 @@ export function FestJump() {
         </div>
       </div>
       
-      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow">
+      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <AnimatePresence>
           {message && (
@@ -1048,10 +1290,33 @@ export function FestJump() {
               {!showCodeInput ? (
                 <div className="w-full flex flex-col items-center flex-1 py-4 justify-between h-full">
                   <div className="text-center w-full">
-                    <h3 className="text-brand-accent text-2xl mb-1 italic font-black">FEST JUMP II</h3>
-                    <p className="text-[8px] text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-2">
-                       <Zap className="w-3 h-3 text-yellow-500" /> {festCoins} KARMAS
-                    </p>
+                    <h3 className="text-brand-accent text-2xl mb-1 italic font-black">
+                      {gameStats ? t('game.fest.gameover') : 'FEST JUMP II'}
+                    </h3>
+                    {gameStats ? (
+                      <div className="bg-zinc-900/80 p-4 border border-zinc-800 rounded-lg mb-4 space-y-1">
+                        <div className="flex justify-between text-[10px] uppercase font-mono">
+                          <span className="text-zinc-500">{t('game.fest.final_score')}</span>
+                          <span className="text-white font-bold">{gameStats.total}</span>
+                        </div>
+                        <div className="flex justify-between text-[10px] uppercase font-mono">
+                          <span className="text-zinc-500">{t('game.fest.karmas_earned')}</span>
+                          <span className="text-yellow-500 font-bold">+{gameStats.earned}</span>
+                        </div>
+                        <div className="flex justify-between text-[8px] uppercase font-mono text-zinc-600">
+                          <span>{t('game.fest.bouncers')}:</span>
+                          <span>{gameStats.enemies}</span>
+                        </div>
+                        <div className="flex justify-between text-[8px] uppercase font-mono text-zinc-600">
+                          <span>{t('game.fest.items', 'ITEMS')}:</span>
+                          <span>{gameStats.items}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[8px] text-zinc-500 uppercase tracking-widest flex items-center justify-center gap-2">
+                         <Zap className="w-3 h-3 text-yellow-500" /> {festCoins} KARMAS
+                      </p>
+                    )}
                   </div>
 
                   <div className="w-full relative px-6 mt-4">
@@ -1104,6 +1369,7 @@ export function FestJump() {
                          UNLOCK - {selectedChar.price} KARMAS
                        </button>
                      )}
+                     <p className="text-[8px] text-zinc-400 text-center uppercase tracking-widest leading-relaxed mt-2">Space / Touch = Shoot</p>
                      <button onClick={() => { playSound('hover'); setShowCodeInput(true); }} className="text-[8px] text-zinc-500 hover:text-white uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
                        <Key className="w-3 h-3" /> Insert Code
                      </button>

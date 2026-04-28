@@ -136,12 +136,14 @@ export function Hero() {
       {/* Scroll Hint */}
       <motion.div 
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, delay: 2 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 pointer-events-none"
+        animate={{ opacity: [0.3, 1, 0.3] }}
+        transition={{ duration: 3, repeat: Infinity, delay: 2 }}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
       >
-        <span className="font-mono text-[8px] uppercase tracking-[0.5em] text-white/40">Scroll</span>
-        <div className="w-px h-16 bg-gradient-to-b from-brand-accent/50 to-transparent"></div>
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.6em] text-white/70 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+          {t('hero.scroll', 'Scroll')}
+        </span>
+        <div className="w-px h-12 bg-gradient-to-b from-brand-accent to-transparent"></div>
       </motion.div>
 
       {/* Decorative atmospheric background elements */}

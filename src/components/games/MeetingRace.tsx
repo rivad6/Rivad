@@ -5,7 +5,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, Car, Heart, TerminalSquare, Zap } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-type ObstacleType = 'microbus' | 'taco' | 'msg' | 'bache';
+type ObstacleType = 'microbus' | 'taco' | 'msg' | 'bache' | 'enemy' | 'shield' | 'nitro';
+
+interface CarConfig {
+  id: string;
+  name: string;
+  desc: string;
+  speed: number;
+  handling: number; // how fast it moves laterally
+  maxHp: number;
+  color: string;
+}
 
 interface Obstacle {
   id: number;
@@ -17,6 +27,7 @@ interface Obstacle {
   type: ObstacleType;
   color: string;
   markedForDeletion: boolean;
+  vx?: number; // for enemy lateral movement
 }
 
 interface Particle {
@@ -36,6 +47,16 @@ export function MeetingRace() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [selectedCarId, setSelectedCarId] = useState('taxi');
+
+  const cars: CarConfig[] = [
+    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 400, handling: 10, maxHp: 3, color: '#ec4899' },
+    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 550, handling: 7, maxHp: 2, color: '#ef4444' },
+    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 300, handling: 5, maxHp: 6, color: '#3b82f6' },
+    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 500, handling: 18, maxHp: 1, color: '#f59e0b' },
+  ];
+
+  const currentCar = cars.find(c => c.id === selectedCarId) || cars[0];
 
   useEffect(() => {
     if (isPlaying) {
@@ -47,7 +68,7 @@ export function MeetingRace() {
   }, [isPlaying, playMusic]);
 
   const [score, setScore] = useState(0);
-  const [hp, setHp] = useState(3);
+  const [hp, setHp] = useState(currentCar.maxHp);
   const [gameOver, setGameOver] = useState(false);
   const scoreRefDOM = useRef<HTMLSpanElement>(null);
 
@@ -66,12 +87,12 @@ export function MeetingRace() {
     // Physics constants
     const GAME_W = 400;
     const GAME_H = 600;
-    const MAX_HP = 3;
+    const MAX_HP = currentCar.maxHp;
     
     let currentScore = 0;
-    let currentHp = 3;
+    let currentHp = MAX_HP;
     let speedMultiplier = 1;
-    let baseRoadSpeed = 350; // pixels per second
+    let baseRoadSpeed = currentCar.speed; // pixels per second
     let roadOffset = 0;
     
     let lastRenderedScore = -1;
@@ -84,13 +105,25 @@ export function MeetingRace() {
     
     let slowMoTimer = 0;
     let damageTimer = 0;
+    let shieldTimer = 0;
+    let nitroTimer = 0;
+
+    // Environment
+    let dayNightCycle = 0; // 0 to 1
+    let isRaining = Math.random() > 0.7;
+    let rainDrops: {x: number, y: number, l: number, s: number}[] = [];
+    if (isRaining) {
+      for(let i=0; i<100; i++) rainDrops.push({x: Math.random()*GAME_W, y: Math.random()*GAME_H, l: Math.random()*20+10, s: Math.random()*15+15});
+    }
+
+    let timeSinceLastSpawn = 0;
 
     const player = { 
-      x: GAME_W / 2 - 18, 
+      x: GAME_W / 2 - (selectedCarId === 'moto' ? 10 : 18), 
       y: GAME_H - 120, 
-      width: 36, 
-      height: 60, 
-      targetX: GAME_W / 2 - 18, 
+      width: selectedCarId === 'moto' ? 20 : 36, 
+      height: selectedCarId === 'moto' ? 45 : 60, 
+      targetX: GAME_W / 2 - (selectedCarId === 'moto' ? 10 : 18), 
       tilt: 0,
       speed: 400
     };
@@ -121,8 +154,6 @@ export function MeetingRace() {
     };
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 
-    let timeSinceLastSpawn = 0;
-    
     const explosionColors = ['#f59e0b', '#ef4444', '#facc15', '#ffffff'];
     const spawnParticles = (x: number, y: number, amount: number, colors: string[]) => {
       for(let i=0; i<amount; i++) {
@@ -146,33 +177,50 @@ export function MeetingRace() {
       let width = 44;
       let height = 80;
       let color = '#10b981';
+      let speedVar = 50;
+      let vx = 0;
       
-      if (typeRand > 0.85) {
+      if (typeRand > 0.95) {
+        type = 'nitro';
+        width = 24; height = 24;
+        color = '#3b82f6';
+      } else if (typeRand > 0.9) {
+        type = 'shield';
+        width = 30; height = 30;
+        color = '#818cf8';
+      } else if (typeRand > 0.8) {
+        type = 'enemy';
+        width = 40; height = 70;
+        color = '#450a0a';
+        speedVar = 80;
+        vx = (Math.random() - 0.5) * 100;
+      } else if (typeRand > 0.7) {
         type = 'msg';
         width = 65; height = 30;
         color = '#25D366';
-      } else if (typeRand > 0.7) {
+      } else if (typeRand > 0.55) {
         type = 'taco';
         width = 28; height = 18;
         color = '#fde047';
-      } else if (typeRand > 0.45) {
+      } else if (typeRand > 0.4) {
         type = 'bache';
         width = 35 + Math.random() * 25; height = 20 + Math.random() * 15;
         color = '#1c1917';
+        speedVar = 0;
       }
 
       const x = Math.max(15, Math.min(GAME_W - width - 15, Math.random() * GAME_W));
-      const speedVar = type === 'taco' || type === 'bache' ? 0 : 50; 
       
       obstacles.push({
         id: nextObstacleId++,
         x, y: -height, width, height,
         speed: speedVar, 
-        type, color, markedForDeletion: false
+        type, color, markedForDeletion: false,
+        vx
       });
     };
 
-    const drawTaxi = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, tilt: number, isBlinking: boolean) => {
+    const drawPlayer = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, tilt: number, isBlinking: boolean) => {
       if (isBlinking && Math.floor(performance.now() / 100) % 2 === 0) return;
       
       ctx.save();
@@ -181,54 +229,94 @@ export function MeetingRace() {
       const bx = -w/2;
       const by = -h/2;
       
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillRect(bx + 4, by + 4, w, h);
 
-      ctx.fillStyle = '#ffffff'; 
-      ctx.beginPath();
-      ctx.roundRect(bx, by, w, h, 6);
-      ctx.fill();
-      
-      // Pink top half
-      ctx.fillStyle = '#ec4899';
-      ctx.beginPath();
-      ctx.roundRect(bx, by, w, h/2 + 5, [6, 6, 0, 0]);
-      ctx.fill();
+      if (selectedCarId === 'moto') {
+        // Motorcycle body
+        ctx.fillStyle = currentCar.color;
+        ctx.fillRect(bx + w/2 - 4, by + 5, 8, h - 10);
+        // Tires
+        ctx.fillStyle = '#111';
+        ctx.fillRect(bx + w/2 - 4, by, 8, 10);
+        ctx.fillRect(bx + w/2 - 4, by + h - 10, 8, 10);
+        // Handlebars
+        ctx.fillStyle = '#333';
+        ctx.fillRect(bx, by + 15, w, 4);
+      } else if (selectedCarId === 'truck') {
+        // Truck body
+        ctx.fillStyle = currentCar.color;
+        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 4); ctx.fill();
+        // Bed
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(bx + 4, by + h/2, w - 8, h/2 - 4);
+        // Cabin
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(bx + 4, by + 10, w - 8, 15);
+      } else {
+        // Car style (Taxi or Sport)
+        ctx.fillStyle = selectedCarId === 'taxi' ? '#ffffff' : currentCar.color; 
+        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
+        
+        if (selectedCarId === 'taxi') {
+          ctx.fillStyle = '#ec4899'; // Pink top
+          ctx.beginPath(); ctx.roundRect(bx, by, w, h/2 + 5, [6, 6, 0, 0]); ctx.fill();
+          // Copete
+          ctx.fillStyle = '#fbbf24'; ctx.fillRect(bx + w/2 - 6, by + h/2 - 10, 12, 8);
+        }
 
-      // Wheels
-      ctx.fillStyle = '#111';
-      ctx.roundRect(bx - 4, by + h*0.15, 4, h*0.25, 2); ctx.fill();
-      ctx.roundRect(bx + w, by + h*0.15, 4, h*0.25, 2); ctx.fill();
-      ctx.roundRect(bx - 4, by + h*0.65, 4, h*0.25, 2); ctx.fill();
-      ctx.roundRect(bx + w, by + h*0.65, 4, h*0.25, 2); ctx.fill();
-      
-      // Windshield
-      ctx.fillStyle = '#1e293b';
-      ctx.beginPath(); ctx.roundRect(bx + 4, by + 8, w - 8, h*0.2, 2); ctx.fill();
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(bx + 6, by + 10, w*0.4, 3);
-      
-      // Rear window
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(bx + 4, by + h - 16, w - 8, 10);
-      
-      // Copete
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(bx + w/2 - 6, by + h/2 - 10, 12, 8);
-      ctx.fillStyle = '#ca8a04';
-      ctx.fillRect(bx + w/2 - 6, by + h/2 - 4, 12, 2);
-      
-      // Headlights
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath(); ctx.roundRect(bx + 2, by - 2, 8, 5, 2); ctx.fill();
-      ctx.beginPath(); ctx.roundRect(bx + w - 10, by - 2, 8, 5, 2); ctx.fill();
+        // Windshield
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(bx + 4, by + 8, w - 8, h*0.2);
+      }
 
-      // Taillights
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(bx + 2, by + h - 3, 8, 4);
-      ctx.fillRect(bx + w - 10, by + h - 3, 8, 4);
+      // Shield effect
+      if (shieldTimer > 0) {
+        ctx.strokeStyle = `rgba(129, 140, 248, ${0.5 + Math.sin(Date.now()/100)*0.2})`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(w, h)/2 + 5, 0, Math.PI*2);
+        ctx.stroke();
+      }
+
+      // Nitro flames
+      if (nitroTimer > 0) {
+        ctx.fillStyle = '#3b82f6';
+        ctx.fillRect(bx + 5, by + h, 10, 20 * Math.random());
+        ctx.fillRect(bx + w - 15, by + h, 10, 20 * Math.random());
+      }
       
       ctx.restore();
+    };
+
+    const drawEnemy = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
+      const bx = obs.x; const by = obs.y; const w = obs.width; const h = obs.height;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(bx + 4, by + 4, w, h);
+      ctx.fillStyle = '#450a0a'; ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
+      // Police or bad car details
+      ctx.fillStyle = '#fef08a'; ctx.fillRect(bx+2, by+2, 8, 4); ctx.fillRect(bx+w-10, by+2, 8, 4);
+      // Siren
+      ctx.fillStyle = Math.floor(Date.now()/100) % 2 === 0 ? '#ef4444' : '#3b82f6';
+      ctx.fillRect(bx + w/2 - 6, by + h/2 - 4, 12, 8);
+    };
+
+    const drawPowerup = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
+       const bx = obs.x; const by = obs.y; const w = obs.width; const h = obs.height;
+       ctx.save();
+       ctx.translate(bx + w/2, by + h/2);
+       ctx.scale(1 + Math.sin(Date.now()/200)*0.1, 1 + Math.sin(Date.now()/200)*0.1);
+       ctx.rotate(Date.now()/1000);
+       
+       ctx.fillStyle = obs.type === 'shield' ? '#818cf8' : '#3b82f6';
+       if (obs.type === 'shield') {
+          ctx.beginPath(); ctx.arc(0, 0, w/2, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+       } else {
+          ctx.beginPath(); ctx.moveTo(0, -h/2); ctx.lineTo(w/2, h/2); ctx.lineTo(-w/2, h/2); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+       }
+       ctx.restore();
     };
 
     const drawMicrobus = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -313,12 +401,20 @@ export function MeetingRace() {
       lastTime = timestamp;
 
       // Logic Updates
+      dayNightCycle = (dayNightCycle + dt * 0.01) % 1;
+
       if (slowMoTimer > 0) {
         slowMoTimer -= dt;
         speedMultiplier = 0.5; // Slow down time
+      } else if (nitroTimer > 0) {
+        nitroTimer -= dt;
+        speedMultiplier = 2.0;
+        currentScore += dt * 500;
       } else {
         speedMultiplier = 1 + Math.floor(currentScore / 1000) * 0.15; // Speed up over time
       }
+
+      if (shieldTimer > 0) shieldTimer -= dt;
 
       const currentRoadSpeed = baseRoadSpeed * speedMultiplier;
       roadOffset = (roadOffset + currentRoadSpeed * dt) % 100;
@@ -326,8 +422,9 @@ export function MeetingRace() {
       if (damageTimer > 0) damageTimer -= dt;
 
       // Handle input -> player targetX
-      if (keys.ArrowLeft || keys.a) player.targetX -= player.speed * dt;
-      if (keys.ArrowRight || keys.d) player.targetX += player.speed * dt;
+      const handling = currentCar.handling * (nitroTimer > 0 ? 0.7 : 1);
+      if (keys.ArrowLeft || keys.a) player.targetX -= player.speed * handling * dt;
+      if (keys.ArrowRight || keys.d) player.targetX += player.speed * handling * dt;
       
       player.targetX = Math.max(14, Math.min(GAME_W - player.width - 14, player.targetX));
 
@@ -338,9 +435,20 @@ export function MeetingRace() {
       player.tilt = (diff / 20) * (Math.PI / 8); 
       player.tilt = Math.max(-0.2, Math.min(0.2, player.tilt));
 
+      // Rain integration
+      if (isRaining) {
+        rainDrops.forEach(drop => {
+          drop.y += drop.s * (speedMultiplier * 2);
+          if (drop.y > GAME_H) {
+            drop.y = -drop.l;
+            drop.x = Math.random() * GAME_W;
+          }
+        });
+      }
+
       // Spawning
       timeSinceLastSpawn += dt;
-      const spawnInterval = Math.max(0.6, 2.0 / speedMultiplier);
+      const spawnInterval = Math.max(0.4, 2.0 / speedMultiplier);
       if (timeSinceLastSpawn > spawnInterval) {
         spawnObstacle();
         timeSinceLastSpawn = 0;
@@ -352,6 +460,11 @@ export function MeetingRace() {
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const obs = obstacles[i];
         obs.y += (currentRoadSpeed + (obs.speed * speedMultiplier)) * dt;
+        
+        if (obs.type === 'enemy' && obs.vx) {
+           obs.x += obs.vx * dt;
+           if (obs.x < 15 || obs.x > GAME_W - obs.width - 15) obs.vx *= -1;
+        }
 
         if (obs.y > GAME_H) {
           obs.markedForDeletion = true;
@@ -369,9 +482,33 @@ export function MeetingRace() {
               playSound('powerup');
               currentScore += 500;
               slowMoTimer = 3.0; // 3 seconds slomo
-              if (currentHp < 3) currentHp++;
+              if (currentHp < currentCar.maxHp) currentHp++;
               spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 10, ['#fde047', '#22c55e', '#ffffff']);
               obs.markedForDeletion = true;
+           } else if (obs.type === 'shield') {
+              playSound('powerup');
+              shieldTimer = 5.0;
+              obs.markedForDeletion = true;
+           } else if (obs.type === 'nitro') {
+              playSound('start');
+              nitroTimer = 2.0;
+              shakeTime = 0.5;
+              shakeMag = 5;
+              obs.markedForDeletion = true;
+           } else if (shieldTimer > 0) {
+              // Absorbed by shield
+              shieldTimer = 0;
+              shakeTime = 0.2;
+              shakeMag = 5;
+              obs.markedForDeletion = true;
+              playSound('click');
+              spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 10, ['#818cf8', '#ffffff']);
+           } else if (nitroTimer > 0 && (obs.type !== 'bache')) {
+              // Destroy obstacle while in nitro
+              obs.markedForDeletion = true;
+              currentScore += 1000;
+              spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 20, explosionColors);
+              playSound('score');
            } else {
               // Hit obstacle
               shakeTime = 0.3;
@@ -425,7 +562,13 @@ export function MeetingRace() {
 
       // DRAW PHASE
       ctx.save();
-      ctx.fillStyle = '#27272a'; // Asphalt
+      
+      // Sky/Env color
+      const skyAngle = (dayNightCycle * Math.PI * 2);
+      const isNight = Math.sin(skyAngle) < 0;
+      const asphaltColor = isNight ? '#18181b' : '#3f3f46';
+      
+      ctx.fillStyle = asphaltColor; // Asphalt
       ctx.fillRect(0, 0, GAME_W, GAME_H);
 
       // Screenshake
@@ -437,13 +580,13 @@ export function MeetingRace() {
       }
 
       // Road lines
-      ctx.fillStyle = '#f59e0b';
+      ctx.fillStyle = isNight ? '#a16207' : '#f59e0b';
       for (let i = 0; i < 7; i++) {
         const lineY = ((roadOffset + (i * 100)) % GAME_H) - 100;
         ctx.fillRect(GAME_W / 2 - 4, lineY, 8, 50);
       }
       
-      ctx.fillStyle = '#cbd5e1';
+      ctx.fillStyle = isNight ? '#71717a' : '#cbd5e1';
       ctx.fillRect(8, 0, 6, GAME_H);
       ctx.fillRect(GAME_W - 14, 0, 6, GAME_H);
 
@@ -453,27 +596,72 @@ export function MeetingRace() {
         else if (obs.type === 'msg') drawMsg(ctx, obs);
         else if (obs.type === 'taco') drawTaco(ctx, obs);
         else if (obs.type === 'bache') drawBache(ctx, obs);
+        else if (obs.type === 'enemy') drawEnemy(ctx, obs);
+        else if (obs.type === 'shield' || obs.type === 'nitro') drawPowerup(ctx, obs);
       }
 
       // Draw Player
-      drawTaxi(ctx, player.x, player.y, player.width, player.height, player.tilt, damageTimer > 0);
+      drawPlayer(ctx, player.x, player.y, player.width, player.height, player.tilt, damageTimer > 0);
 
       // Draw Particles
       for (const p of particles) {
         const alpha = 1 - (p.life / p.maxLife);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha = 1;
       }
       
-      // Slomo overlay
+      // Rain
+      if (isRaining) {
+        ctx.strokeStyle = 'rgba(150, 200, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        rainDrops.forEach(drop => {
+          ctx.moveTo(drop.x, drop.y);
+          ctx.lineTo(drop.x + 2, drop.y + drop.l);
+        });
+        ctx.stroke();
+      }
+
+      // Darkness overlay
+      if (isNight) {
+        ctx.fillStyle = 'rgba(0,0,10,0.5)';
+        ctx.fillRect(0, 0, GAME_W, GAME_H);
+        
+        // Headlights glow
+        ctx.save();
+        ctx.translate(player.x + player.width/2, player.y);
+        const grad = ctx.createRadialGradient(0, 0, 0, 0, -20, 150);
+        grad.addColorStop(0, 'rgba(254, 240, 138, 0.4)');
+        grad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(-20, 0);
+        ctx.lineTo(20, 0);
+        ctx.lineTo(60, -180);
+        ctx.lineTo(-60, -180);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Slomo/Nitro overlay
       if (slowMoTimer > 0) {
          ctx.fillStyle = 'rgba(253, 224, 71, 0.1)';
          ctx.fillRect(0, 0, GAME_W, GAME_H);
       }
+      if (nitroTimer > 0) {
+         ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+         ctx.fillRect(0, 0, GAME_W, GAME_H);
+      }
+
+      // Env Indicator
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(GAME_W - 80, 10, 70, 20);
+      ctx.fillStyle = 'white';
+      ctx.font = '8px monospace';
+      ctx.fillText(isNight ? t('game.env.night') : 'DAY', GAME_W - 75, 23);
+      if (isRaining) ctx.fillText('🌧️', GAME_W - 30, 23);
 
       ctx.restore();
 
@@ -491,7 +679,7 @@ export function MeetingRace() {
   }, [isPlaying, playSound]);
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800">
+    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50" />
       <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg">
          <span className="flex items-center gap-2">
@@ -507,27 +695,53 @@ export function MeetingRace() {
         <div className="absolute inset-0 z-10 pointer-events-none opacity-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,1)_50%)] bg-[length:100%_4px]" />
 
         {!isPlaying && !gameOver ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#222]/90 backdrop-blur-sm p-4 text-center z-20">
-            <Car size={32} className="text-orange-500 mb-2" />
-            <h3 className="text-xl font-bold text-orange-400 mb-2 leading-none uppercase tracking-widest">{t('game.arc.race')}</h3>
-            <p className="text-[10px] text-zinc-400 mb-6 max-w-[200px] uppercase">
+          <div className="absolute inset-0 flex flex-col bg-[#111]/90 backdrop-blur-md p-4 z-20 overflow-y-auto">
+            <div className="flex flex-col items-center mb-4">
+              <Car size={32} className="text-orange-500 mb-1" />
+              <h3 className="text-xl font-bold text-orange-400 leading-none uppercase tracking-widest">{t('game.arc.race')}</h3>
+            </div>
+
+            <p className="text-[10px] text-zinc-500 mb-4 uppercase text-center max-w-[300px] mx-auto">
               {t('game.arc.race.desc')}
             </p>
-            <div className="flex gap-4 mb-6 text-[8px] text-zinc-500 uppercase font-mono">
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#10b981] rounded-sm mb-1" />-2 HP</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#25D366] rounded-sm mb-1" />-2 HP</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#1c1917] rounded-full mb-1" />-1 HP</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#fde047] rounded-full mb-1" />+1 HP</div>
+
+            <h4 className="text-[10px] text-zinc-400 mb-2 uppercase font-bold text-center tracking-tighter">--- {t('game.race.select_car')} ---</h4>
+            
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              {cars.map(car => (
+                <button
+                  key={car.id}
+                  onClick={() => setSelectedCarId(car.id)}
+                  className={`flex flex-col items-start p-2 border-2 transition-all rounded-lg ${selectedCarId === car.id ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}
+                >
+                  <div className="flex justify-between w-full items-center mb-1">
+                    <span className="text-[10px] font-bold uppercase" style={{ color: car.color }}>{car.name}</span>
+                    <Car size={14} style={{ color: car.color }} />
+                  </div>
+                  <p className="text-[8px] text-zinc-500 text-left leading-tight h-6 overflow-hidden">{car.desc}</p>
+                  <div className="flex gap-1 mt-2 w-full">
+                    {Array.from({length: car.maxHp}).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-red-500 rounded-full" />)}
+                  </div>
+                </button>
+              ))}
             </div>
+
+            <div className="flex justify-center gap-4 mb-6 text-[8px] text-zinc-500 uppercase font-mono bg-black/40 p-2 rounded">
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#10b981] rounded-sm mb-1" />BUS</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#450a0a] rounded-sm mb-1" />POLI</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#818cf8] rounded-full mb-1" />🛡️</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#3b82f6] rounded-full mb-1" />🔥</div>
+            </div>
+
             <button 
               onClick={() => {
                 setScore(0);
-                setHp(3);
+                setHp(currentCar.maxHp);
                 setGameOver(false);
                 setIsPlaying(true);
                 playSound('start');
               }}
-              className="bg-orange-500 text-black px-6 py-2 font-black uppercase text-xs hover:bg-orange-400 transition-colors animate-pulse"
+              className="bg-orange-500 text-black w-full py-3 font-black uppercase text-sm hover:bg-orange-400 transition-colors animate-pulse shadow-[0_0_20px_rgba(249,115,22,0.3)] rounded"
             >
               {t('game.insert', 'INSERT COIN')}
             </button>
@@ -553,7 +767,7 @@ export function MeetingRace() {
             <button
                onClick={() => {
                  setScore(0);
-                 setHp(3);
+                 setHp(currentCar.maxHp);
                  setGameOver(false);
                  setIsPlaying(true);
                  playSound('start');

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize, Joystick, Trophy } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
@@ -10,7 +10,6 @@ import { CreativeInvaders } from './games/CreativeInvaders';
 import { MeetingRace } from './games/MeetingRace';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
-
 import { useLanguage } from '../context/LanguageContext';
 
 export function Arcade() {
@@ -25,13 +24,13 @@ export function Arcade() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const games = [
-    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-blue-600', label: 'DEBATE PONG' },
-    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-red-600', label: 'POLITICAL UNO' },
-    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-green-600', label: 'IDEAS TIC TAC TOE' },
-    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-purple-600', label: 'ART RPG' },
-    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-yellow-600', label: 'SELLOUT GAME' },
-    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-pink-600', label: 'CREATIVE INVADERS' },
-    { id: 'race', title: t('arc.game7', 'Meeting Race'), icon: <Gamepad2 size={24} />, color: 'bg-orange-600', label: 'MEETING RACE' },
+    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-blue-600', label: t('arc.game1.lbl') },
+    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-red-600', label: t('arc.game2.lbl') },
+    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-green-600', label: t('arc.game3.lbl') },
+    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-purple-600', label: t('arc.game4.lbl') },
+    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-yellow-600', label: t('arc.game5.lbl') },
+    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-pink-600', label: t('arc.game6.lbl') },
+    { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-orange-600', label: t('arc.game7.lbl') },
   ] as const;
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -59,15 +58,15 @@ export function Arcade() {
       setBootLog([]);
       
       const lines = [
-        "RIVAD OS v2.0 - Arcade Mode",
-        "BIOS Date 04/28/26 19:20:00 Ver 1.00",
-        "CPU: Sisyphus Processor, Speed: 66 MHz",
-        "Memory Test: 640K OK",
-        "Initializing sound system... OK",
-        "Checking cartridge slot...",
-        "NO CARTRIDGE DETECTED.",
+        t('arc.boot.os'),
+        t('arc.boot.bios'),
+        t('arc.boot.cpu'),
+        t('arc.boot.mem'),
+        t('arc.boot.sound'),
+        t('arc.boot.cart'),
+        t('arc.boot.none'),
         "",
-        "PLEASE SELECT & INSERT CARTRIDGE TO PLAY"
+        t('arc.boot.select')
       ];
       
       lines.forEach((line, index) => {
@@ -93,7 +92,7 @@ export function Arcade() {
     playSound('powerup');
     setPowerState('inserting');
     setActiveGame(null);
-    setBootLog(["LOADING CARTRIDGE...", "VERIFYING CHECKSUM...", "ROM OK", "STARTING GAME..."]);
+    setBootLog([t('arc.boot.loading'), t('arc.boot.verify'), t('arc.boot.rom'), t('arc.boot.start')]);
     
     setTimeout(() => {
       setActiveGame(id);
@@ -229,7 +228,9 @@ export function Arcade() {
                     {/* Cartridge Label */}
                     <div className={`w-full flex-grow mx-1 my-1 md:my-2 border-2 border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm`}>
                       <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
-                      <span className="text-white drop-shadow-md z-10 mb-1">{g.icon}</span>
+                      <div className="bg-white/20 p-2 md:p-3 rounded-full mb-1 sm:mb-2 shadow-inner border border-white/30 backdrop-blur-sm z-10 scale-75 sm:scale-100">
+                        <span className="text-white drop-shadow-md block transition-transform group-hover:scale-110">{g.icon}</span>
+                      </div>
                       <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase drop-shadow-md">{g.label}</span>
                     </div>
                   </motion.button>
@@ -310,7 +311,7 @@ export function Arcade() {
                         initial={{ opacity: 0, x: -10 }} 
                         animate={{ opacity: 1, x: 0 }} 
                         key={i} 
-                        className={`mb-1 ${line === "PLEASE INSERT CARTRIDGE" || line === "STARTING GAME..." ? "animate-pulse font-bold mt-4" : ""}`}
+                        className={`mb-1 ${line === t('arc.boot.select') || line === t('arc.boot.start') ? "animate-pulse font-bold mt-4" : ""}`}
                       >
                         {line}
                       </motion.div>
@@ -379,21 +380,21 @@ export function Arcade() {
                       onMouseDown={() => startHoldKey(' ')} onMouseUp={() => stopHoldKey(' ')} onMouseLeave={() => stopHoldKey(' ')}
                       onTouchStart={() => startHoldKey(' ')} onTouchEnd={() => stopHoldKey(' ')}
                       className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-600 shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_4px_0_#1e3a8a] border border-blue-400 active:translate-y-1 active:shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_0px_0_#1e3a8a] transition-all"></button>
-                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">Action / Space</span>
+                     <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">{t('arc.btn.action')}</span>
                   </div>
                   <div className="flex flex-col items-center gap-1 -mt-4 md:-mt-6">
                     <button 
                       onMouseDown={() => startHoldKey('Enter')} onMouseUp={() => stopHoldKey('Enter')} onMouseLeave={() => stopHoldKey('Enter')}
                       onTouchStart={() => startHoldKey('Enter')} onTouchEnd={() => stopHoldKey('Enter')}
                       className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-yellow-500 shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_4px_0_#a16207] border border-yellow-300 active:translate-y-1 active:shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_0px_0_#a16207] transition-all"></button>
-                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">Enter / Select</span>
+                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">{t('arc.btn.select')}</span>
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <button 
                       onMouseDown={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onMouseUp={() => stopHoldKey('Escape')} onMouseLeave={() => stopHoldKey('Escape')}
                       onTouchStart={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onTouchEnd={() => stopHoldKey('Escape')}
                       className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-600 shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_4px_0_#7f1d1d] border border-red-400 active:translate-y-1 active:shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_0px_0_#7f1d1d] transition-all"></button>
-                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">Back / Esc</span>
+                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">{t('arc.btn.back')}</span>
                   </div>
                 </div>
              </div>
