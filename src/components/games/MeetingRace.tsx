@@ -48,6 +48,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedCarId, setSelectedCarId] = useState('taxi');
+  const lastKeyTime = useRef(0);
 
   const cars: CarConfig[] = [
     { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 440, handling: 10, maxHp: 3, color: '#facc15' },
@@ -168,7 +169,6 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
     };
 
     const keys = { ArrowLeft: false, ArrowRight: false, a: false, d: false };
-    const lastKeyTime = useRef(0);
     const KEY_REPEAT_DELAY = 150; // ms between lane shifts if held
 
     const handleKeyDown = (e: KeyboardEvent) => {
