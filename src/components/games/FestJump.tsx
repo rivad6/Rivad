@@ -89,6 +89,7 @@ export function FestJump() {
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
   const [unlockedCodes, setUnlockedCodes] = useState<string[]>([]);
   const [gameStats, setGameStats] = useState<{earned: number, total: number, enemies: number, items: number} | null>(null);
+  const [currentTheme, setCurrentTheme] = useState<'vaporwave' | 'matrix' | 'classic'>('classic');
   const keysRef = useRef({ left: false, right: false });
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
@@ -794,14 +795,71 @@ export function FestJump() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // BG with dynamic gradient
-      const bgColorTop = cameraY < 2000 ? '#0a0a1a' : cameraY < 6000 ? '#022c22' : cameraY < 12000 ? '#1e1b4b' : '#3b0764';
-      const bgColorBot = cameraY < 2000 ? '#1e1b4b' : cameraY < 6000 ? '#065f46' : cameraY < 12000 ? '#3730a3' : '#000000';
-      
-      let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bgGrad.addColorStop(0, bgColorTop);
-      bgGrad.addColorStop(1, bgColorBot);
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (currentTheme === 'matrix') {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = 'rgba(0, 255, 70, 0.15)';
+        ctx.font = '10px monospace';
+        for(let i=0; i<30; i++) {
+          const x = (i * 15) % canvas.width;
+          const y = (cameraY * 0.2 + i * 100) % canvas.height;
+          ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), x, y);
+          ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), x, (y + 200) % canvas.height);
+        }
+      } else if (currentTheme === 'vaporwave') {
+        // Vaporwave Sun and Grid
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        skyGrad.addColorStop(0, '#ff0080');
+        skyGrad.addColorStop(0.5, '#7000ff');
+        skyGrad.addColorStop(1, '#000000');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Retro Sun
+        const sunY = 150 + Math.sin(cameraY * 0.0001) * 20;
+        const sunGrad = ctx.createLinearGradient(0, sunY - 60, 0, sunY + 60);
+        sunGrad.addColorStop(0, '#fde047');
+        sunGrad.addColorStop(0.5, '#f97316');
+        sunGrad.addColorStop(1, '#ef4444');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(canvas.width/2, sunY, 60, 0, Math.PI*2);
+        ctx.fill();
+
+        // Scanlines over sun
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        for(let i=0; i<10; i++) {
+          ctx.fillRect(canvas.width/2 - 60, sunY - 40 + i * 10, 120, 2);
+        }
+
+        // Perspective Grid
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        const gridY = (cameraY * 0.5) % 40;
+        for(let i=0; i<canvas.width; i+=40) {
+          ctx.beginPath();
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i, canvas.height);
+          ctx.stroke();
+        }
+        for(let i=0; i<canvas.height; i+=40) {
+          ctx.beginPath();
+          ctx.moveTo(0, i + gridY);
+          ctx.lineTo(canvas.width, i + gridY);
+          ctx.stroke();
+        }
+      } else {
+        // Classic Festival Theme
+        const bgColorTop = cameraY < 2000 ? '#0a0a1a' : cameraY < 6000 ? '#022c22' : cameraY < 12000 ? '#1e1b4b' : '#3b0764';
+        const bgColorBot = cameraY < 2000 ? '#1e1b4b' : cameraY < 6000 ? '#065f46' : cameraY < 12000 ? '#3730a3' : '#000000';
+        
+        let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        bgGrad.addColorStop(0, bgColorTop);
+        bgGrad.addColorStop(1, bgColorBot);
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
       // Parallax Silhouettes
       parallaxLayers.forEach((layer, i) => {
@@ -1190,7 +1248,7 @@ export function FestJump() {
       canvas.removeEventListener('mousemove', handlePointerMove);
       canvas.removeEventListener('touchmove', handlePointerMove);
     };
-  }, [isPlaying, selectedChar]);
+  }, [isPlaying, selectedChar, currentTheme]);
 
   const handleGameOver = () => {
      const earned = Math.floor(score / 50);
@@ -1421,30 +1479,32 @@ export function FestJump() {
         )}
 
         {isPlaying && showMobileControls && (
-          <div className="absolute inset-x-0 bottom-8 z-20 flex justify-center px-6 pointer-events-none">
-            <div className="flex bg-zinc-900 border-4 border-zinc-700 p-2 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]">
+          <>
+            <div className="absolute bottom-8 left-8 z-20 pointer-events-none">
               <button 
                 onMouseDown={() => { keysRef.current.left = true; playSound('click'); }}
                 onMouseUp={() => keysRef.current.left = false}
                 onMouseLeave={() => keysRef.current.left = false}
                 onTouchStart={(e) => { e.preventDefault(); keysRef.current.left = true; playSound('click'); }}
                 onTouchEnd={(e) => { e.preventDefault(); keysRef.current.left = false; }}
-                className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+                className="w-20 h-20 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto shadow-xl"
               >
-                <ChevronLeft className="w-10 h-10 text-white" />
+                <ChevronLeft className="w-10 h-10 text-white/50" />
               </button>
+            </div>
+            <div className="absolute bottom-8 right-8 z-20 pointer-events-none">
               <button 
                 onMouseDown={() => { keysRef.current.right = true; playSound('click'); }}
                 onMouseUp={() => keysRef.current.right = false}
                 onMouseLeave={() => keysRef.current.right = false}
                 onTouchStart={(e) => { e.preventDefault(); keysRef.current.right = true; playSound('click'); }}
                 onTouchEnd={(e) => { e.preventDefault(); keysRef.current.right = false; }}
-                className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+                className="w-20 h-20 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto shadow-xl"
               >
-                <ChevronRight className="w-10 h-10 text-white" />
+                <ChevronRight className="w-10 h-10 text-white/50" />
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
 

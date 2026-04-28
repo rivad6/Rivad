@@ -48,6 +48,8 @@ export function CreativeInvaders() {
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
   const [storeTab, setStoreTab] = useState<"chars" | "upgrades">("chars");
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('invaders_mobile_controls') === 'true');
+  const [pendingCoins, setPendingCoins] = useState(0);
+
   const [upgrades, setUpgrades] = useState(() => {
     const saved = localStorage.getItem('invaders_upgrades');
     return saved ? JSON.parse(saved) : { shield: 0, power: 0, speed: 0, rear_turret: 0 };
@@ -56,13 +58,16 @@ export function CreativeInvaders() {
   const selectedChar = CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0];
 
   useEffect(() => {
+    localStorage.setItem('invaders_mobile_controls', showMobileControls.toString());
+  }, [showMobileControls]);
+
+  useEffect(() => {
     localStorage.setItem('fest_coins', festCoins.toString());
     localStorage.setItem('invaders_chars', JSON.stringify(unlockedChars));
     localStorage.setItem('invaders_selected_char', selectedCharId);
     localStorage.setItem('invaders_upgrades', JSON.stringify(upgrades));
     localStorage.setItem('invaders_highscore', highScore.toString());
-    localStorage.setItem('invaders_mobile_controls', showMobileControls.toString());
-  }, [festCoins, unlockedChars, selectedCharId, upgrades, highScore, showMobileControls]);
+  }, [festCoins, unlockedChars, selectedCharId, upgrades, highScore]);
 
   const buyChar = (char: typeof CHARACTERS[0]) => {
     if (festCoins >= char.price) {
@@ -308,6 +313,7 @@ export function CreativeInvaders() {
         hp: bossHp,
         maxHp: bossHp,
         offset: 0,
+        variant: Math.floor(Math.random() * 3)
       });
       return;
     }
@@ -669,30 +675,55 @@ export function CreativeInvaders() {
         const shooter = shooters[Math.floor(Math.random() * shooters.length)];
         const isBoss = shooter.type === "boss";
         const isFast = shooter.type === "distraction";
+        const variant = shooter.variant || 0;
         
+        let bulletColor = "#ff00ff"; // Default fast
+        if (isBoss) {
+          bulletColor = variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6";
+        } else if (isFast) {
+          bulletColor = "#fbbf24";
+        }
+
         s.projectiles.push({
            x: shooter.x + shooter.width/2,
            y: shooter.y + shooter.height,
-           vx: isBoss ? (Math.random() - 0.5) * 4 : 0,
+           vx: isBoss && variant === 2 ? (s.player.x - shooter.x) * 0.01 : (isBoss ? (Math.random() - 0.5) * 4 : 0),
            vy: isFast ? 8 + s.level : 5 + s.level,
            speed: isFast ? 8 + s.level : 5 + s.level,
-           color: isBoss ? "#ef4444" : isFast ? "#fbbf24" : "#ff00ff", // Magenta for fast bullets
+           color: bulletColor,
            isEnemy: true
         });
 
-        if (isBoss && Math.random() < 0.5) {
-           // Boss fires spread
-           for (let d = -1; d <= 1; d += 2) {
-             s.projectiles.push({
-                x: shooter.x + shooter.width/2,
-                y: shooter.y + shooter.height,
-                vx: d * 3,
-                vy: 6 + s.level,
-                speed: 6 + s.level,
-                color: "#ef4444",
-                isEnemy: true
-             });
-           }
+        if (isBoss) {
+          if (variant === 0 && Math.random() < 0.5) {
+             // Boss fires spread
+             for (let d = -1; d <= 1; d += 2) {
+               s.projectiles.push({
+                  x: shooter.x + shooter.width/2,
+                  y: shooter.y + shooter.height,
+                  vx: d * 3,
+                  vy: 6 + s.level,
+                  speed: 6 + s.level,
+                  color: bulletColor,
+                  isEnemy: true
+               });
+             }
+          } else if (variant === 1 && Math.random() < 0.3) {
+             // Rapid fire for blue boss
+             for (let i = 0; i < 3; i++) {
+               setTimeout(() => {
+                 s.projectiles.push({
+                    x: shooter.x + shooter.width/2 + (Math.random() - 0.5) * 20,
+                    y: shooter.y + shooter.height,
+                    vx: 0,
+                    vy: 10 + s.level,
+                    speed: 10 + s.level,
+                    color: bulletColor,
+                    isEnemy: true
+                 });
+               }, i * 100);
+             }
+          }
         }
       }
     }
@@ -1090,8 +1121,10 @@ export function CreativeInvaders() {
         const palette = isHit ? ['#ffffff', '#ffffff', '#ffffff', '#ffffff'] : ['#1e293b', '#3b82f6', '#ef4444', '#1e293b'];
         drawSprite(ctx, sprites.distraction, enemy.x, enemy.y, enemy.width, enemy.height, palette);
       } else if (enemy.type === "boss") {
+        const variant = enemy.variant || 0;
+        const bossColor = variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6";
         const metalColor = enemy.hp / enemy.maxHp > 0.5 ? '#d4d4d4' : '#fca5a5';
-        const palette = isHit ? ['#ffffff', '#ffffff'] : ['#1e293b', metalColor];
+        const palette = isHit ? ['#ffffff', '#ffffff'] : [bossColor, metalColor];
         drawSprite(ctx, sprites.boss, enemy.x, enemy.y, enemy.width, enemy.height, palette);
         // Health bar
         ctx.fillStyle = "#333";
@@ -1192,64 +1225,39 @@ export function CreativeInvaders() {
   }, [tick]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
-      <div className="w-full flex flex-col">
-      <div className="w-full flex justify-between items-end border-b border-white/10 pb-4 mb-4 flex-wrap gap-4">
-        <div>
-          <h2 className="text-2xl font-display uppercase tracking-tight text-brand-accent flex items-center gap-2 mb-1">
-            <Zap className="w-6 h-6" />
-            {t("game.invaders.title")}
-          </h2>
-          <p className="text-white/60 text-xs font-mono uppercase tracking-widest max-w-sm">
-            {t("game.invaders.desc")}
-          </p>
-        </div>
-        <div className="flex gap-4 md:gap-8 flex-wrap">
-           <div className="flex items-center gap-4 mr-4">
-              {hudShield > 0 && (
-                <div className="flex flex-col items-center">
-                  <Shield className="w-4 h-4 text-blue-400 animate-pulse" />
-                  <span className="text-[8px] text-blue-400 font-mono uppercase">{t('game.invaders.shield')}</span>
+    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[500px] font-mono text-white p-2 md:p-4 relative bg-[#050505] rounded-xl flex-grow overflow-hidden border-2 border-zinc-900 shadow-2xl [&.is-fullscreen]:bg-black [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none">
+      <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-[70] transition-opacity opacity-20 hover:opacity-100" />
+      
+      {/* Top HUD */}
+      <div className="flex justify-between items-center w-full max-w-4xl mb-2 px-6 py-2 text-[10px] font-bold bg-zinc-900/50 rounded-t-xl border-x-2 border-t-2 border-zinc-800 backdrop-blur-sm shadow-lg shrink-0">
+         <div className="flex items-center gap-6">
+            <button 
+              onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
+              className={`flex items-center gap-1 uppercase text-[8px] font-bold border px-1.5 py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-[0_0_10px_rgba(242,74,41,0.2)]' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
+            >
+              <Settings className="w-3 h-3" /> {showMobileControls ? t('game.common.controls_on') : t('game.common.controls_off')}
+            </button>
+            <div className="flex items-center gap-2">
+               <span className="text-zinc-500 tracking-tighter uppercase">{t('game.invaders.score')}</span>
+               <div ref={scoreRefDOM} className="text-brand-accent text-sm italic">{score}</div>
+            </div>
+            <div className="flex items-center gap-4 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                <div className="flex items-center gap-1">
+                   <Shield className="w-3 h-3 text-blue-400" />
+                   <span className="text-blue-400">{hudShield}</span>
                 </div>
-              )}
-              {hudTurbo > 0 && (
-                <div className="flex flex-col items-center">
-                  <Zap className="w-4 h-4 text-yellow-400 animate-bounce" />
-                  <span className="text-[8px] text-yellow-400 font-mono uppercase">{t('game.invaders.turbo')}</span>
+                <div className="flex items-center gap-1">
+                   <Zap className="w-3 h-3 text-yellow-400" />
+                   <span className="text-yellow-400">LV.{hudPower}</span>
                 </div>
-              )}
-              {hudPower > 1 && (
-                <div className="flex flex-col items-center">
-                  <Star className="w-4 h-4 text-purple-400 animate-pulse" />
-                  <span className="text-[8px] text-purple-400 font-mono uppercase">{t('game.invaders.pwr')} {hudPower}</span>
-                </div>
-              )}
-           </div>
-           <div className="text-right">
-             <p className="text-white/50 text-xs font-mono tracking-widest uppercase mb-1">
-               {gameState === 'asteroids' ? t('game.invaders.wave') : (t('game.invaders.level') || 'Level')}
-             </p>
-             <div className="bg-black/50 border border-white/20 px-4 py-2 rounded-md">
-               <p className="text-3xl font-mono text-white tracking-widest">
-                 {gameState === 'playing' ? state.current.level : gameState === 'asteroids' ? state.current.wave : 1}
-               </p>
-             </div>
-           </div>
-           <div className="text-right">
-             <p className="text-brand-accent text-xs font-mono tracking-widest uppercase mb-1">
-               {t("game.invaders.score")}
-             </p>
-               <div className="bg-black/50 border border-brand-accent/30 px-4 py-2 rounded-md">
-               <p ref={scoreRefDOM} className="text-3xl font-mono text-white tracking-widest">
-                 {score.toString().padStart(5, "0")}
-               </p>
-             </div>
-           </div>
-        </div>
+            </div>
+         </div>
+         <div className="flex items-center gap-2 text-zinc-500">
+            <Star className="w-3 h-3 text-yellow-500" /> {highScore}
+         </div>
       </div>
 
-      <div ref={containerRef} className="relative w-full h-full min-h-[400px] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
-        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      <div className="relative border-x-2 border-b-2 border-zinc-800 rounded-b-xl bg-black overflow-hidden w-full max-w-4xl flex-grow h-full max-h-[800px] touch-none shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)]">
         <canvas
           ref={canvasRef}
           width={GAME_WIDTH}
@@ -1574,73 +1582,79 @@ export function CreativeInvaders() {
         )}
 
         {showMobileControls && (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") && (
-          <div className="absolute inset-x-0 bottom-0 pointer-events-none flex justify-between p-4 z-[60]">
-            <div className="flex justify-between items-end w-full">
-              {/* Circular joystick panel */}
-              <div className="w-32 h-32 rounded-full bg-zinc-900/80 border-2 border-zinc-700 p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center pointer-events-auto">
-                <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
-                  <div />
-                  <button 
-                    onMouseDown={() => { state.current.player.isMovingUp = true; playSound('click'); }}
-                    onMouseUp={() => state.current.player.isMovingUp = false}
-                    onMouseLeave={() => state.current.player.isMovingUp = false}
-                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
-                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingUp = false; }}
-                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
-                  >
-                    <ChevronUp className="text-white w-4 h-4" />
-                  </button>
-                  <div />
-                  
-                  <button 
-                    onMouseDown={() => { state.current.player.isMovingLeft = true; playSound('click'); }}
-                    onMouseUp={() => state.current.player.isMovingLeft = false}
-                    onMouseLeave={() => state.current.player.isMovingLeft = false}
-                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
-                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingLeft = false; }}
-                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
-                  >
-                    <ChevronLeft className="text-white w-4 h-4" />
-                  </button>
-                  <div className="w-10 h-10 bg-zinc-950 border-2 border-zinc-800 rounded-full" />
-                  <button 
-                    onMouseDown={() => { state.current.player.isMovingRight = true; playSound('click'); }}
-                    onMouseUp={() => state.current.player.isMovingRight = false}
-                    onMouseLeave={() => state.current.player.isMovingRight = false}
-                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
-                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingRight = false; }}
-                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
-                  >
-                    <ChevronRight className="text-white w-4 h-4" />
-                  </button>
-
-                  <div />
-                  <button 
-                    onMouseDown={() => { state.current.player.isMovingDown = true; playSound('click'); }}
-                    onMouseUp={() => state.current.player.isMovingDown = false}
-                    onMouseLeave={() => state.current.player.isMovingDown = false}
-                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
-                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingDown = false; }}
-                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
-                  >
-                    <ChevronDown className="text-white w-4 h-4" />
-                  </button>
-                  <div />
-                </div>
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            {/* Movement Controls (Left) */}
+            <div className="absolute bottom-6 left-6 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <div className="w-16 h-16" /> {/* Spacer */}
+                <button 
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingUp = false}
+                  onMouseLeave={() => state.current.player.isMovingUp = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingUp = false; }}
+                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                >
+                  <ChevronUp className="text-white w-6 h-6 opacity-40 group-active:opacity-100" />
+                </button>
+                <div className="w-16 h-16" />
               </div>
+              <div className="flex gap-2">
+                <button 
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingLeft = false}
+                  onMouseLeave={() => state.current.player.isMovingLeft = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingLeft = false; }}
+                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                >
+                  <ChevronLeft className="text-white w-6 h-6 opacity-40" />
+                </button>
+                <div className="w-16 h-16 flex items-center justify-center">
+                  <div className="w-4 h-4 rounded-full bg-brand-accent/20 border border-brand-accent/40" />
+                </div>
+                <button 
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingRight = false}
+                  onMouseLeave={() => state.current.player.isMovingRight = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingRight = false; }}
+                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                >
+                  <ChevronRight className="text-white w-6 h-6 opacity-40" />
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-16 h-16" />
+                <button 
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingDown = false}
+                  onMouseLeave={() => state.current.player.isMovingDown = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingDown = false; }}
+                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                >
+                  <ChevronDown className="text-white w-6 h-6 opacity-40" />
+                </button>
+                <div className="w-16 h-16" />
+              </div>
+            </div>
 
-              {/* Fire Button */}
+            {/* Fire Button (Right) */}
+            <div className="absolute bottom-10 right-10 flex flex-col items-center gap-4">
               <button 
                 onMouseDown={(e) => { e.preventDefault(); fire(); }}
                 onTouchStart={(e) => { e.preventDefault(); fire(); }}
-                className="w-16 h-16 bg-zinc-800 border-4 border-red-600 rounded-full flex items-center justify-center active:bg-zinc-700 active:border-red-500 transition-all pointer-events-auto"
+                className="w-28 h-28 bg-brand-accent/10 backdrop-blur-lg border-4 border-brand-accent/30 rounded-full flex items-center justify-center active:bg-brand-accent/40 active:border-brand-accent/60 transition-all pointer-events-auto shadow-[0_0_30px_rgba(242,74,41,0.2)]"
               >
-                <Crosshair className="w-8 h-8 text-white" />
+                <div className="w-14 h-14 bg-brand-accent/80 rounded-full flex items-center justify-center shadow-inner">
+                  <Crosshair className="w-8 h-8 text-white" />
+                </div>
               </button>
+              <div className="text-[8px] font-black uppercase text-brand-accent tracking-widest opacity-50">{t('game.invaders.action.fire')}</div>
             </div>
           </div>
         )}
-      </div>
       </div>
     </div>
   );

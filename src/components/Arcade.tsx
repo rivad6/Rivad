@@ -301,7 +301,7 @@ export function Arcade() {
               )}
 
               {(powerState === 'booting' || powerState === 'waiting' || powerState === 'inserting') && (
-                <div className="w-full h-full min-h-[400px] bg-black flex justify-start items-start p-6 md:p-12 overflow-hidden relative">
+                <div className="w-full h-full min-h-[400px] bg-black flex justify-start items-start p-6 md:p-12 overflow-y-auto relative custom-scrollbar">
                   {/* Scanline overlay specifically for terminal text */}
                   <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] z-10" />
                   

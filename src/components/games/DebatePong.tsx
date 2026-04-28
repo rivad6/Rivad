@@ -45,7 +45,11 @@ export function DebatePong() {
     
     const player = { x: 20, y: canvas.height / 2 - paddleHeight / 2, dy: 0, score: 0 };
     const cpu = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight / 2, dy: 3.5, score: 0 };
-    const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 4, dy: 4 };
+    const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: 4, dy: 4, trail: [] as {x: number, y: number}[] };
+    let rally = 0;
+    let intensity = 1;
+    let cpuEmotion = "";
+    let cpuEmotionTimeout: ReturnType<typeof setTimeout>;
 
     const debateTerms = language === 'en' 
       ? ["Ad Hominem", "Straw Man", "Syllogism", "Appeal to Authority", "Sophism", "False Dichotomy", "Axiom"]
@@ -53,19 +57,26 @@ export function DebatePong() {
       ? ["Ad Hominem", "Homme de Paille", "Syllogisme", "Appel à l'Autorité", "Sophisme", "Fausse Dichotomie", "Axiome"]
       : ["Ad Hominem", "Hombre de Paja", "Silogismo", "Apelación a la Autoridad", "Sofisma", "Falsa Dicotomía", "Axioma"];
 
-    const showHitText = (x: number, y: number) => {
-      const term = debateTerms[Math.floor(Math.random() * debateTerms.length)];
+    const showCPUEmotion = (emotion: string) => {
+      cpuEmotion = emotion;
+      clearTimeout(cpuEmotionTimeout);
+      cpuEmotionTimeout = setTimeout(() => { cpuEmotion = "" }, 1500);
+    };
+
+    const showHitText = (x: number, y: number, isPower: boolean = false) => {
+      const term = isPower ? (language === 'en' ? "POWER SHOT!" : "¡GOLPE DE PODER!") : debateTerms[Math.floor(Math.random() * debateTerms.length)];
       hitText = term;
-      shakeAmount = 8;
+      shakeAmount = isPower ? 15 : 8;
       
       // Add particles
-      for (let i = 0; i < 5; i++) {
+      const particleCount = isPower ? 15 : 5;
+      for (let i = 0; i < particleCount; i++) {
         particles.push({
           x,
           y,
-          vx: (Math.random() - 0.5) * 4,
-          vy: (Math.random() - 0.5) * 4,
-          text: term.split(' ')[0], // First word of term
+          vx: (Math.random() - 0.5) * (isPower ? 10 : 4),
+          vy: (Math.random() - 0.5) * (isPower ? 10 : 4),
+          text: isPower ? "★" : term.split(' ')[0], 
           life: 1.0
         });
       }
@@ -134,12 +145,18 @@ export function DebatePong() {
         player.y += playerSpeed;
       }
 
+      // Ball trail logic
+      ball.trail.push({ x: ball.x, y: ball.y });
+      if (ball.trail.length > 8) ball.trail.shift();
+
       // Physics
-      ball.x += ball.dx;
-      ball.y += ball.dy;
+      const currentSpeedMult = 1 + (rally * 0.05);
+      ball.x += ball.dx * currentSpeedMult;
+      ball.y += ball.dy * currentSpeedMult;
 
       // CPU AI
-      const cpuSpeed = 3.2 + (player.score * 0.4); 
+      const isPower = rally >= 10;
+      const cpuSpeed = (3.2 + (player.score * 0.4)) * (isPower ? 1.5 : 1); 
       const targetPos = ball.y - paddleHeight / 2;
       if (cpu.y < targetPos) {
         cpu.y += cpuSpeed;
@@ -165,8 +182,9 @@ export function DebatePong() {
           ball.dx = Math.min(10, Math.abs(ball.dx) + 0.4); 
           const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
+          rally++;
           playSound('hit');
-          showHitText(ball.x, ball.y);
+          showHitText(ball.x, ball.y, isPower);
         }
       }
 
@@ -181,8 +199,12 @@ export function DebatePong() {
           ball.dx = -Math.min(10, Math.abs(ball.dx) + 0.4); 
           const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
+          rally++;
           playSound('hit');
-          showHitText(ball.x, ball.y);
+          showHitText(ball.x, ball.y, isPower);
+          
+          if (rally > 10) showCPUEmotion("😤");
+          else if (Math.abs(ball.dy) > 4) showCPUEmotion("😲");
         }
       }
 
@@ -190,11 +212,13 @@ export function DebatePong() {
       if (ball.x < 0) {
         cpu.score++;
         setCpuScore(cpu.score);
+        showCPUEmotion("😌");
         resetBall();
         shakeAmount = 15;
       } else if (ball.x > canvas.width) {
         player.score++;
         setPlayerScore(player.score);
+        showCPUEmotion("😠");
         resetBall();
         shakeAmount = 15;
       }
@@ -226,33 +250,53 @@ export function DebatePong() {
         ctx.fillRect(canvas.width / 2 - 1, i, 2, 10);
       }
 
+      // Draw Ball Trail
+      ball.trail.forEach((p, i) => {
+        const alpha = (i + 1) / ball.trail.length * 0.3;
+        ctx.fillStyle = isPower ? `rgba(242, 74, 41, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+        ctx.fillRect(p.x, p.y, ballSize, ballSize);
+      });
+
       // Draw Paddles with bloom-ish effect
       ctx.shadowBlur = 15;
       ctx.shadowColor = '#f24a29';
       ctx.fillStyle = '#f24a29'; 
       ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
       
-      ctx.shadowColor = '#fff';
+      ctx.shadowColor = isPower ? '#f24a29' : '#fff';
       ctx.fillStyle = '#fff'; // CPU
       ctx.fillRect(cpu.x, cpu.y, paddleWidth, paddleHeight);
+
+      // CPU Emotion Bubble
+      if (cpuEmotion) {
+        ctx.font = '12px serif';
+        ctx.fillText(cpuEmotion, cpu.x - 20, cpu.y);
+      }
       
       // Ball
-      ctx.shadowBlur = 10;
-      ctx.fillStyle = '#fff'; 
+      ctx.shadowBlur = isPower ? 20 : 10;
+      ctx.shadowColor = isPower ? '#f24a29' : '#fff';
+      ctx.fillStyle = isPower ? '#f24a29' : '#fff'; 
       ctx.fillRect(ball.x, ball.y, ballSize, ballSize);
 
       if (hitText) {
         ctx.shadowBlur = 5;
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = isPower ? '#f24a29' : '#fff';
         ctx.font = '8px "Press Start 2P"';
         ctx.textAlign = 'center';
         ctx.fillText(hitText, canvas.width / 2, 40);
       }
 
+      // UI Text (Rally)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '6px "Press Start 2P"';
+      ctx.textAlign = 'left';
+      ctx.fillText(t('game.pong.rally', { val: rally.toString() }), 10, canvas.height - 10);
+
       // Draw particles
       particles = particles.filter(p => p.life > 0);
       particles.forEach(p => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${p.life})`;
+        ctx.fillStyle = p.text === '★' ? `rgba(242, 74, 41, ${p.life})` : `rgba(255, 255, 255, ${p.life})`;
         ctx.font = '6px "Press Start 2P"';
         ctx.fillText(p.text, p.x, p.y);
         p.x += p.vx;
@@ -280,6 +324,8 @@ export function DebatePong() {
       ball.y = canvas.height / 2;
       ball.dx = (Math.random() > 0.5 ? 4 : -4);
       ball.dy = (Math.random() > 0.5 ? 4 : -4);
+      ball.trail = [];
+      rally = 0;
     };
 
     animationFrameId = requestAnimationFrame(gameLoop);

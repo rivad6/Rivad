@@ -63,7 +63,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* 8-bit CRT Effect */
+/* CRT Scanlines Overlay */
 .crt::before {
   content: " ";
   display: block;
@@ -76,5 +76,20 @@ html {
   z-index: 2;
   background-size: 100% 2px, 3px 100%;
   pointer-events: none;
+}
+
+/* Custom Scrollbar for story text */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(242, 74, 41, 0.3);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 74, 41, 0.6);
 }
 

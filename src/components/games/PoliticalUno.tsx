@@ -20,7 +20,7 @@ import {
 import { FullscreenButton } from '../ui/FullscreenButton';
 
 type Color = 'rojo' | 'azul' | 'guinda' | 'naranja' | 'black';
-type SpecialAction = 'moche' | 'fuero' | 'alianza' | 'dedazo' | 'fake_news' | 'consulta' | 'normal';
+type SpecialAction = 'moche' | 'fuero' | 'alianza' | 'dedazo' | 'fake_news' | 'consulta' | 'guerra_sucia' | 'voto_por_voto' | 'normal';
 type Card = { 
   color: Color; 
   value: number | string; 
@@ -85,18 +85,19 @@ export function PoliticalUno() {
     const color = forceColor || colors[Math.floor(Math.random() * colors.length)];
     
     if (isSpecial) {
-      const actions: SpecialAction[] = ['moche', 'fuero', 'alianza', 'fake_news', 'consulta', 'dedazo'];
+      const actions: SpecialAction[] = ['moche', 'fuero', 'alianza', 'fake_news', 'consulta', 'dedazo', 'guerra_sucia', 'voto_por_voto'];
       const action = actions[Math.floor(Math.random() * actions.length)];
       
-      // Dedazo and Fake News are wild (black)
-      const finalColor = (action === 'dedazo' || action === 'fake_news') ? 'black' : color;
+      // Dedazo, Fake News, Guerra Sucia, Voto por Voto are wild (black)
+      const isWild = ['dedazo', 'fake_news', 'guerra_sucia', 'voto_por_voto'].includes(action);
+      const finalColor = isWild ? 'black' : color;
       
       return {
         color: finalColor,
         value: action === 'moche' ? '+2' : action === 'fake_news' ? '+4' : '★',
         id: crypto.randomUUID(),
         action,
-        partyNameKey: (action === 'dedazo' || action === 'fake_news') ? undefined : getPartyKey(finalColor)
+        partyNameKey: isWild ? undefined : getPartyKey(finalColor)
       };
     }
 
@@ -144,6 +145,8 @@ export function PoliticalUno() {
     }
   }, [activePopup, playSound]);
 
+  const [isSwapping, setIsSwapping] = useState(false);
+  
   const processAction = (card: Card, currentPlayer: 'player' | 'cpu') => {
     const otherPlayer = currentPlayer === 'player' ? 'cpu' : 'player';
     
@@ -194,6 +197,24 @@ export function PoliticalUno() {
           setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
           return 'player';
         }
+      case 'guerra_sucia':
+        setMessage(t('game.uno.msg.guerra_sucia'));
+        setIsSwapping(true);
+        setTimeout(() => {
+          setPlayerHand(prevPlayer => {
+            const currentCpu = [...cpuHand];
+            setCpuHand([...prevPlayer]);
+            return currentCpu;
+          });
+          setIsSwapping(false);
+          setTurn(otherPlayer); // Change turn AFTER swap
+        }, 1000);
+        return currentPlayer; // Keep current turn state until finished
+      case 'voto_por_voto':
+        setMessage(t('game.uno.msg.voto_por_voto'));
+        setPlayerHand(Array(7).fill(null).map(() => generateCard()));
+        setCpuHand(Array(7).fill(null).map(() => generateCard()));
+        return otherPlayer;
       default:
         return otherPlayer;
     }
@@ -302,10 +323,12 @@ export function PoliticalUno() {
     switch (action) {
       case 'moche': return <Coins className="w-6 h-6 md:w-8 md:h-8" />;
       case 'fuero': return <Shield className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'alianza': return <ArrowLeftRight className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'alianza': return <Handshake className="w-6 h-6 md:w-8 md:h-8" />;
       case 'dedazo': return <Fingerprint className="w-6 h-6 md:w-8 md:h-8" />;
       case 'fake_news': return <Megaphone className="w-6 h-6 md:w-8 md:h-8" />;
       case 'consulta': return <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />;
+      case 'guerra_sucia': return <ArrowLeftRight className="w-6 h-6 md:w-8 md:h-8 text-red-500" />;
+      case 'voto_por_voto': return <Star className="w-6 h-6 md:w-8 md:h-8 text-yellow-500 animate-[spin_3s_linear_infinite]" />;
       default: return null;
     }
   };
@@ -462,6 +485,21 @@ export function PoliticalUno() {
 
            {/* Special Action Overlay */}
            <AnimatePresence>
+             {isSwapping && (
+               <motion.div
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 exit={{ opacity: 0 }}
+                 className="absolute inset-0 z-[60] flex items-center justify-center bg-red-950/40 backdrop-blur-sm pointer-events-none"
+               >
+                 <motion.div 
+                   animate={{ rotate: 360 }}
+                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                 >
+                   <ArrowLeftRight className="w-32 h-32 text-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)]" />
+                 </motion.div>
+               </motion.div>
+             )}
              {activePopup && (
                <motion.div
                  initial={{ opacity: 0, scale: 0.5, y: 50 }}

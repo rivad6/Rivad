@@ -26,6 +26,7 @@ const calculateWinner = (squares: Player[]) => {
 export function IdeasTicTacToe() {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
+  const [personality, setPersonality] = useState<'rationalist' | 'traditionalist' | 'postmodernist'>('rationalist');
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [log, setLog] = useState<string>(t('game.ttt.log.start'));
@@ -42,63 +43,83 @@ export function IdeasTicTacToe() {
     return () => playMusic('none');
   }, [winner, isDraw, playMusic]);
 
-  const philosophicalPhrasesX = language === 'en'
-    ? [ "Reason illuminates the board.", "A structured argument.", "Status quo questioned.", "Dialectics advancing." ]
-    : language === 'fr'
-    ? [ "La raison illumine le tableau.", "Un argument structuré.", "Le statu quo est remis en question.", "La dialectique progresse." ]
-    : [ "La razón ilumina el tablero.", "Un argumento estructurado.", "Se cuestiona el status quo.", "La dialéctica avanza." ];
-
-  const philosophicalPhrasesO = language === 'en'
-    ? [ "Dogma clings to the cell.", "Appeal to tradition.", "Authority fallacy dominates.", "Established norm imposed." ]
-    : language === 'fr'
-    ? [ "Le dogme s'accroche à la case.", "Appel à la tradition.", "La sophisme d'autorité domine.", "La norme établie s'impose." ]
-    : [ "El dogma se aferra a la casilla.", "Apelación a la tradición.", "La falacia de autoridad domina.", "Se impone la norma establecida." ];
-
-  useEffect(() => {
-    if (winner === 'X') playSound('win');
-    else if (winner === 'O') playSound('lose');
-    else if (isDraw) playSound('alert');
-  }, [winner, isDraw, playSound]);
+  const getPhrases = (p: 'X' | 'O', currentBotPersonality?: string) => {
+    if (p === 'X') {
+      return language === 'en'
+        ? [ "Reason illuminates the board.", "A structured argument.", "Status quo questioned.", "Dialectics advancing." ]
+        : language === 'fr'
+        ? [ "La raison illumine le tableau.", "Un argument structuré.", "Le statu quo est remis en question.", "La dialectique progresse." ]
+        : [ "La razón ilumina el tablero.", "Un argumento estructurado.", "Se cuestiona el status quo.", "La dialéctica avanza." ];
+    }
+    
+    // Bot phrases based on personality
+    if (currentBotPersonality === 'postmodernist') {
+      return language === 'en' 
+        ? ["Meaning is a social construct.", "I play because I exist, or do I?", "Deconstructing your corner.", "The board is a text."]
+        : ["Le sens est une construction sociale.", "Je joue parce que j'existe, ou bien ?", "Déconstruction de votre coin.", "La grille est un texte."];
+    }
+    if (currentBotPersonality === 'traditionalist') {
+       return language === 'en'
+        ? [ "Dogma clings to the cell.", "Appeal to tradition.", "Authority fallacy dominates.", "Established norm imposed." ]
+        : [ "El dogma se aferra a la casilla.", "Apelación a la tradición.", "La falacia de autoridad domina.", "Se impone la norma establecida." ];
+    }
+    
+    return language === 'en'
+      ? ["Optimizing logical path.", "Syllogism complete.", "Empirical advantage.", "Pure thought placed."]
+      : ["Optimizando ruta lógica.", "Silogismo completado.", "Ventaja empírica.", "Pensamiento puro colocado."];
+  };
 
   useEffect(() => {
     if (!xIsNext && !winner && !isDraw) {
       const timer = setTimeout(() => {
         const availableMoves = board.map((square, index) => square === null ? index : null).filter((val) => val !== null) as number[];
         
-        // Simple Bot: Try to win, block, or take center/random
         let bestMove = -1;
         
-        // Block player 'X'
-        for (let i = 0; i < availableMoves.length; i++) {
-          const move = availableMoves[i];
-          const testBoard = [...board];
-          testBoard[move] = 'O';
-          if (calculateWinner(testBoard) === 'O') {
-            bestMove = move;
-            break;
-          }
-          testBoard[move] = 'X';
-          if (calculateWinner(testBoard) === 'X') {
-            bestMove = move;
+        // Block player 'X' (Universal logic for all but postmodernist)
+        if (personality !== 'postmodernist') {
+          for (let i = 0; i < availableMoves.length; i++) {
+            const move = availableMoves[i];
+            const testBoard = [...board];
+            testBoard[move] = 'O';
+            if (calculateWinner(testBoard) === 'O') {
+              bestMove = move;
+              break;
+            }
+            testBoard[move] = 'X';
+            if (calculateWinner(testBoard) === 'X') {
+              bestMove = move;
+            }
           }
         }
         
-        if (bestMove === -1) { // Take center if available
-           if (board[4] === null) bestMove = 4;
-           else bestMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        if (bestMove === -1) {
+           if (personality === 'rationalist') {
+             if (board[4] === null) bestMove = 4;
+             else bestMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+           } else if (personality === 'traditionalist') {
+             const corners = [0, 2, 6, 8].filter(i => board[i] === null);
+             if (corners.length > 0) bestMove = corners[Math.floor(Math.random() * corners.length)];
+             else bestMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+           } else {
+             // Postmodernist: just random
+             bestMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+           }
         }
         
         const newBoard = [...board];
         newBoard[bestMove] = 'O';
         setBoard(newBoard);
-        setLog(philosophicalPhrasesO[Math.floor(Math.random() * philosophicalPhrasesO.length)]);
+        
+        const botPhrases = getPhrases('O', personality);
+        setLog(botPhrases[Math.floor(Math.random() * botPhrases.length)]);
         setXIsNext(true);
         playSound('click');
 
-      }, 600);
+      }, 800);
       return () => clearTimeout(timer);
     }
-  }, [xIsNext, board, winner, isDraw, playSound, language]);
+  }, [xIsNext, board, winner, isDraw, personality, playSound, language]);
 
   const handleClick = (i: number) => {
     if (board[i] || winner || !xIsNext) return;
@@ -107,7 +128,8 @@ export function IdeasTicTacToe() {
     newBoard[i] = 'X';
     setBoard(newBoard);
     
-    setLog(philosophicalPhrasesX[Math.floor(Math.random() * philosophicalPhrasesX.length)]);
+    const xPhrases = getPhrases('X');
+    setLog(xPhrases[Math.floor(Math.random() * xPhrases.length)]);
     setXIsNext(false);
   };
 
@@ -125,19 +147,35 @@ export function IdeasTicTacToe() {
       <div className="mb-1 text-center w-full">
          <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase">{t('game.objective')}{t('game.ttt.goal')}</p>
       </div>
-      <div className="mb-2 text-center text-[10px] md:text-xs leading-tight w-full h-10 flex flex-col justify-center">
-        {winner ? (
-          <p className="text-brand-accent animate-pulse">
-            {t('game.ttt.win', { winner: winner === 'X' ? t('game.ttt.reason') : t('game.ttt.tradition') })}
-          </p>
-        ) : isDraw ? (
-          <p className="text-gray-400">{t('game.ttt.draw')}</p>
-        ) : (
-          <>
-            <p className="text-white mb-1">{t('game.ttt.turn')}{xIsNext ? <span className="text-brand-accent">{t('game.ttt.you')}</span> : <span className="text-blue-400">{t('game.ttt.bot')}</span>}</p>
-            <p className="text-gray-500 text-[8px] md:text-[10px] uppercase truncate px-2">[{log}]</p>
-          </>
+      <div className="mb-2 text-center text-[10px] md:text-xs leading-tight w-full flex flex-col justify-center gap-1">
+        {!winner && !isDraw && (
+          <div className="flex gap-1 justify-center scale-75 opacity-60 hover:opacity-100 transition-opacity">
+            {(['rationalist', 'traditionalist', 'postmodernist'] as const).map(p => (
+              <button 
+                key={p} 
+                onClick={() => setPersonality(p)}
+                className={cn(
+                  "px-2 py-0.5 rounded border border-white/10 grow text-[8px]",
+                  personality === p ? "bg-brand-accent text-white border-brand-accent" : "hover:bg-white/5"
+                )}
+              >
+                {t(`game.ttt.personality.${p}`)}
+              </button>
+            ))}
+          </div>
         )}
+        <div className="h-4 flex items-center justify-center">
+          {winner ? (
+            <p className="text-brand-accent animate-pulse font-bold">
+              {t('game.ttt.win', { winner: winner === 'X' ? t('game.ttt.reason') : t('game.ttt.tradition') })}
+            </p>
+          ) : isDraw ? (
+            <p className="text-gray-400">{t('game.ttt.draw')}</p>
+          ) : (
+            <p className="text-white">{t('game.ttt.turn')}{xIsNext ? <span className="text-brand-accent">{t('game.ttt.you')}</span> : <span className="text-blue-400">{t(`game.ttt.personality.${personality}`)}</span>}</p>
+          )}
+        </div>
+        {!winner && !isDraw && <p className="text-gray-500 text-[8px] uppercase truncate px-2 italic">[{log}]</p>}
       </div>
 
       <div className="grid grid-cols-3 gap-2 bg-zinc-900/50 p-2 rounded-2xl backdrop-blur-xl relative border border-white/5 shadow-2xl scale-95 sm:scale-100">

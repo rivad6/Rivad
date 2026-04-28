@@ -657,6 +657,9 @@ const translations: Record<Language, Record<string, string>> = {
     'game.pong.title': 'PONG DE DEBATE',
     'game.pong.goal': 'Llega a 5 puntos',
     'game.pong.controls': 'Usa el ratón o dedo para mover tu argumento',
+    'game.pong.rally': 'INTERCAMBIO: {{val}}',
+    'game.pong.level': 'INTENSIDAD: {{val}}',
+    'game.pong.power_shot': '¡GOLPE DE PODER!',
 
     // Game: TicTacToe
     'game.ttt.goal': '3 ideas alineadas',
@@ -670,6 +673,10 @@ const translations: Record<Language, Record<string, string>> = {
     'game.ttt.reset': 'DECONSTRUIR SISTEMA',
     'game.ttt.log.start': 'El debate comienza. Elige una premisa.',
     'game.ttt.log.reset': 'Nueva tabula rasa. Comienza el debate.',
+    'game.ttt.personality.rationalist': 'Racionalista',
+    'game.ttt.personality.traditionalist': 'Tradicionalista',
+    'game.ttt.personality.postmodernist': 'Post-Modernista',
+    'game.ttt.score': 'PUNTOS: {{val}}',
 
     // Game: Political Uno
     'game.uno.goal': 'Quédate sin cartas para ganar la elección',
@@ -712,6 +719,10 @@ const translations: Record<Language, Record<string, string>> = {
     'game.uno.party.blue': 'Bloque Conservador',
     'game.uno.party.guinda': 'Movimiento de Regeneración',
     'game.uno.party.orange': 'Movimiento de la Alegría',
+    'game.uno.action.guerra_sucia': 'Guerra Sucia',
+    'game.uno.action.voto_por_voto': 'Voto por Voto',
+    'game.uno.msg.guerra_sucia': '¡Manos intercambiadas! Caos electoral.',
+    'game.uno.msg.voto_por_voto': 'Recuento total de cartas (Redraw).',
 
     // Game: FestJump
     'game.fest.back': 'Volver al Inicio',
@@ -772,7 +783,11 @@ const translations: Record<Language, Record<string, string>> = {
     'game.sell.label.requires': 'Exige {{val}}% de Relevancia',
     'game.sell.label.level': 'Nv {{val}}',
     'game.sell.footer': 'SISTEMA DE MONETIZACIÓN DE RELEVANCIA V4.0 // EL ARTE ES CAPITAL',
-    'game.sell.quote1': 'El éxito no es lo que haces, sino cuánto Hype puedes generar antes de que te descubran.',
+    'game.sell.viral': '¡TE HICISTE VIRAL! ¡Hype x3!',
+    'game.sell.label.prestige': 'TRANSFÓRMATE EN ICONO (PRESTIGIO)',
+    'game.sell.msg.prestige': 'Renacido como leyenda. ¡Multiplicador aumentado!',
+    'game.sell.stats.multiplier': 'Multiplicador: x{{val}}',
+    'game.sell.quote1': 'El éxito no es lo que haces, sino cuánto Hype puedes generar antes de que te descubran!',
     'game.sell.quote2': 'Si una obra no es viral, ¿realmente existe en el tejido sociocultural contemporáneo?',
     'game.sell.quote3': 'La autenticidad es solo una etiqueta que puedes comprar por 500 Karmas.',
     'game.sell.copied': 'URL copiada al portapapeles.',
@@ -828,6 +843,9 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.services': 'Services (Stats)',
     'hero.years': 'Years',
     'hero.scroll': 'SCROLL',
+    'game.pong.rally': 'RALLY: {{val}}',
+    'game.pong.level': 'INTENSITY: {{val}}',
+    'game.pong.power_shot': 'POWER SHOT!',
 
     // Random Facts
     'hero.random_facts': 'Random Facts About Me',
@@ -1465,6 +1483,10 @@ const translations: Record<Language, Record<string, string>> = {
     'game.ttt.reset': 'DECONSTRUCT SYSTEM',
     'game.ttt.log.start': 'The debate begins. Choose a premise.',
     'game.ttt.log.reset': 'New tabula rasa. The debate begins.',
+    'game.ttt.personality.rationalist': 'Rationalist',
+    'game.ttt.personality.traditionalist': 'Traditionalist',
+    'game.ttt.personality.postmodernist': 'Post-Modernist',
+    'game.ttt.score': 'SCORE: {{val}}',
 
     // Game: Political Uno
     'game.uno.goal': 'Run out of cards to win the election',
@@ -1507,6 +1529,10 @@ const translations: Record<Language, Record<string, string>> = {
     'game.uno.party.blue': 'Conservative Block',
     'game.uno.party.guinda': 'Regeneration Movement',
     'game.uno.party.orange': 'Joy Movement',
+    'game.uno.action.guerra_sucia': 'Dirty War',
+    'game.uno.action.voto_por_voto': 'Vote by Vote',
+    'game.uno.msg.guerra_sucia': 'Hands swapped! Electoral chaos.',
+    'game.uno.msg.voto_por_voto': 'Total recount (Redraw hands).',
 
     // Game: FestJump
     'game.fest.back': 'Back to Home',
@@ -1567,6 +1593,10 @@ const translations: Record<Language, Record<string, string>> = {
     'game.sell.label.requires': 'Requires {{val}}% Relevance',
     'game.sell.label.level': 'Lv {{val}}',
     'game.sell.footer': 'RELEVANCE MONETIZATION SYSTEM V4.0 // ART IS CAPITAL',
+    'game.sell.viral': 'GOING VIRAL! 3x Hype!',
+    'game.sell.label.prestige': 'TRANSFORM INTO ICON (PRESTIGE)',
+    'game.sell.msg.prestige': 'Reborn as a legend. Multiplier increased!',
+    'game.sell.stats.multiplier': 'Multiplier: x{{val}}',
     'game.sell.quote1': 'Success is not what you do, but how much Hype you generate before you are discovered.',
     'game.sell.quote2': 'If a work is not viral, does it really exist in the contemporary sociocultural fabric?',
     'game.sell.quote3': 'Authenticity is just a label you can buy for 500 Karmas.',

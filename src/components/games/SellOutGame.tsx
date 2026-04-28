@@ -50,10 +50,13 @@ export const SellOutGame: React.FC = () => {
   const [hype, setHype] = useState(0);
   const [audience, setAudience] = useState(10);
   const [relevance, setRelevance] = useState(100);
+  const [prestige, setPrestige] = useState(1);
+  const [viralTimer, setViralTimer] = useState(0);
   const [gameState, setGameState] = useState<'start' | 'playing' | 'win' | 'lose'>('start');
   const [message, setMessage] = useState(t('game.sell.msg.start'));
   const [inventory, setInventory] = useState<Record<string, number>>({});
   const [clicks, setClicks] = useState<{ id: number, x: number, y: number, val: number }[]>([]);
+  const [fans, setFans] = useState<{ id: number, x: number, y: number }[]>([]);
   const hypeRef = React.useRef(hype);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -61,11 +64,11 @@ export const SellOutGame: React.FC = () => {
     hypeRef.current = hype;
   }, [hype]);
 
-  const hypePerClick = 1 + (audience * 0.1);
+  const hypePerClick = (1 + (audience * 0.1)) * prestige * (viralTimer > 0 ? 3 : 1);
   const passiveHype = UPGRADES.reduce((acc, up) => acc + (inventory[up.id] || 0) * up.hypeBoost, 0);
   const relevanceMultiplier = Math.max(0.1, relevance / 100);
   const totalHypePerClick = hypePerClick * relevanceMultiplier;
-  const totalPassiveHype = passiveHype * relevanceMultiplier;
+  const totalPassiveHype = passiveHype * relevanceMultiplier * prestige * (viralTimer > 0 ? 3 : 1);
   const winProgress = Math.min(100, (hype / 1000000) * 100);
 
   const resetGame = () => {
@@ -83,6 +86,16 @@ export const SellOutGame: React.FC = () => {
     const timer = setInterval(() => {
       const currentHype = hypeRef.current;
       setHype(prev => prev + totalPassiveHype / 10);
+      
+      setViralTimer(prev => Math.max(0, prev - 1));
+      
+      // Random viral event
+      if (Math.random() < 0.002 && viralTimer === 0) {
+        setViralTimer(300); // 30 seconds
+        setMessage(t('game.sell.viral'));
+        playSound('powerup');
+      }
+
       setRelevance(prev => {
         const next = prev - (0.25 + (currentHype * 0.000003)); 
         if (next <= 0) {
@@ -106,16 +119,32 @@ export const SellOutGame: React.FC = () => {
     return () => clearInterval(timer);
   }, [gameState, totalPassiveHype, t]);
 
+  const handlePrestige = () => {
+    if (hype < 1000000) return;
+    setPrestige(prev => prev + 1);
+    resetGame();
+    setMessage(t('game.sell.msg.prestige'));
+    playSound('win');
+  };
+
   const handleMainClick = (e: React.MouseEvent) => {
     if (gameState !== 'playing') return;
     
     playSound('hover');
     setHype(prev => prev + totalHypePerClick);
     setAudience(prev => prev + 1);
-    setRelevance(prev => Math.min(100, prev + 1.2));
+    setRelevance(prev => Math.min(100, prev + (viralTimer > 0 ? 2 : 1.2)));
 
     const id = Date.now() + Math.random();
     setClicks(prev => [...prev, { id, x: e.clientX, y: e.clientY, val: totalHypePerClick }]);
+    
+    // Fan particle
+    if (Math.random() > 0.5) {
+       const fanId = Math.random();
+       setFans(prev => [...prev, { id: fanId, x: e.clientX, y: e.clientY }]);
+       setTimeout(() => setFans(prev => prev.filter(f => f.id !== fanId)), 1000);
+    }
+
     setTimeout(() => {
       setClicks(prev => prev.filter(c => c.id !== id));
     }, 800);
@@ -157,15 +186,16 @@ export const SellOutGame: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12">
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-brand-accent/20 to-transparent blur opacity-25 group-hover:opacity-50 transition" />
-          <div className="relative bg-zinc-900/40 backdrop-blur-md p-6 rounded-3xl border border-white/5 flex flex-col items-center">
-            <div className="flex items-center gap-2 text-zinc-500 mb-2">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="text-[10px] uppercase font-black tracking-widest">{t('game.sell.hype')}</span>
+            <div className="relative bg-zinc-900/40 backdrop-blur-md p-6 rounded-3xl border border-white/5 flex flex-col items-center">
+              <div className="flex items-center gap-2 text-zinc-500 mb-2">
+                <Flame className={cn("w-4 h-4", viralTimer > 0 ? "text-brand-accent animate-pulse" : "text-orange-500")} />
+                <span className="text-[10px] uppercase font-black tracking-widest">{t('game.sell.hype')}</span>
+              </div>
+              <span className={cn("text-3xl md:text-4xl font-black tabular-nums transition-all", viralTimer > 0 ? "text-brand-accent scale-110" : "text-white")}>
+                {Math.floor(hype).toLocaleString()}
+              </span>
+              {prestige > 1 && <span className="text-[9px] text-zinc-600 mt-1 uppercase font-bold">x{prestige} Mult</span>}
             </div>
-            <span className="text-3xl md:text-4xl font-black text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-              {Math.floor(hype).toLocaleString()}
-            </span>
-          </div>
         </div>
 
         <div className="bg-zinc-900/40 backdrop-blur-md p-6 rounded-3xl border border-white/5 flex flex-col items-center">
@@ -229,6 +259,21 @@ export const SellOutGame: React.FC = () => {
                <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
             </div>
 
+            {/* Fans visual feedback */}
+            <AnimatePresence>
+              {fans.map(fan => (
+                <motion.div
+                  key={fan.id}
+                  initial={{ x: fan.x - 20, y: fan.y - 20, opacity: 1, scale: 0.5 }}
+                  animate={{ x: 300, y: 150, opacity: 0, scale: 1 }} // Move towards hype stat (approx)
+                  exit={{ opacity: 0 }}
+                  className="fixed pointer-events-none text-blue-400 z-[60]"
+                >
+                  <Users className="w-6 h-6" />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
             {/* Click effects */}
             <AnimatePresence>
               {clicks.map(click => (
@@ -248,6 +293,20 @@ export const SellOutGame: React.FC = () => {
 
           <div className="bg-zinc-950/80 backdrop-blur-xl border border-white/5 p-6 rounded-[2rem] w-full text-center shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-brand-accent" />
+            
+            {hype >= 1000000 && (
+              <motion.button
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={handlePrestige}
+                className="mb-4 w-full bg-white text-black py-4 rounded-xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('game.sell.label.prestige')}
+              </motion.button>
+            )}
+
             <p className="text-zinc-300 font-bold uppercase tracking-widest text-xs md:text-sm mb-4 leading-relaxed italic">"{message}"</p>
             
             {gameState !== 'playing' && (

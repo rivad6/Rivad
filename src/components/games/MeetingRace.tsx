@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, Car, Heart, TerminalSquare, Zap } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-type ObstacleType = 'microbus' | 'taco' | 'msg' | 'bache' | 'enemy' | 'shield' | 'nitro';
+type ObstacleType = 'microbus' | 'taco' | 'msg' | 'bache' | 'enemy' | 'shield' | 'nitro' | 'oil' | 'cone' | 'tree' | 'building';
 
 interface CarConfig {
   id: string;
@@ -50,10 +50,10 @@ export function MeetingRace() {
   const [selectedCarId, setSelectedCarId] = useState('taxi');
 
   const cars: CarConfig[] = [
-    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 400, handling: 10, maxHp: 3, color: '#ec4899' },
-    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 550, handling: 7, maxHp: 2, color: '#ef4444' },
-    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 300, handling: 5, maxHp: 6, color: '#3b82f6' },
-    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 500, handling: 18, maxHp: 1, color: '#f59e0b' },
+    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 400, handling: 8, maxHp: 3, color: '#ec4899' },
+    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 550, handling: 12, maxHp: 2, color: '#ef4444' },
+    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 300, handling: 6, maxHp: 6, color: '#3b82f6' },
+    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 500, handling: 15, maxHp: 1, color: '#f59e0b' },
   ];
 
   const currentCar = cars.find(c => c.id === selectedCarId) || cars[0];
@@ -70,7 +70,12 @@ export function MeetingRace() {
   const [score, setScore] = useState(0);
   const [hp, setHp] = useState(currentCar.maxHp);
   const [gameOver, setGameOver] = useState(false);
+  const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('race_mobile_controls') === 'true');
   const scoreRefDOM = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('race_mobile_controls', showMobileControls.toString());
+  }, [showMobileControls]);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -180,33 +185,48 @@ export function MeetingRace() {
       let speedVar = 50;
       let vx = 0;
       
-      if (typeRand > 0.95) {
+      if (typeRand > 0.96) {
         type = 'nitro';
         width = 24; height = 24;
         color = '#3b82f6';
-      } else if (typeRand > 0.9) {
+      } else if (typeRand > 0.92) {
         type = 'shield';
         width = 30; height = 30;
         color = '#818cf8';
-      } else if (typeRand > 0.8) {
+      } else if (typeRand > 0.85) {
         type = 'enemy';
         width = 40; height = 70;
         color = '#450a0a';
         speedVar = 80;
-        vx = (Math.random() - 0.5) * 100;
-      } else if (typeRand > 0.7) {
+        vx = (Math.random() - 0.5) * 50;
+      } else if (typeRand > 0.75) {
         type = 'msg';
         width = 65; height = 30;
         color = '#25D366';
-      } else if (typeRand > 0.55) {
+      } else if (typeRand > 0.65) {
+        type = 'oil';
+        width = 50; height = 30;
+        color = '#000';
+        speedVar = 0;
+      } else if (typeRand > 0.5) {
+        type = 'cone';
+        width = 18; height = 24;
+        color = '#f97316';
+        speedVar = 0;
+      } else if (typeRand > 0.4) {
         type = 'taco';
         width = 28; height = 18;
         color = '#fde047';
-      } else if (typeRand > 0.4) {
+      } else if (typeRand > 0.25) {
         type = 'bache';
         width = 35 + Math.random() * 25; height = 20 + Math.random() * 15;
         color = '#1c1917';
         speedVar = 0;
+      } else {
+        type = 'microbus';
+        width = 44; height = 80;
+        color = '#10b981';
+        speedVar = -20;
       }
 
       const x = Math.max(15, Math.min(GAME_W - width - 15, Math.random() * GAME_W));
@@ -288,6 +308,49 @@ export function MeetingRace() {
       }
       
       ctx.restore();
+    };
+
+    const drawOil = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
+      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      ctx.beginPath();
+      ctx.ellipse(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, obs.height/2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.beginPath();
+      ctx.ellipse(obs.x + obs.width/3, obs.y + obs.height/3, obs.width/6, obs.height/6, 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const drawCone = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath();
+      ctx.moveTo(obs.x + obs.width/2, obs.y);
+      ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+      ctx.lineTo(obs.x, obs.y + obs.height);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'white';
+      ctx.fillRect(obs.x + obs.width/4, obs.y + obs.height/2, obs.width/2, obs.height/4);
+    };
+
+    const drawTree = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
+      ctx.fillStyle = '#422006';
+      ctx.fillRect(obs.x + obs.width/2 - 4, obs.y + obs.height/2, 8, obs.height/2);
+      ctx.fillStyle = '#166534';
+      ctx.beginPath();
+      ctx.arc(obs.x + obs.width/2, obs.y + obs.height/4, obs.width/2, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const drawBuilding = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+      ctx.fillStyle = '#f8fafc';
+      for(let iy=0; iy<obs.height; iy+=20) {
+        for(let ix=0; ix<obs.width; ix+=15) {
+          if (Math.random() > 0.3) ctx.fillRect(obs.x + ix + 4, obs.y + iy + 4, 6, 8);
+        }
+      }
     };
 
     const drawEnemy = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -423,17 +486,24 @@ export function MeetingRace() {
 
       // Handle input -> player targetX
       const handling = currentCar.handling * (nitroTimer > 0 ? 0.7 : 1);
-      if (keys.ArrowLeft || keys.a) player.targetX -= player.speed * handling * dt;
-      if (keys.ArrowRight || keys.d) player.targetX += player.speed * handling * dt;
+      const moveSpeed = player.speed * (slowMoTimer > 0 ? 0.8 : 1); // slightly slower handling in slomo for precision
       
+      if (keys.ArrowLeft || keys.a) player.targetX -= moveSpeed * handling * dt;
+      if (keys.ArrowRight || keys.d) player.targetX += moveSpeed * handling * dt;
+      
+      // Prevent accumulating targetX way beyond bounds
       player.targetX = Math.max(14, Math.min(GAME_W - player.width - 14, player.targetX));
 
-      // Smooth follow targetX for tilt effect
+      // Precision Lerp: increase the follow factor for tighter control
       const diff = player.targetX - player.x;
-      player.x += diff * 10 * dt; // Lerp
+      const followFactor = 15; 
+      const maxMovePerFrame = player.speed * 2 * dt; // Cap movement speed
+      const moveAmount = diff * followFactor * dt;
+      player.x += Math.max(-maxMovePerFrame, Math.min(maxMovePerFrame, moveAmount)); 
       
-      player.tilt = (diff / 20) * (Math.PI / 8); 
-      player.tilt = Math.max(-0.2, Math.min(0.2, player.tilt));
+      // Tilt based on actual movement speed, not just target diff
+      player.tilt = (diff / 15) * (Math.PI / 10); 
+      player.tilt = Math.max(-0.15, Math.min(0.15, player.tilt));
 
       // Rain integration
       if (isRaining) {
@@ -448,9 +518,24 @@ export function MeetingRace() {
 
       // Spawning
       timeSinceLastSpawn += dt;
-      const spawnInterval = Math.max(0.4, 2.0 / speedMultiplier);
+      const spawnInterval = Math.max(0.3, 1.8 / speedMultiplier);
       if (timeSinceLastSpawn > spawnInterval) {
         spawnObstacle();
+        
+        // Spawn side decorations
+        if (Math.random() > 0.5) {
+           const type: ObstacleType = Math.random() > 0.5 ? 'tree' : 'building';
+           const side = Math.random() > 0.5 ? -40 : GAME_W + 10;
+           obstacles.push({
+             id: nextObstacleId++,
+             x: side, y: -100,
+             width: 40 + Math.random() * 60,
+             height: 60 + Math.random() * 100,
+             speed: 0,
+             type, color: '#000',
+             markedForDeletion: false
+           });
+        }
         timeSinceLastSpawn = 0;
       }
 
@@ -461,8 +546,11 @@ export function MeetingRace() {
         const obs = obstacles[i];
         obs.y += (currentRoadSpeed + (obs.speed * speedMultiplier)) * dt;
         
-        if (obs.type === 'enemy' && obs.vx) {
-           obs.x += obs.vx * dt;
+        if (obs.type === 'enemy') {
+           // Aggressive AI: move towards player
+           const targetVX = player.x < obs.x ? -100 : 100;
+           obs.vx = (obs.vx || 0) * 0.95 + targetVX * 0.05; 
+           obs.x += (obs.vx || 0) * dt;
            if (obs.x < 15 || obs.x > GAME_W - obs.width - 15) obs.vx *= -1;
         }
 
@@ -503,18 +591,28 @@ export function MeetingRace() {
               obs.markedForDeletion = true;
               playSound('click');
               spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 10, ['#818cf8', '#ffffff']);
-           } else if (nitroTimer > 0 && (obs.type !== 'bache')) {
+           } else if (obs.type === 'oil') {
+              // Slippery! Temporary handling reduction
+              playSound('hover');
+              const prevHandling = currentCar.handling;
+              // Reduce handling significantly for 1s
+              currentCar.handling *= 0.3;
+              setTimeout(() => { if (currentCar) currentCar.handling = prevHandling; }, 1000);
+              spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 5, ['#000']);
+              obs.markedForDeletion = true;
+           } else if (nitroTimer > 0 && (obs.type !== 'bache' && obs.type !== 'oil' && obs.type !== 'tree' && obs.type !== 'building')) {
               // Destroy obstacle while in nitro
               obs.markedForDeletion = true;
               currentScore += 1000;
               spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 20, explosionColors);
               playSound('score');
            } else {
+              if (obs.type === 'tree' || obs.type === 'building') return; // Side decos don't collide normally like this
               // Hit obstacle
               shakeTime = 0.3;
-              shakeMag = obs.type === 'bache' ? 5 : 15;
+              shakeMag = (obs.type === 'bache' || obs.type === 'cone') ? 5 : 15;
               damageTimer = 1.0; // 1s invuln
-              currentHp -= (obs.type === 'bache' ? 1 : 2);
+              currentHp -= (obs.type === 'bache' || obs.type === 'cone' ? 1 : 2);
               
               if (obs.type !== 'bache') obs.markedForDeletion = true;
               
@@ -597,6 +695,10 @@ export function MeetingRace() {
         else if (obs.type === 'taco') drawTaco(ctx, obs);
         else if (obs.type === 'bache') drawBache(ctx, obs);
         else if (obs.type === 'enemy') drawEnemy(ctx, obs);
+        else if (obs.type === 'oil') drawOil(ctx, obs);
+        else if (obs.type === 'cone') drawCone(ctx, obs);
+        else if (obs.type === 'tree') drawTree(ctx, obs);
+        else if (obs.type === 'building') drawBuilding(ctx, obs);
         else if (obs.type === 'shield' || obs.type === 'nitro') drawPowerup(ctx, obs);
       }
 
@@ -625,8 +727,9 @@ export function MeetingRace() {
       }
 
       // Darkness overlay
-      if (isNight) {
-        ctx.fillStyle = 'rgba(0,0,10,0.5)';
+      const nightAlpha = isNight ? Math.abs(Math.sin(skyAngle)) * 0.5 : 0;
+      if (nightAlpha > 0) {
+        ctx.fillStyle = `rgba(0, 0, 20, ${nightAlpha})`;
         ctx.fillRect(0, 0, GAME_W, GAME_H);
         
         // Headlights glow
@@ -680,19 +783,57 @@ export function MeetingRace() {
 
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
-      <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50" />
-      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg">
-         <span className="flex items-center gap-2">
-            <span>{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
-            {hp > 0 && Array.from({length: hp}).map((_, i) => <Heart key={i} size={12} className="text-red-500 fill-red-500" />)}
-         </span>
-         <span className="flex items-center gap-1"><TerminalSquare size={14} /> {t('arc.game7')}</span>
+      <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50 transition-opacity opacity-20 hover:opacity-100" />
+      
+      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg shrink-0">
+         <div className="flex items-center gap-4">
+            <button 
+              onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
+              className={`flex items-center gap-1 uppercase text-[8px] font-bold border px-1.5 py-1 transition-all ${showMobileControls ? 'bg-orange-500/10 border-orange-500 text-orange-400' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
+            >
+              <Zap className="w-3 h-3" /> {showMobileControls ? 'CONTROLS ON' : 'OFF'}
+            </button>
+            <span className="flex items-center gap-2">
+               <span>{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
+               {hp > 0 && Array.from({length: hp}).map((_, i) => <Heart key={i} size={12} className="text-red-500 fill-red-500" />)}
+            </span>
+         </div>
+         <span className="flex items-center gap-1 opacity-50"><TerminalSquare size={14} /> {t('arc.game7')}</span>
       </div>
 
       <div className="relative border-4 border-zinc-800 rounded-b-xl shadow-2xl bg-[#27272a] overflow-hidden w-full max-w-lg flex-grow h-full max-h-[800px] touch-none">
         
         {/* CRT Scanline Overlay */}
         <div className="absolute inset-0 z-10 pointer-events-none opacity-10 bg-[linear-gradient(transparent_50%,rgba(0,0,0,1)_50%)] bg-[length:100%_4px]" />
+
+        {isPlaying && showMobileControls && (
+          <>
+            <div className="absolute bottom-10 left-4 z-20 pointer-events-none">
+              <button 
+                onMouseDown={() => { keys.ArrowLeft = true; playSound('click'); }}
+                onMouseUp={() => keys.ArrowLeft = false}
+                onMouseLeave={() => keys.ArrowLeft = false}
+                onTouchStart={(e) => { e.preventDefault(); keys.ArrowLeft = true; playSound('click'); }}
+                onTouchEnd={(e) => { e.preventDefault(); keys.ArrowLeft = false; }}
+                className="w-24 h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+              >
+                <div className="w-0 h-0 border-t-[15px] border-t-transparent border-r-[25px] border-r-white/30 border-b-[15px] border-b-transparent mr-2" />
+              </button>
+            </div>
+            <div className="absolute bottom-10 right-4 z-20 pointer-events-none">
+              <button 
+                onMouseDown={() => { keys.ArrowRight = true; playSound('click'); }}
+                onMouseUp={() => keys.ArrowRight = false}
+                onMouseLeave={() => keys.ArrowRight = false}
+                onTouchStart={(e) => { e.preventDefault(); keys.ArrowRight = true; playSound('click'); }}
+                onTouchEnd={(e) => { e.preventDefault(); keys.ArrowRight = false; }}
+                className="w-24 h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+              >
+                <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white/30 border-b-[15px] border-b-transparent ml-2" />
+              </button>
+            </div>
+          </>
+        )}
 
         {!isPlaying && !gameOver ? (
           <div className="absolute inset-0 flex flex-col bg-[#111]/90 backdrop-blur-md p-4 z-20 overflow-y-auto">
@@ -719,8 +860,22 @@ export function MeetingRace() {
                     <Car size={14} style={{ color: car.color }} />
                   </div>
                   <p className="text-[8px] text-zinc-500 text-left leading-tight h-6 overflow-hidden">{car.desc}</p>
-                  <div className="flex gap-1 mt-2 w-full">
-                    {Array.from({length: car.maxHp}).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-red-500 rounded-full" />)}
+                  <div className="flex flex-col w-full gap-1 mt-2">
+                    <div className="flex items-center gap-1">
+                       <span className="text-[6px] text-zinc-600 uppercase w-10">SPEED</span>
+                       <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-orange-400" style={{ width: `${(car.speed / 600) * 100}%` }} />
+                       </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                       <span className="text-[6px] text-zinc-600 uppercase w-10">HANDLING</span>
+                       <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-400" style={{ width: `${(car.handling / 20) * 100}%` }} />
+                       </div>
+                    </div>
+                    <div className="flex gap-1 mt-1 justify-end">
+                      {Array.from({length: car.maxHp}).map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-red-500 rounded-full" />)}
+                    </div>
                   </div>
                 </button>
               ))}
