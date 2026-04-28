@@ -596,6 +596,8 @@ const translations: Record<Language, Record<string, string>> = {
     'game.objective': 'Objetivo: ',
     'game.retry': 'REINTENTAR',
     'game.insert': 'INSERT COIN',
+    'game.common.controls_on': 'CONTROLES ACTIVADOS',
+    'game.common.controls_off': 'CONTROLES DESACTIVADOS',
 
     // Game: Pong
     'game.pong.thesis': 'Tesis (Tú)',
@@ -691,6 +693,8 @@ const translations: Record<Language, Record<string, string>> = {
     'game.fest.discount5': 'FEST2026 (5% Descuento)',
     'game.fest.discount10': 'BEATS26 (10% Descuento)',
     'game.fest.discountVIP': 'VIPFEST (Acces/Bebida)',
+    'game.fest.coupon.title': '¡CUPÓN GANADO!',
+    'game.fest.coupon.desc': '¡Felicidades! Has ganado un cupón por tu gran desempeño:',
 
     // Game: Sell Out
     'game.sell.title': 'The Art of Selling Out',
@@ -1337,6 +1341,8 @@ const translations: Record<Language, Record<string, string>> = {
     'game.objective': 'Objective: ',
     'game.retry': 'RETRY',
     'game.insert': 'INSERT COIN',
+    'game.common.controls_on': 'CONTROLS ON',
+    'game.common.controls_off': 'CONTROLS OFF',
 
     // Game: Pong
     'game.pong.thesis': 'Thesis (You)',
@@ -1432,6 +1438,8 @@ const translations: Record<Language, Record<string, string>> = {
     'game.fest.discount5': 'FEST2026 (5% Discount)',
     'game.fest.discount10': 'BEATS26 (10% Discount)',
     'game.fest.discountVIP': 'VIPFEST (Access/Drink)',
+    'game.fest.coupon.title': 'COUPON EARNED!',
+    'game.fest.coupon.desc': 'Congratulations! You earned a coupon for your great performance:',
 
     // Game: Sell Out
     'game.sell.title': 'The Art of Selling Out',
@@ -2089,6 +2097,8 @@ const translations: Record<Language, Record<string, string>> = {
     'game.objective': 'Objectif : ',
     'game.retry': 'RÉESSAYER',
     'game.insert': 'INSÉRER PIÈCE',
+    'game.common.controls_on': 'CONTRÔLES ACTIVÉS',
+    'game.common.controls_off': 'CONTRÔLES DÉSACTIVÉS',
 
     // Game: Pong
     'game.pong.thesis': 'Thèse (Vous)',
@@ -2184,6 +2194,8 @@ const translations: Record<Language, Record<string, string>> = {
     'game.fest.discount5': 'FEST2026 (Réduction 5%)',
     'game.fest.discount10': 'BEATS26 (Réduction 10%)',
     'game.fest.discountVIP': 'VIPFEST (Accès/Boisson)',
+    'game.fest.coupon.title': 'COUPON GAGNÉ !',
+    'game.fest.coupon.desc': 'Félicitations ! Vous avez gagné un coupon pour votre excellente performance :',
 
     // Game: Sell Out
     'game.sell.title': 'The Art of Selling Out',

@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle } from 'lucide-react';
+import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 
 interface Character {
   id: string;
@@ -83,7 +83,10 @@ export function FestJump() {
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_chars') || '["default"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('fest_selected_char') || 'default');
   const [highScore, setHighScore] = useState(() => Number(localStorage.getItem('fest_highscore') || 0));
+  const [coupon, setCoupon] = useState<{code: string, discount: string} | null>(null);
+  const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
   const [unlockedCodes, setUnlockedCodes] = useState<string[]>([]);
+  const keysRef = useRef({ left: false, right: false });
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   const selectedChar = useMemo(() => CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0], [selectedCharId]);
@@ -93,7 +96,8 @@ export function FestJump() {
     localStorage.setItem('fest_chars', JSON.stringify(unlockedChars));
     localStorage.setItem('fest_selected_char', selectedCharId);
     localStorage.setItem('fest_highscore', highScore.toString());
-  }, [festCoins, unlockedChars, selectedCharId, highScore]);
+    localStorage.setItem('fest_mobile_controls', showMobileControls.toString());
+  }, [festCoins, unlockedChars, selectedCharId, highScore, showMobileControls]);
 
   const showMsg = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
     setMessage({ text, type });
@@ -171,7 +175,7 @@ export function FestJump() {
     let maxScore = 0;
     let shake = 0;
 
-    const keys = { left: false, right: false };
+    const keys = keysRef.current; // Use the ref
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -356,6 +360,10 @@ export function FestJump() {
         if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
         if (maxScore > 2000) setUnlockedCodes(prev => prev.includes('BEATS10') ? prev : [...prev, 'BEATS10']);
         if (maxScore > 5000) setUnlockedCodes(prev => prev.includes('VIPPRO') ? prev : [...prev, 'VIPPRO']);
+        if (maxScore > 1000 && !coupon) {
+            setCoupon({code: 'JUMP2026', discount: '20% OFF'});
+            playSound('win');
+        }
 
         platforms.forEach((p, idx) => {
           p.y += diff;
@@ -761,6 +769,15 @@ export function FestJump() {
             <User className="w-3 h-3" />
             {t(selectedChar.nameKey)}
           </p>
+          <div className="flex items-center gap-2 mt-1">
+            <button 
+                onClick={(e) => { e.stopPropagation(); playSound('hover'); setShowMobileControls(prev => !prev); }} 
+                className={`flex items-center gap-1 uppercase text-[7px] font-bold border px-1.5 py-0.5 transition-all ${showMobileControls ? 'bg-[#6EE7B7]/10 border-[#6EE7B7] text-[#6EE7B7]' : 'text-zinc-500 border-zinc-800 hover:border-zinc-500'}`}
+              >
+                <Settings className="w-2 h-2" /> {showMobileControls ? 'ON' : 'OFF'}
+              </button>
+          </div>
+        </div>
           <div className="flex items-baseline gap-1">
             <p className="text-4xl font-black italic tracking-tighter">{score}</p>
             <span className="text-[10px] text-zinc-500 font-mono">/ {highScore} HI</span>
@@ -884,6 +901,17 @@ export function FestJump() {
           )}
         </AnimatePresence>
 
+        {isPlaying && coupon && (
+          <div className="absolute top-20 left-0 right-0 z-50 flex justify-center p-4">
+             <div className="bg-brand-accent p-4 rounded-lg shadow-xl text-center">
+                 <h2 className="text-white text-lg font-bold">{t('game.fest.coupon.title')}</h2>
+                 <p className="text-white text-xs">{t('game.fest.coupon.desc')}</p>
+                 <div className="mt-2 bg-white/20 p-2 font-mono text-2xl font-black text-white">{coupon.code}</div>
+                 <p className="mt-1 text-white text-sm font-bold">{coupon.discount}</p>
+                 <button onClick={() => setCoupon(null)} className="mt-4 bg-white text-brand-accent px-4 py-1 text-xs rounded-full font-bold">X</button>
+             </div>
+          </div>
+        )}
         <canvas 
           ref={canvasRef} 
           width={400} 
@@ -908,6 +936,31 @@ export function FestJump() {
             )}
           </div>
         )}
+
+        {isPlaying && showMobileControls && (
+          <div className="absolute inset-x-0 bottom-8 z-20 flex justify-between px-6 pointer-events-none">
+            <button 
+              onMouseDown={() => { keysRef.current.left = true; playSound('click'); }}
+              onMouseUp={() => keysRef.current.left = false}
+              onMouseLeave={() => keysRef.current.left = false}
+              onTouchStart={(e) => { e.preventDefault(); keysRef.current.left = true; playSound('click'); }}
+              onTouchEnd={(e) => { e.preventDefault(); keysRef.current.left = false; }}
+              className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+            >
+              <ChevronLeft className="w-10 h-10 text-white" />
+            </button>
+            <button 
+              onMouseDown={() => { keysRef.current.right = true; playSound('click'); }}
+              onMouseUp={() => keysRef.current.right = false}
+              onMouseLeave={() => keysRef.current.right = false}
+              onTouchStart={(e) => { e.preventDefault(); keysRef.current.right = true; playSound('click'); }}
+              onTouchEnd={(e) => { e.preventDefault(); keysRef.current.right = false; }}
+              className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+            >
+              <ChevronRight className="w-10 h-10 text-white" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-8 w-[400px] max-w-full px-4 text-[8px] text-zinc-500 uppercase tracking-widest font-mono">
@@ -924,7 +977,6 @@ export function FestJump() {
            <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> Críticos de Arte</div>
            <p className="mt-4 leading-relaxed opacity-60 italic">Escala la espiral infinita del éxito y derrota el conformismo.</p>
         </div>
-      </div>
       </div>
     </div>
   );

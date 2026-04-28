@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAchievements } from "../../context/AchievementsContext";
-import { Play, RefreshCw, Zap, Shield, Star } from "lucide-react";
+import { Play, RefreshCw, Zap, Shield, Star, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Crosshair, Settings } from "lucide-react";
 import { useAudio } from "../../context/AudioContext";
 
 type GameState = "start" | "playing" | "gameover" | "win" | "takeoff" | "asteroids" | "asteroids_win";
@@ -35,6 +35,7 @@ export function CreativeInvaders() {
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('invaders_chars') || '["classic"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
   const [storeTab, setStoreTab] = useState<"chars" | "upgrades">("chars");
+  const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('invaders_mobile_controls') === 'true');
   const [upgrades, setUpgrades] = useState(() => {
     const saved = localStorage.getItem('invaders_upgrades');
     return saved ? JSON.parse(saved) : { shield: 0, power: 0, speed: 0, rear_turret: 0 };
@@ -48,7 +49,8 @@ export function CreativeInvaders() {
     localStorage.setItem('invaders_selected_char', selectedCharId);
     localStorage.setItem('invaders_upgrades', JSON.stringify(upgrades));
     localStorage.setItem('invaders_highscore', highScore.toString());
-  }, [festCoins, unlockedChars, selectedCharId, upgrades, highScore]);
+    localStorage.setItem('invaders_mobile_controls', showMobileControls.toString());
+  }, [festCoins, unlockedChars, selectedCharId, upgrades, highScore, showMobileControls]);
 
   const buyChar = (char: typeof CHARACTERS[0]) => {
     if (festCoins >= char.price) {
@@ -1343,6 +1345,22 @@ export function CreativeInvaders() {
                 <div className="text-brand-accent font-mono text-[10px] tracking-widest flex items-center gap-2 mt-2">
                    {t('game.invaders.highscore')} {highScore}
                 </div>
+                <div className="mt-2 text-brand-accent font-mono text-[10px] tracking-widest flex items-center gap-2 cursor-pointer hover:underline" onClick={() => setShowMobileControls(prev => !prev)}>
+                   <Settings className="w-3 h-3" /> {showMobileControls ? t('game.common.controls_on') : t('game.common.controls_off')}
+                </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMobileControls(prev => !prev);
+                      playSound('click');
+                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-mono uppercase tracking-widest transition-all ${showMobileControls ? 'bg-brand-accent/20 border-brand-accent text-brand-accent' : 'bg-white/5 border-white/10 text-white/40'}`}
+                  >
+                    <Settings className="w-3 h-3" />
+                    {showMobileControls ? t('game.common.controls_on') : t('game.common.controls_off')}
+                  </button>
+                </div>
                 <div className="flex gap-2 mt-4">
                   <button 
                     onClick={() => setStoreTab("chars")}
@@ -1518,6 +1536,72 @@ export function CreativeInvaders() {
             >
               <RefreshCw size={18} /> {t("game.invaders.next")}
             </button>
+          </div>
+        )}
+
+        {showMobileControls && (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") && (
+          <div className="absolute inset-0 pointer-events-none flex flex-col justify-end p-6 z-[60]">
+            <div className="flex justify-between items-end w-full">
+              {/* D-Pad */}
+              <div className="grid grid-cols-3 grid-rows-3 gap-2 pointer-events-auto">
+                <div />
+                <button 
+                  onMouseDown={() => { state.current.player.isMovingUp = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingUp = false}
+                  onMouseLeave={() => state.current.player.isMovingUp = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingUp = false; }}
+                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+                >
+                  <ChevronUp className="text-white w-8 h-8" />
+                </button>
+                <div />
+                
+                <button 
+                  onMouseDown={() => { state.current.player.isMovingLeft = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingLeft = false}
+                  onMouseLeave={() => state.current.player.isMovingLeft = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingLeft = false; }}
+                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+                >
+                  <ChevronLeft className="text-white w-8 h-8" />
+                </button>
+                <div className="w-16 h-16 bg-zinc-900 border-4 border-zinc-800" />
+                <button 
+                  onMouseDown={() => { state.current.player.isMovingRight = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingRight = false}
+                  onMouseLeave={() => state.current.player.isMovingRight = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingRight = false; }}
+                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+                >
+                  <ChevronRight className="text-white w-8 h-8" />
+                </button>
+
+                <div />
+                <button 
+                  onMouseDown={() => { state.current.player.isMovingDown = true; playSound('click'); }}
+                  onMouseUp={() => state.current.player.isMovingDown = false}
+                  onMouseLeave={() => state.current.player.isMovingDown = false}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
+                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingDown = false; }}
+                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+                >
+                  <ChevronDown className="text-white w-8 h-8" />
+                </button>
+                <div />
+              </div>
+
+              {/* Fire Button */}
+              <button 
+                onMouseDown={(e) => { e.preventDefault(); fire(); }}
+                onTouchStart={(e) => { e.preventDefault(); fire(); }}
+                className="w-24 h-24 bg-zinc-800 border-4 border-red-600 flex items-center justify-center active:bg-zinc-700 active:border-red-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] pointer-events-auto"
+              >
+                <Crosshair className="w-12 h-12 text-white" />
+              </button>
+            </div>
           </div>
         )}
       </div>
