@@ -314,6 +314,35 @@ export function Arcade() {
                   {/* Scanline overlay specifically for terminal text */}
                   <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] z-10" />
                   
+                  {powerState === 'inserting' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-20 bg-black/40 backdrop-blur-sm">
+                      <div className="relative">
+                        <motion.div 
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-16 h-16 border-4 border-brand-accent/20 border-t-brand-accent rounded-full"
+                        />
+                        <motion.div 
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="absolute inset-0 flex items-center justify-center text-brand-accent font-black text-xl"
+                        >
+                          {activeGame === 'pong' ? '🏓' : activeGame === 'tictactoe' ? '👁' : activeGame === 'uno' ? '📢' : activeGame === 'rpg' ? '🎨' : activeGame === 'sellout' ? '⭐' : activeGame === 'invaders' ? '🚀' : '🏎️'}
+                        </motion.div>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <motion.p 
+                          animate={{ opacity: [0.4, 1, 0.4] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                          className="text-brand-accent font-mono text-[10px] uppercase tracking-[0.4em] font-black"
+                        >
+                          {t('arc.boot.loading', 'INITIALIZING DATA...')}
+                        </motion.p>
+                        <p className="text-zinc-500 font-mono text-[8px] uppercase tracking-widest">{t('arc.boot.please_wait', 'PLEASE REMAIN SEATED')}</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="text-green-500 font-mono text-xs md:text-sm leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(34,197,94,0.8)] z-0">
                     {bootLog.map((line, i) => (
                       <motion.div 

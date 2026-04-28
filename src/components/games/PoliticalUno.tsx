@@ -610,7 +610,7 @@ export function PoliticalUno({ isPausedGlobal = false }: { isPausedGlobal?: bool
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
           >
             <div className="flex flex-col items-center gap-8 p-12 bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl max-w-lg w-full">
               <div className="text-center">
@@ -646,7 +646,7 @@ export function PoliticalUno({ isPausedGlobal = false }: { isPausedGlobal?: bool
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-3xl"
+            className="absolute inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-3xl"
           >
             <motion.div 
               initial={{ scale: 0.5, y: 100, rotate: -10 }}

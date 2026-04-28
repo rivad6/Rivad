@@ -77,7 +77,7 @@ export function Hero() {
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </div>
               <div className="flex items-center gap-2 font-mono text-[8px] md:text-[10px] uppercase tracking-[0.15em]">
-                <span className="text-white/90 font-bold">JUD DEL FARO BICENTENARIO MH CDMX</span>
+                <span className="text-white/90 font-bold">PAGADÍA BICENTENARIO</span>
               </div>
             </div>
           </motion.div>

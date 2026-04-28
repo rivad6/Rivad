@@ -16,6 +16,8 @@ const CHARACTERS = [
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
+type Difficulty = "easy" | "normal" | "hard";
+
 export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
@@ -26,6 +28,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
   const requestRef = useRef<number>();
 
   const [gameState, setGameState] = useState<GameState>("start");
+  const [difficulty, setDifficulty] = useState<Difficulty>(() => (localStorage.getItem('invaders_difficulty') as Difficulty) || 'normal');
 
   useEffect(() => {
     if (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") {
@@ -62,6 +65,10 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
   useEffect(() => {
     localStorage.setItem('invaders_mobile_controls', showMobileControls.toString());
   }, [showMobileControls]);
+
+  useEffect(() => {
+    localStorage.setItem('invaders_difficulty', difficulty);
+  }, [difficulty]);
 
   useEffect(() => {
     localStorage.setItem('fest_coins', festCoins.toString());
@@ -229,6 +236,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
       size: Math.random() * 2 + 1
     })),
     enemyDirection: 1,
+    difficultyMultiplier: 1.0,
     enemySpeedBase: 1.5,
     enemyMoveTimer: 0,
     time: 0,
@@ -274,12 +282,13 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
     }));
     
     // Create 5 large asteroids
+    const asteroidSpeedMulti = difficulty === 'easy' ? 0.6 : difficulty === 'hard' ? 1.5 : 1.0;
     for(let i = 0; i < 5; i++) {
         state.current.enemies.push({
             x: Math.random() * GAME_WIDTH,
             y: Math.random() * GAME_HEIGHT * 0.5,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
+            vx: (Math.random() - 0.5) * 4 * asteroidSpeedMulti,
+            vy: (Math.random() - 0.5) * 4 * asteroidSpeedMulti,
             width: 80,
             height: 80,
             type: "asteroid_l",
@@ -295,7 +304,12 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
     state.current.drops = [];
     state.current.isTransitioning = false;
     state.current.enemyDirection = 1;
-    state.current.enemySpeedBase = 1.0 + (level * 0.2) + (state.current.wave * 0.5);
+    
+    // Difficulty scaling
+    const diffMulti = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.3 : 1.0;
+    state.current.difficultyMultiplier = diffMulti;
+    
+    state.current.enemySpeedBase = (1.0 + (level * 0.2) + (state.current.wave * 0.5)) * diffMulti;
     state.current.player.x = GAME_WIDTH / 2;
     state.current.projectiles = [];
     state.current.bgType = "grid";
@@ -305,7 +319,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
 
     if (currentMapLevel === 4) {
       // Boss level
-      const bossHp = 100 + (level * 20);
+      const bossHp = (100 + (level * 20)) * state.current.difficultyMultiplier;
       state.current.enemies.push({
         x: GAME_WIDTH / 2 - 100,
         y: 50,
@@ -382,6 +396,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
       planets: [],
       enemyDirection: 1,
       enemySpeedBase: 1.5,
+      difficultyMultiplier: difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.3 : 1.0,
       enemyMoveTimer: 0,
       time: 0,
       score: 0,
@@ -392,13 +407,16 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
       bgType: "grid",
       shake: 0,
       playerFlash: 0,
-      lastHitEdgeTime: 0
+      lastHitEdgeTime: 0,
+      isTransitioning: false,
+      levelUpTimer: 0,
+      pendingCoins: 0
     };
 
     loadLevel(1);
     setScore(0);
     setGameState("playing");
-  }, [loadLevel, selectedChar, GAME_WIDTH, GAME_HEIGHT, upgrades]);
+  }, [loadLevel, selectedChar, GAME_WIDTH, GAME_HEIGHT, upgrades, difficulty]);
 
   const fire = useCallback(() => {
     const s = state.current;
@@ -408,7 +426,10 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
     const now = Date.now();
     // Use fireRateBase
     const baseFireDelay = 300 / selectedChar.fireRateBase;
-    const fireDelay = s.player.speedBoostTimer > 0 ? baseFireDelay * 0.33 : (s.player.power > 1 ? baseFireDelay * 0.5 : baseFireDelay);
+    const diffFireMulti = difficulty === 'easy' ? 1.3 : difficulty === 'hard' ? 0.8 : 1.0;
+    const fireDelay = s.player.speedBoostTimer > 0 
+      ? baseFireDelay * 0.33 
+      : (s.player.power > 1 ? baseFireDelay * 0.5 : baseFireDelay) / diffFireMulti;
 
     if (now - s.lastFireTime > fireDelay) {
       playSound('fire');
@@ -541,7 +562,8 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
     if (s.levelUpTimer > 0) s.levelUpTimer -= normalDt;
 
     if (gameState === "takeoff") {
-        s.player.y -= 10 * normalDt;
+        const takeoffSpeed = 10 * s.difficultyMultiplier * normalDt;
+        s.player.y -= takeoffSpeed;
         s.player.angle = Math.sin(s.time) * 0.1;
 
         for (const star of s.stars) {
@@ -666,7 +688,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
       }
     }
 
-    if (gameState === "playing" && Math.random() < (0.02 + (s.level * 0.01)) * normalDt) {
+    if (gameState === "playing" && Math.random() < (0.02 + (s.level * 0.01)) * s.difficultyMultiplier * normalDt) {
       const shooters = s.enemies.filter(e => e.type !== 'block');
       if (shooters.length > 0) {
         const shooter = shooters[Math.floor(Math.random() * shooters.length)];
@@ -681,12 +703,13 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
           bulletColor = "#fbbf24";
         }
 
+        const projSpeed = (isFast ? 8 + s.level : 5 + s.level) * s.difficultyMultiplier;
         s.projectiles.push({
            x: shooter.x + shooter.width/2,
            y: shooter.y + shooter.height,
            vx: isBoss && variant === 2 ? (s.player.x - shooter.x) * 0.01 : (isBoss ? (Math.random() - 0.5) * 4 : 0),
-           vy: isFast ? 8 + s.level : 5 + s.level,
-           speed: isFast ? 8 + s.level : 5 + s.level,
+           vy: projSpeed,
+           speed: projSpeed,
            color: bulletColor,
            isEnemy: true
         });
@@ -698,8 +721,8 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
                   x: shooter.x + shooter.width/2,
                   y: shooter.y + shooter.height,
                   vx: d * 3,
-                  vy: 6 + s.level,
-                  speed: 6 + s.level,
+                  vy: projSpeed * 1.2,
+                  speed: projSpeed * 1.2,
                   color: bulletColor,
                   isEnemy: true
                });
@@ -710,8 +733,8 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
                   x: shooter.x + shooter.width/2 + (Math.random() - 0.5) * 20,
                   y: shooter.y + shooter.height,
                   vx: 0,
-                  vy: 10 + s.level,
-                  speed: 10 + s.level,
+                  vy: (10 + s.level) * s.difficultyMultiplier,
+                  speed: (10 + s.level) * s.difficultyMultiplier,
                   color: bulletColor,
                   isEnemy: true
                });
@@ -746,7 +769,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
         const moveX = s.enemyDirection * currentSpeed;
 
         if (hitEdge) {
-          if (enemy.type !== "block") enemy.y += 20 * normalDt; 
+          if (enemy.type !== "block") enemy.y += 12 * normalDt; 
           if (enemy.y >= s.player.y - enemy.height) {
             triggerGameOver();
           }
@@ -1410,7 +1433,30 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
                 <div className="mt-2 text-brand-accent font-mono text-[10px] tracking-widest flex items-center gap-2 cursor-pointer hover:underline" onClick={() => setShowMobileControls(prev => !prev)}>
                    <Settings className="w-3 h-3" /> {showMobileControls ? t('game.common.controls_on') : t('game.common.controls_off')}
                 </div>
-                <div className="mt-4 flex items-center gap-2">
+                
+                <div className="mt-6 flex flex-col gap-2 w-full max-w-[200px]">
+                  <p className="text-[8px] font-mono text-white/40 uppercase tracking-[0.2em]">{t('game.invaders.difficulty', 'DIFFICULTY')}</p>
+                  <div className="flex gap-1 p-1 bg-white/5 rounded-lg border border-white/10">
+                    {(['easy', 'normal', 'hard'] as const).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => {
+                          setDifficulty(d);
+                          playSound('hover');
+                        }}
+                        className={`flex-1 py-1.5 px-2 rounded-md font-mono text-[9px] uppercase tracking-tighter transition-all ${
+                          difficulty === d 
+                            ? 'bg-brand-accent text-white shadow-[0_0_15px_rgba(242,74,41,0.3)]' 
+                            : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                        }`}
+                      >
+                        {t(`game.difficulty.${d}`, d)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center gap-2">
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();

@@ -130,18 +130,22 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean }> = ({ isPausedGl
   const handleMainClick = (e: React.MouseEvent) => {
     if (gameState !== 'playing' || isPausedGlobal) return;
     
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
     playSound('hover');
     setHype(prev => prev + totalHypePerClick);
     setAudience(prev => prev + 1);
     setRelevance(prev => Math.min(100, prev + (viralTimer > 0 ? 2 : 1.2)));
 
     const id = Date.now() + Math.random();
-    setClicks(prev => [...prev, { id, x: e.clientX, y: e.clientY, val: totalHypePerClick }]);
+    setClicks(prev => [...prev, { id, x, y, val: totalHypePerClick }]);
     
     // Fan particle
     if (Math.random() > 0.5) {
        const fanId = Math.random();
-       setFans(prev => [...prev, { id: fanId, x: e.clientX, y: e.clientY }]);
+       setFans(prev => [...prev, { id: fanId, x, y }]);
        setTimeout(() => setFans(prev => prev.filter(f => f.id !== fanId)), 1000);
     }
 
@@ -288,9 +292,9 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean }> = ({ isPausedGl
                 <motion.div
                   key={fan.id}
                   initial={{ x: fan.x - 20, y: fan.y - 20, opacity: 1, scale: 0.5 }}
-                  animate={{ x: 300, y: 150, opacity: 0, scale: 1 }} // Move towards hype stat (approx)
+                  animate={{ x: 300, y: -200, opacity: 0, scale: 1 }} // Move towards top stats
                   exit={{ opacity: 0 }}
-                  className="fixed pointer-events-none text-blue-400 z-[60]"
+                  className="absolute pointer-events-none text-blue-400 z-[60]"
                 >
                   <Users className="w-6 h-6" />
                 </motion.div>
@@ -305,8 +309,8 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean }> = ({ isPausedGl
                   initial={{ opacity: 1, scale: 0.5, y: -20, rotate: (Math.random() - 0.5) * 30 }}
                   animate={{ opacity: 0, scale: 2.5, y: -200, rotate: (Math.random() - 0.5) * 60 }}
                   exit={{ opacity: 0 }}
-                  style={{ left: click.x - 40, top: click.y - 40 }}
-                  className="fixed pointer-events-none text-brand-accent font-black text-3xl z-50 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] italic"
+                  style={{ left: click.x, top: click.y }}
+                  className="absolute pointer-events-none text-brand-accent font-black text-3xl z-50 drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] italic"
                 >
                   +{Math.floor(click.val).toLocaleString()}
                 </motion.div>

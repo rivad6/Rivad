@@ -351,7 +351,7 @@ export function DebatePong({ isPausedGlobal = false }: { isPausedGlobal?: boolea
   }, [isPlaying]);
 
   return (
-    <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]"}>
+    <div className={isPlaying ? "absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]"}>
       <div className={isPlaying ? "w-full max-w-[600px] flex flex-col" : "flex flex-col items-center w-full"}>
       <div className="flex justify-between w-full max-w-[420px] mx-auto px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-xl border border-white/5 shadow-xl shrink-0 pt-4">
         <div className="flex flex-col items-center">
