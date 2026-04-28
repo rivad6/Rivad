@@ -18,13 +18,23 @@ import { FullscreenButton } from '../ui/FullscreenButton';
 export function CreativeInvaders() {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>();
 
   const [gameState, setGameState] = useState<GameState>("start");
+
+  useEffect(() => {
+    if (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") {
+      playMusic('invaders');
+    } else {
+      playMusic('none');
+    }
+    return () => playMusic('none');
+  }, [gameState, playMusic]);
+
   const [score, setScore] = useState(0);
   const [hudShield, setHudShield] = useState(0);
   const [hudPower, setHudPower] = useState(1);
@@ -1244,7 +1254,7 @@ export function CreativeInvaders() {
           ref={canvasRef}
           width={GAME_WIDTH}
           height={GAME_HEIGHT}
-          className="w-full h-full object-contain cursor-none mix-blend-screen touch-none"
+          className="w-full h-full object-contain cursor-none touch-none"
           onMouseMove={(e) => {
             if ((gameState === "playing" || gameState === "asteroids") && canvasRef.current) {
               const canvas = canvasRef.current;

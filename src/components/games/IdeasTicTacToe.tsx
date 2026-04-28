@@ -8,12 +8,39 @@ import { FullscreenButton } from '../ui/FullscreenButton';
 
 type Player = 'X' | 'O' | null;
 
+const calculateWinner = (squares: Player[]) => {
+  const lines = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+    [0, 3, 6], [1, 4, 7], [2, 5, 8], // cols
+    [0, 4, 8], [2, 4, 6] // diagonals
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+};
+
 export function IdeasTicTacToe() {
   const { t, language } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [log, setLog] = useState<string>(t('game.ttt.log.start'));
+
+  const winner = calculateWinner(board);
+  const isDraw = !winner && board.every((square) => square !== null);
+
+  useEffect(() => {
+    if (!winner && !isDraw) {
+      playMusic('rpg'); 
+    } else {
+      playMusic('none');
+    }
+    return () => playMusic('none');
+  }, [winner, isDraw, playMusic]);
 
   const philosophicalPhrasesX = language === 'en'
     ? [ "Reason illuminates the board.", "A structured argument.", "Status quo questioned.", "Dialectics advancing." ]
@@ -26,24 +53,6 @@ export function IdeasTicTacToe() {
     : language === 'fr'
     ? [ "Le dogme s'accroche à la case.", "Appel à la tradition.", "La sophisme d'autorité domine.", "La norme établie s'impose." ]
     : [ "El dogma se aferra a la casilla.", "Apelación a la tradición.", "La falacia de autoridad domina.", "Se impone la norma establecida." ];
-
-  const calculateWinner = (squares: Player[]) => {
-    const lines = [
-      [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-      [0, 3, 6], [1, 4, 7], [2, 5, 8], // cols
-      [0, 4, 8], [2, 4, 6] // diagonals
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-        return board[a];
-      }
-    }
-    return null;
-  };
-
-  const winner = calculateWinner(board);
-  const isDraw = !winner && board.every((square) => square !== null);
 
   useEffect(() => {
     if (winner === 'X') playSound('win');

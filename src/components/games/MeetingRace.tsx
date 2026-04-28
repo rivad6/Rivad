@@ -32,10 +32,20 @@ interface Particle {
 
 export function MeetingRace() {
   const { t } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (isPlaying) {
+      playMusic('race');
+    } else {
+      playMusic('none');
+    }
+    return () => playMusic('none');
+  }, [isPlaying, playMusic]);
+
   const [score, setScore] = useState(0);
   const [hp, setHp] = useState(3);
   const [gameOver, setGameOver] = useState(false);

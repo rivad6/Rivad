@@ -4,7 +4,7 @@ type SoundType = 'click' | 'hover' | 'win' | 'lose' | 'hit' | 'score' | 'purchas
 
 interface AudioContextType {
   playSound: (type: SoundType) => void;
-  playMusic: (track: 'arcade' | 'jump' | 'none') => void;
+  playMusic: (track: 'arcade' | 'jump' | 'none' | 'pong' | 'rpg' | 'uno' | 'invaders' | 'sellout' | 'race') => void;
   isMuted: boolean;
   toggleMute: () => void;
 }
@@ -161,7 +161,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [isMuted]);
 
-  const playMusic = useCallback((track: 'arcade' | 'jump' | 'none') => {
+  const playMusic = useCallback((track: 'arcade' | 'jump' | 'none' | 'pong' | 'rpg' | 'uno' | 'invaders' | 'sellout' | 'race') => {
     if (musicIntervalRef.current) {
       window.clearInterval(musicIntervalRef.current);
       musicIntervalRef.current = null;
@@ -219,11 +219,73 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
              osc.start(now);
              osc.stop(now + 0.05);
          }
+      } else if (track === 'pong') {
+         // Slow ping pong ping pong
+         const notes = [440, 330];
+         osc.type = 'triangle';
+         osc.frequency.setValueAtTime(notes[step % notes.length], now);
+         gainNode.gain.setValueAtTime(0.08, now);
+         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+         osc.start(now);
+         osc.stop(now + 0.4);
+      } else if (track === 'rpg') {
+         // Medieval simple 3-note loop
+         const notes = [261.63, 329.63, 392.00]; // C E G
+         osc.type = 'sine';
+         osc.frequency.setValueAtTime(notes[step % notes.length], now);
+         gainNode.gain.setValueAtTime(0.05, now);
+         gainNode.gain.linearRampToValueAtTime(0.01, now + 0.6);
+         osc.start(now);
+         osc.stop(now + 0.6);
+      } else if (track === 'uno') {
+         // Tense repeating notes
+         const notes = [130.81, 138.59, 146.83, 138.59]; // C C# D C#
+         osc.type = 'sawtooth';
+         osc.frequency.setValueAtTime(notes[step % notes.length], now);
+         gainNode.gain.setValueAtTime(0.03, now);
+         gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+         osc.start(now);
+         osc.stop(now + 0.2);
+      } else if (track === 'invaders') {
+         // Fast descending bass
+         const notes = [110, 103.83, 98.00, 92.50]; // A Ab G Gb 
+         osc.type = 'square';
+         osc.frequency.setValueAtTime(notes[step % notes.length], now);
+         gainNode.gain.setValueAtTime(0.04, now);
+         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+         osc.start(now);
+         osc.stop(now + 0.15);
+      } else if (track === 'sellout') {
+         // Fast upbeat alternating pitch
+         const notes = [880, 440, 660, 440];
+         osc.type = 'square';
+         osc.frequency.setValueAtTime(notes[step % notes.length], now);
+         gainNode.gain.setValueAtTime(0.015, now);
+         gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+         osc.start(now);
+         osc.stop(now + 0.1);
+      } else if (track === 'race') {
+         // Driving fast bass
+         const notes = [55, 55, 65.41, 65.41, 73.42, 73.42, 55, 55]; // A A C C D D A A
+         osc.type = 'sawtooth';
+         osc.frequency.setValueAtTime(notes[step % notes.length], now);
+         gainNode.gain.setValueAtTime(0.05, now);
+         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+         osc.start(now);
+         osc.stop(now + 0.1);
       }
       step++;
     };
 
-    const intervalRate = track === 'arcade' ? 180 : 150; 
+    let intervalRate = 150;
+    if (track === 'arcade') intervalRate = 180;
+    if (track === 'pong') intervalRate = 500;
+    if (track === 'rpg') intervalRate = 600;
+    if (track === 'uno') intervalRate = 200;
+    if (track === 'invaders') intervalRate = 200;
+    if (track === 'sellout') intervalRate = 120;
+    if (track === 'race') intervalRate = 120;
+    
     musicIntervalRef.current = window.setInterval(playBeat, intervalRate);
 
   }, [isMuted]);

@@ -140,10 +140,24 @@ const storyMap: Record<string, StoryNode> = {
 
 export function ArtRPG() {
   const { t } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
   const [currentNode, setCurrentNode] = useState<NodeId>('start');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  
+  // Stats system to make decisions feel coherent and impactful
+  const [stats, setStats] = useState({ budget: 50, sanity: 50, reputation: 50 });
+  const [lastStatDelta, setLastStatDelta] = useState<{b: number, s: number, r: number} | null>(null);
+
+  useEffect(() => {
+    const isPlaying = currentNode !== 'start' && !STORY_GRAPH[currentNode]?.isEnding;
+    if (isPlaying) {
+      playMusic('rpg');
+    } else {
+      playMusic('none');
+    }
+    return () => playMusic('none');
+  }, [currentNode, playMusic]);
 
   const node = storyMap[currentNode];
 
@@ -155,11 +169,42 @@ export function ArtRPG() {
     setSelectedIndex(0);
   }, [currentNode, node.isEnding, playSound, unlockAchievement]);
 
-  const handleChoice = (next: NodeId) => {
+  const handleChoice = (next: NodeId, choiceIndex?: number) => {
     if (next === 'start') {
       playSound('hover');
+      setStats({ budget: 50, sanity: 50, reputation: 50 });
+      setLastStatDelta(null);
     } else {
       playSound('click');
+      
+      // Calculate coherent stat impacts based on choice index (0 = usually artistic/crazy, 1 = practical/destructive)
+      if (choiceIndex !== undefined) {
+        let bDelta = 0;
+        let sDelta = 0;
+        let rDelta = 0;
+        
+        if (choiceIndex === 0) {
+          bDelta = Math.floor(Math.random() * -10) - 5; // Artistic choices cost money
+          sDelta = Math.floor(Math.random() * -15) - 5; // and sanity
+          rDelta = Math.floor(Math.random() * 20) + 10; // but gain reputation
+        } else if (choiceIndex === 1) {
+          bDelta = Math.floor(Math.random() * 15) + 5; // Practical/Destructive might save money or get attention
+          sDelta = Math.floor(Math.random() * -20) - 10; // but lose more sanity
+          rDelta = Math.floor(Math.random() * -15) - 5; // and lose reputation
+        } else {
+          // If there are more than 2 choices (e.g. at the beginning)
+          bDelta = Math.floor(Math.random() * 20) - 10;
+          sDelta = Math.floor(Math.random() * 20) - 10;
+          rDelta = Math.floor(Math.random() * 20) - 10;
+        }
+        
+        setLastStatDelta({ b: bDelta, s: sDelta, r: rDelta });
+        setStats(prev => ({
+          budget: Math.min(100, Math.max(0, prev.budget + bDelta)),
+          sanity: Math.min(100, Math.max(0, prev.sanity + sDelta)),
+          reputation: Math.min(100, Math.max(0, prev.reputation + rDelta))
+        }));
+      }
     }
     setCurrentNode(next);
   };
@@ -181,7 +226,7 @@ export function ArtRPG() {
         playSound('hover');
       } else if (e.key === 'Enter' || e.key === ' ') {
         if (node.choices[selectedIndex]) {
-          handleChoice(node.choices[selectedIndex].next);
+          handleChoice(node.choices[selectedIndex].next, selectedIndex);
         }
       }
     };
@@ -203,10 +248,10 @@ export function ArtRPG() {
 
   if (currentNode === 'start') {
     return (
-      <div ref={containerRef} className="w-full h-full max-w-2xl mx-auto min-h-[400px] flex flex-col justify-center items-center text-center p-8 bg-[#0a0812] border-2 border-[#3a2d59] relative shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)]">
+      <div ref={containerRef} className="w-full h-full max-w-2xl mx-auto min-h-[400px] flex flex-col justify-center items-center text-center p-8 bg-[#0a0812] border-2 border-[#3a2d59] relative shadow-[inset_0_0_80px_rgba(0,0,0,0.8)] shadow-[8px_8px_0_0_rgba(58,45,89,0.4)] [&.is-fullscreen]:shadow-none [&.is-fullscreen]:border-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         {/* Decorative Grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(138,99,210,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,210,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(138,99,210,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,210,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none [&.is-fullscreen]:hidden" />
         
         <div className="relative z-10 w-full mb-8 flex justify-between items-end border-b border-[#3a2d59] pb-2">
           <span className="text-[#8a63d2] font-mono text-[10px] tracking-widest uppercase">8-Bit Simulator v2.0</span>
@@ -228,21 +273,46 @@ export function ArtRPG() {
   }
 
   return (
-    <div ref={containerRef} className="w-full h-full max-w-3xl mx-auto min-h-[350px] flex flex-col justify-between p-4 sm:p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+    <div ref={containerRef} className="w-full h-full max-w-3xl mx-auto min-h-[450px] flex flex-col justify-between p-4 sm:p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.5)] [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       {/* Decorative Scanlines & Grain */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px]" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat [&.is-fullscreen]:hidden" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:100%_4px] [&.is-fullscreen]:hidden" />
       
       {/* Header Info */}
-      <div className="flex justify-between items-center border-b border-white/5 pb-4 mb-4 shrink-0">
-        <div className="flex items-center gap-4">
-           <div className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
-           <span className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500">{t('game.rpg.label.terminal')}</span>
+      <div className="flex flex-col gap-4 border-b border-white/5 pb-4 mb-4 shrink-0">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-4">
+             <div className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
+             <span className="text-[10px] uppercase font-black tracking-[0.3em] text-zinc-500">{t('game.rpg.label.terminal')}</span>
+          </div>
+          <div className="text-[9px] uppercase font-bold text-zinc-700 bg-white/5 px-3 py-1 rounded-full">
+            {t('game.rpg.label.status')}: {node.isEnding ? t('game.rpg.label.finished') : t('game.rpg.label.processing')}
+          </div>
         </div>
-        <div className="text-[9px] uppercase font-bold text-zinc-700 bg-white/5 px-3 py-1 rounded-full">
-          {t('game.rpg.label.status')}: {node.isEnding ? t('game.rpg.label.finished') : t('game.rpg.label.processing')}
-        </div>
+        {!node.isEnding && (
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Otoño Capitalista', value: stats.budget, color: 'bg-green-500', icon: '💰' },
+              { label: 'Cordura', value: stats.sanity, color: 'bg-blue-500', icon: '🧠' },
+              { label: 'Ego Curatorial', value: stats.reputation, color: 'bg-brand-accent', icon: '✨' }
+            ].map(stat => (
+              <div key={stat.label} className="bg-white/5 p-2 rounded-lg flex flex-col gap-1">
+                <div className="flex justify-between items-center text-[8px] md:text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                  <span>{stat.icon} {stat.label}</span>
+                  <span>{stat.value}%</span>
+                </div>
+                <div className="h-1 w-full bg-black rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={false} 
+                    animate={{ width: `${stat.value}%` }} 
+                    className={`h-full ${stat.color}`} 
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Prompt Area */}
@@ -308,7 +378,7 @@ export function ArtRPG() {
                   key={choice.textKey}
                   whileHover={{ x: 10, backgroundColor: 'rgba(138,99,210,0.1)' }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => handleChoice(choice.next)}
+                  onClick={() => handleChoice(choice.next, idx)}
                   className={`w-full px-5 py-4 border border-white/5 bg-zinc-950/40 text-[11px] md:text-sm transition-all text-left flex gap-4 items-center rounded-2xl group ${idx === selectedIndex ? 'text-white border-brand-accent/50 bg-brand-accent/10 translate-x-3' : 'text-zinc-400 hover:text-white'}`}
                 >
                   <span className={`text-brand-accent font-black transition-opacity font-mono ${idx === selectedIndex ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>

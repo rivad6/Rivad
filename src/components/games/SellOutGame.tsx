@@ -38,8 +38,15 @@ const UPGRADES: Upgrade[] = [
 
 export const SellOutGame: React.FC = () => {
   const { t } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
+  
+  useEffect(() => {
+    // SellOutGame is an idle clicker, so it's always playing essentially.
+    playMusic('sellout');
+    return () => playMusic('none');
+  }, [playMusic]);
+
   const [hype, setHype] = useState(0);
   const [audience, setAudience] = useState(10);
   const [relevance, setRelevance] = useState(100);

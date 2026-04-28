@@ -8,13 +8,22 @@ import { FullscreenButton } from '../ui/FullscreenButton';
 
 export function DebatePong() {
   const { t, language } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [playerScore, setPlayerScore] = useState(0);
   const [cpuScore, setCpuScore] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {
+    if (isPlaying) {
+      playMusic('pong');
+    } else {
+      playMusic('none');
+    }
+    return () => playMusic('none');
+  }, [isPlaying, playMusic]);
 
   useEffect(() => {
     if (!isPlaying) return;

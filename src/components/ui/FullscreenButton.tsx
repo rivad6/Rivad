@@ -12,11 +12,15 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-      if (!document.fullscreenElement) {
-        setIsFakeFullscreen(false);
-        if (targetRef.current) {
-          targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none');
+      const isFs = !!document.fullscreenElement;
+      setIsFullscreen(isFs);
+      if (targetRef.current) {
+        if (isFs) {
+          targetRef.current.classList.add('is-fullscreen');
+        } else {
+          targetRef.current.classList.remove('is-fullscreen');
+          setIsFakeFullscreen(false);
+          targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none', '!shadow-none');
         }
       }
     };
@@ -28,12 +32,24 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
   const toggleFullscreen = async () => {
     if (!targetRef.current) return;
 
-    if (!isFakeFullscreen) {
+    if (!document.fullscreenElement && !isFakeFullscreen) {
+      if (document.documentElement.requestFullscreen) {
+        try {
+          await targetRef.current.requestFullscreen();
+          return; // Native success
+        } catch (err) {
+          console.warn("Native fullscreen failed, using CSS fallback", err);
+        }
+      }
       setIsFakeFullscreen(true);
-      targetRef.current.classList.add('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none');
+      targetRef.current.classList.add('is-fullscreen', '!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none', '!shadow-none');
     } else {
-      setIsFakeFullscreen(false);
-      targetRef.current.classList.remove('!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none');
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else {
+        setIsFakeFullscreen(false);
+        targetRef.current.classList.remove('is-fullscreen', '!fixed', '!inset-0', '!z-[9999]', '!w-[100dvw]', '!h-[100dvh]', '!max-w-none', '!rounded-none', '!border-none', '!shadow-none');
+      }
     }
   };
 

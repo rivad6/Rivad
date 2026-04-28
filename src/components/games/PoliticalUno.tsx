@@ -31,7 +31,7 @@ type Card = {
 
 export function PoliticalUno() {
   const { t } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [playerHand, setPlayerHand] = useState<Card[]>([]);
@@ -39,6 +39,16 @@ export function PoliticalUno() {
   const [topCard, setTopCard] = useState<Card | null>(null);
   const [turn, setTurn] = useState<'player' | 'cpu'>('player');
   const [message, setMessage] = useState(t('game.uno.msg.start'));
+  const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
+
+  useEffect(() => {
+    if (!winner) {
+      playMusic('uno');
+    } else {
+      playMusic('none');
+    }
+    return () => playMusic('none');
+  }, [winner, playMusic]);
 
   useEffect(() => {
     if (message) {
@@ -46,7 +56,7 @@ export function PoliticalUno() {
       return () => clearTimeout(timer);
     }
   }, [message]);
-  const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
+
   const [isChoosingColor, setIsChoosingColor] = useState(false);
   const [direction, setDirection] = useState(1); // 1 for clockwise, -1 for reverse
 
@@ -78,15 +88,15 @@ export function PoliticalUno() {
       const actions: SpecialAction[] = ['moche', 'fuero', 'alianza', 'fake_news', 'consulta', 'dedazo'];
       const action = actions[Math.floor(Math.random() * actions.length)];
       
-      // Dedazo is wild (black)
-      const finalColor = action === 'dedazo' ? 'black' : color;
+      // Dedazo and Fake News are wild (black)
+      const finalColor = (action === 'dedazo' || action === 'fake_news') ? 'black' : color;
       
       return {
         color: finalColor,
         value: action === 'moche' ? '+2' : action === 'fake_news' ? '+4' : '★',
         id: crypto.randomUUID(),
         action,
-        partyNameKey: action === 'dedazo' ? undefined : getPartyKey(finalColor)
+        partyNameKey: (action === 'dedazo' || action === 'fake_news') ? undefined : getPartyKey(finalColor)
       };
     }
 
@@ -120,12 +130,26 @@ export function PoliticalUno() {
 
   const isValidPlay = (card: Card) => {
     if (!topCard) return true;
-    if (card.action === 'dedazo') return true;
+    if (card.action === 'dedazo' || card.action === 'fake_news') return true;
     return card.color === topCard.color || card.value === topCard.value;
   };
 
+  const [activePopup, setActivePopup] = useState<SpecialAction | null>(null);
+
+  useEffect(() => {
+    if (activePopup) {
+      playSound('score');
+      const timer = setTimeout(() => setActivePopup(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [activePopup, playSound]);
+
   const processAction = (card: Card, currentPlayer: 'player' | 'cpu') => {
     const otherPlayer = currentPlayer === 'player' ? 'cpu' : 'player';
+    
+    if (card.action !== 'normal') {
+      setActivePopup(card.action);
+    }
     
     switch (card.action) {
       case 'moche':
@@ -144,7 +168,16 @@ export function PoliticalUno() {
         setMessage(t('game.uno.msg.fake_news'));
         if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
         else setPlayerHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
-        return currentPlayer; // +4 skips opponent
+        
+        if (currentPlayer === 'player') {
+          setIsChoosingColor(true);
+          return 'player'; // Wait for color choice
+        } else {
+          // CPU chooses random color
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
+          return currentPlayer; // Play again since +4 skips player
+        }
       case 'consulta':
         setMessage(t('game.uno.msg.consulta'));
         setPlayerHand(prev => [...prev, generateCard()]);
@@ -186,7 +219,7 @@ export function PoliticalUno() {
       }
       
       const nextTurn = processAction(card, 'player');
-      if (card.action !== 'dedazo') {
+      if (card.action !== 'dedazo' && card.action !== 'fake_news') {
         setTurn(nextTurn);
       }
     } else {
@@ -200,7 +233,12 @@ export function PoliticalUno() {
     if (!topCard) return;
     setTopCard({ ...topCard, color });
     setIsChoosingColor(false);
-    setTurn('cpu');
+    // Dedazo gives turn to CPU. Fake News (+4) skips CPU, so player goes again!
+    if (topCard.action === 'fake_news') {
+      setTurn('player');
+    } else {
+      setTurn('cpu');
+    }
   };
 
   const drawCard = () => {
@@ -321,11 +359,11 @@ export function PoliticalUno() {
   );
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-16 relative overflow-hidden bg-[#0a0a0A]">
+    <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-16 relative overflow-hidden bg-[#0a0a0A] [&.is-fullscreen]:bg-black">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       
       {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden [&.is-fullscreen]:hidden">
         <Fingerprint className="absolute -top-20 -left-20 w-96 h-96 rotate-12" />
         <Megaphone className="absolute -bottom-20 -right-20 w-80 h-80 -rotate-12" />
       </div>
@@ -350,7 +388,7 @@ export function PoliticalUno() {
         
         {/* Opponent Area (Top) */}
         <div className={cn(
-          "flex flex-col items-center gap-3 bg-zinc-950/40 p-4 md:p-6 rounded-[2rem] border transition-all duration-500 w-full max-w-4xl mx-auto",
+          "flex flex-col items-center gap-3 bg-zinc-950/40 p-4 md:p-6 rounded-[2rem] border transition-all duration-500 w-full max-w-4xl mx-auto [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none",
           turn === 'cpu' ? "border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]" : "border-white/5"
         )}>
           <div className="flex items-center gap-4 mb-1">
@@ -422,6 +460,28 @@ export function PoliticalUno() {
              <p className="text-zinc-400 font-black uppercase tracking-tighter text-[10px]">{t('game.uno.label.actual')}</p>
            </div>
 
+           {/* Special Action Overlay */}
+           <AnimatePresence>
+             {activePopup && (
+               <motion.div
+                 initial={{ opacity: 0, scale: 0.5, y: 50 }}
+                 animate={{ opacity: 1, scale: 1, y: 0 }}
+                 exit={{ opacity: 0, scale: 1.5, filter: 'blur(10px)' }}
+                 transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                 className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+               >
+                 <div className="bg-[#0a0a0A]/90 backdrop-blur-md px-12 py-8 rounded-full border border-brand-accent shadow-[0_0_100px_rgba(138,99,210,0.8)] flex flex-col items-center gap-4 text-center">
+                   <div className="text-brand-accent">
+                     <CardIcon action={activePopup} />
+                   </div>
+                   <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-brand-accent !not-italic">
+                     {activePopup.replace('_', ' ')}
+                   </h1>
+                 </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
+
            {/* Active Action Message Overlay */}
            <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 pointer-events-none z-50">
              <AnimatePresence mode="wait">
@@ -446,7 +506,7 @@ export function PoliticalUno() {
 
         {/* Player Area (Bottom) */}
         <div className={cn(
-          "flex flex-col items-center gap-4 bg-white/[0.03] backdrop-blur-xl p-6 md:p-10 rounded-[3rem] border transition-all duration-700 w-full max-w-6xl mx-auto shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative",
+          "flex flex-col items-center gap-4 bg-white/[0.03] backdrop-blur-xl p-6 md:p-10 rounded-[3rem] border transition-all duration-700 w-full max-w-6xl mx-auto shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:backdrop-blur-none",
           turn === 'player' && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_50px_rgba(138,99,210,0.15)] ring-1 ring-brand-accent/20" : "border-white/5"
         )}>
           {/* Active Hand Indicator Glow */}
