@@ -84,7 +84,7 @@ export function PoliticalUno() {
       return {
         color: finalColor,
         value: action === 'moche' ? '+2' : action === 'fake_news' ? '+4' : '★',
-        id: Math.random().toString(36).substring(2, 11),
+        id: crypto.randomUUID(),
         action,
         partyNameKey: action === 'dedazo' ? undefined : getPartyKey(finalColor)
       };
@@ -93,7 +93,7 @@ export function PoliticalUno() {
     return {
       color,
       value: Math.floor(Math.random() * 9) + 1,
-      id: Math.random().toString(36).substring(2, 11),
+      id: crypto.randomUUID(),
       action: 'normal',
       partyNameKey: getPartyKey(color)
     };

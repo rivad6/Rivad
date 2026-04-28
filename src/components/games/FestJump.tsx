@@ -145,7 +145,7 @@ export function FestJump() {
     
     let player = {
       x: canvas.width / 2,
-      y: canvas.height / 2,
+      y: canvas.height - 20 - 24, // Positioned on top of the starting platform
       vx: 0,
       vy: 0,
       width: 24,
@@ -938,27 +938,29 @@ export function FestJump() {
         )}
 
         {isPlaying && showMobileControls && (
-          <div className="absolute inset-x-0 bottom-8 z-20 flex justify-between px-6 pointer-events-none">
-            <button 
-              onMouseDown={() => { keysRef.current.left = true; playSound('click'); }}
-              onMouseUp={() => keysRef.current.left = false}
-              onMouseLeave={() => keysRef.current.left = false}
-              onTouchStart={(e) => { e.preventDefault(); keysRef.current.left = true; playSound('click'); }}
-              onTouchEnd={(e) => { e.preventDefault(); keysRef.current.left = false; }}
-              className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
-            >
-              <ChevronLeft className="w-10 h-10 text-white" />
-            </button>
-            <button 
-              onMouseDown={() => { keysRef.current.right = true; playSound('click'); }}
-              onMouseUp={() => keysRef.current.right = false}
-              onMouseLeave={() => keysRef.current.right = false}
-              onTouchStart={(e) => { e.preventDefault(); keysRef.current.right = true; playSound('click'); }}
-              onTouchEnd={(e) => { e.preventDefault(); keysRef.current.right = false; }}
-              className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
-            >
-              <ChevronRight className="w-10 h-10 text-white" />
-            </button>
+          <div className="absolute inset-x-0 bottom-8 z-20 flex justify-center px-6 pointer-events-none">
+            <div className="flex bg-zinc-900 border-4 border-zinc-700 p-2 rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]">
+              <button 
+                onMouseDown={() => { keysRef.current.left = true; playSound('click'); }}
+                onMouseUp={() => keysRef.current.left = false}
+                onMouseLeave={() => keysRef.current.left = false}
+                onTouchStart={(e) => { e.preventDefault(); keysRef.current.left = true; playSound('click'); }}
+                onTouchEnd={(e) => { e.preventDefault(); keysRef.current.left = false; }}
+                className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+              >
+                <ChevronLeft className="w-10 h-10 text-white" />
+              </button>
+              <button 
+                onMouseDown={() => { keysRef.current.right = true; playSound('click'); }}
+                onMouseUp={() => keysRef.current.right = false}
+                onMouseLeave={() => keysRef.current.right = false}
+                onTouchStart={(e) => { e.preventDefault(); keysRef.current.right = true; playSound('click'); }}
+                onTouchEnd={(e) => { e.preventDefault(); keysRef.current.right = false; }}
+                className="w-20 h-20 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
+              >
+                <ChevronRight className="w-10 h-10 text-white" />
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -8,12 +8,14 @@ import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
 import { CreativeInvaders } from './games/CreativeInvaders';
 import { useAchievements } from '../context/AchievementsContext';
+import { useAudio } from '../context/AudioContext';
 
 import { useLanguage } from '../context/LanguageContext';
 
 export function Arcade() {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
+  const { playSound } = useAudio();
   const [showPopup, setShowPopup] = useState(false);
   const games = [
     { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={16} /> },
@@ -86,30 +88,43 @@ export function Arcade() {
         {/* Game Selector */}
         <div className="flex flex-wrap justify-start gap-2 mb-12 relative z-20">
           {games.map((g) => (
-            <button
+            <motion.button
               key={g.id}
               onClick={() => setActiveGame(g.id)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              animate={activeGame === g.id ? { borderColor: '#8a63d2', backgroundColor: '#8a63d2' } : { borderColor: '#3a2d59', backgroundColor: 'transparent' }}
               className={`flex items-center gap-2 px-4 py-3 font-mono text-xs uppercase tracking-[0.2em] transition-all ${
                 activeGame === g.id 
-                  ? 'bg-[#8a63d2] text-white border border-[#8a63d2] rounded-none shadow-[0_0_15px_rgba(138,99,210,0.5)]' 
-                  : 'bg-transparent border border-[#3a2d59] text-[#8a63d2] hover:text-white hover:border-[#8a63d2] rounded-none'
+                  ? 'text-white border rounded-none shadow-[0_0_15px_rgba(138,99,210,0.5)]' 
+                  : 'border text-[#8a63d2] hover:text-white hover:border-[#8a63d2] rounded-none'
               }`}
             >
               {g.icon}
               {g.title}
-            </button>
+            </motion.button>
           ))}
         </div>
 
         {/* Game Screen / Arcade Cabinet */}
-        <div className="relative bg-transparent p-1 md:p-2 border border-[#3a2d59] mx-auto overflow-hidden shadow-[8px_8px_0_0_rgba(58,45,89,0.5)] bg-[#1e1633]/50">
+        <div className="relative bg-[#2d2d2d] p-4 md:p-6 border-4 border-zinc-900 mx-auto overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,0.8)] rounded-xl">
+          {/* Machine Header */}
+          <div className="absolute top-0 left-0 right-0 h-4 bg-zinc-950 flex items-center justify-center gap-2">
+            <div className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
+            <div className="w-1 h-1 rounded-full bg-yellow-500" />
+            <div className="w-1 h-1 rounded-full bg-green-500" />
+          </div>
+
           {/* CRT Screen Frame */}
-          <div className="bg-[#05040a] border border-[#1e1633] min-h-[500px] flex items-center justify-center relative shadow-[inset_0_0_50px_rgba(0,0,0,1)]">
+          <div className="bg-[#05040a] border-4 border-zinc-950 min-h-[500px] flex items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-lg">
             
             {/* CRT Screen Effect overlay */}
-            <div className="absolute inset-0 pointer-events-none z-10 mix-blend-overlay opacity-30">
+            <div className="absolute inset-0 pointer-events-none z-10 mix-blend-overlay opacity-50">
               <div className="w-full h-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]" />
             </div>
+            
+            {/* Bezel vignette */}
+            <div className="absolute inset-0 z-20 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
             
             <AnimatePresence mode="wait">
               <motion.div
@@ -131,6 +146,20 @@ export function Arcade() {
 
           </div>
           
+          {/* Arcade Cabinet Control Area */}
+          <div className="mt-6 flex justify-between items-center px-4 md:px-8">
+             <div className="flex gap-4">
+                <button 
+                  onClick={() => playSound('click')}
+                  className="w-10 h-10 rounded-full bg-red-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] border-t-4 border-red-400 active:translate-y-[2px] transition-all" />
+                <button 
+                  onClick={() => playSound('click')}
+                  className="w-10 h-10 rounded-full bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] border-t-4 border-yellow-200 active:translate-y-[2px] transition-all" />
+             </div>
+             <div className="w-20 h-10 bg-zinc-950 border-4 border-zinc-800 rounded-sm flex items-center justify-center">
+                <div className="w-3 h-6 bg-zinc-700" />
+             </div>
+          </div>
         </div>
       </div>
     </div>

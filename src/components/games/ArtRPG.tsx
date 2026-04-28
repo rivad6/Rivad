@@ -276,7 +276,7 @@ export function ArtRPG() {
             ) : (
               node.choices.map((choice, idx) => (
                 <motion.button
-                  key={idx}
+                  key={choice.textKey}
                   whileHover={{ x: 10, backgroundColor: 'rgba(138,99,210,0.1)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleChoice(choice.next)}

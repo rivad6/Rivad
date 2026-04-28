@@ -107,7 +107,7 @@ export const SellOutGame: React.FC = () => {
     setAudience(prev => prev + 1);
     setRelevance(prev => Math.min(100, prev + 1.2));
 
-    const id = Date.now();
+    const id = Date.now() + Math.random();
     setClicks(prev => [...prev, { id, x: e.clientX, y: e.clientY, val: totalHypePerClick }]);
     setTimeout(() => {
       setClicks(prev => prev.filter(c => c.id !== id));

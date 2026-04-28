@@ -1540,66 +1540,68 @@ export function CreativeInvaders() {
         )}
 
         {showMobileControls && (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") && (
-          <div className="absolute inset-0 pointer-events-none flex flex-col justify-end p-6 z-[60]">
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none flex justify-between p-4 z-[60]">
             <div className="flex justify-between items-end w-full">
-              {/* D-Pad */}
-              <div className="grid grid-cols-3 grid-rows-3 gap-2 pointer-events-auto">
-                <div />
-                <button 
-                  onMouseDown={() => { state.current.player.isMovingUp = true; playSound('click'); }}
-                  onMouseUp={() => state.current.player.isMovingUp = false}
-                  onMouseLeave={() => state.current.player.isMovingUp = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
-                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingUp = false; }}
-                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
-                >
-                  <ChevronUp className="text-white w-8 h-8" />
-                </button>
-                <div />
-                
-                <button 
-                  onMouseDown={() => { state.current.player.isMovingLeft = true; playSound('click'); }}
-                  onMouseUp={() => state.current.player.isMovingLeft = false}
-                  onMouseLeave={() => state.current.player.isMovingLeft = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
-                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingLeft = false; }}
-                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
-                >
-                  <ChevronLeft className="text-white w-8 h-8" />
-                </button>
-                <div className="w-16 h-16 bg-zinc-900 border-4 border-zinc-800" />
-                <button 
-                  onMouseDown={() => { state.current.player.isMovingRight = true; playSound('click'); }}
-                  onMouseUp={() => state.current.player.isMovingRight = false}
-                  onMouseLeave={() => state.current.player.isMovingRight = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
-                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingRight = false; }}
-                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
-                >
-                  <ChevronRight className="text-white w-8 h-8" />
-                </button>
+              {/* Circular joystick panel */}
+              <div className="w-32 h-32 rounded-full bg-zinc-900/80 border-2 border-zinc-700 p-1 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center pointer-events-auto">
+                <div className="grid grid-cols-3 grid-rows-3 gap-0.5">
+                  <div />
+                  <button 
+                    onMouseDown={() => { state.current.player.isMovingUp = true; playSound('click'); }}
+                    onMouseUp={() => state.current.player.isMovingUp = false}
+                    onMouseLeave={() => state.current.player.isMovingUp = false}
+                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
+                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingUp = false; }}
+                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
+                  >
+                    <ChevronUp className="text-white w-4 h-4" />
+                  </button>
+                  <div />
+                  
+                  <button 
+                    onMouseDown={() => { state.current.player.isMovingLeft = true; playSound('click'); }}
+                    onMouseUp={() => state.current.player.isMovingLeft = false}
+                    onMouseLeave={() => state.current.player.isMovingLeft = false}
+                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
+                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingLeft = false; }}
+                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
+                  >
+                    <ChevronLeft className="text-white w-4 h-4" />
+                  </button>
+                  <div className="w-10 h-10 bg-zinc-950 border-2 border-zinc-800 rounded-full" />
+                  <button 
+                    onMouseDown={() => { state.current.player.isMovingRight = true; playSound('click'); }}
+                    onMouseUp={() => state.current.player.isMovingRight = false}
+                    onMouseLeave={() => state.current.player.isMovingRight = false}
+                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
+                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingRight = false; }}
+                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
+                  >
+                    <ChevronRight className="text-white w-4 h-4" />
+                  </button>
 
-                <div />
-                <button 
-                  onMouseDown={() => { state.current.player.isMovingDown = true; playSound('click'); }}
-                  onMouseUp={() => state.current.player.isMovingDown = false}
-                  onMouseLeave={() => state.current.player.isMovingDown = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
-                  onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingDown = false; }}
-                  className="w-16 h-16 bg-zinc-800 border-4 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px]"
-                >
-                  <ChevronDown className="text-white w-8 h-8" />
-                </button>
-                <div />
+                  <div />
+                  <button 
+                    onMouseDown={() => { state.current.player.isMovingDown = true; playSound('click'); }}
+                    onMouseUp={() => state.current.player.isMovingDown = false}
+                    onMouseLeave={() => state.current.player.isMovingDown = false}
+                    onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
+                    onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingDown = false; }}
+                    className="w-10 h-10 bg-zinc-800 border-2 border-zinc-600 flex items-center justify-center active:bg-zinc-700 active:border-zinc-500 transition-all"
+                  >
+                    <ChevronDown className="text-white w-4 h-4" />
+                  </button>
+                  <div />
+                </div>
               </div>
 
               {/* Fire Button */}
               <button 
                 onMouseDown={(e) => { e.preventDefault(); fire(); }}
                 onTouchStart={(e) => { e.preventDefault(); fire(); }}
-                className="w-24 h-24 bg-zinc-800 border-4 border-red-600 flex items-center justify-center active:bg-zinc-700 active:border-red-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] pointer-events-auto"
+                className="w-16 h-16 bg-zinc-800 border-4 border-red-600 rounded-full flex items-center justify-center active:bg-zinc-700 active:border-red-500 transition-all pointer-events-auto"
               >
-                <Crosshair className="w-12 h-12 text-white" />
+                <Crosshair className="w-8 h-8 text-white" />
               </button>
             </div>
           </div>
