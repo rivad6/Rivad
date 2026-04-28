@@ -334,6 +334,10 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game4': 'Simulador de Inauguración',
     'arc.game5': 'Venderse al Capitalismo',
     'arc.game6': 'Invasores',
+    'arc.game7': 'Carreras',
+    'game.race.score': 'DIST: ',
+    'game.arc.race': 'TARDE A LA REUNIÓN',
+    'game.arc.race.desc': 'ESQUIVA EL TRÁFICO Y MENSAJES URGENTES. TOMA CAFÉ PARA MÁS TIEMPO.',
     
     // Game: Creative Invaders
     'game.invaders.title': 'Defensores Creativos',
@@ -1079,6 +1083,10 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game4': 'Inauguration Simulator',
     'arc.game5': 'The Art of Selling Out',
     'arc.game6': 'Invaders',
+    'arc.game7': 'Meeting Race',
+    'game.race.score': 'DIST: ',
+    'game.arc.race': 'LATE FOR MEETING',
+    'game.arc.race.desc': 'DODGE TRAFFIC AND URGENT MESSAGES. GRAB COFFEE TO SLOW TIME.',
 
     // Game: Creative Invaders
     'game.invaders.title': 'Creative Defenders',
@@ -1824,6 +1832,10 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game4': 'Simulateur d\'Inauguration',
     'arc.game5': 'L\'Art de se Vendre',
     'arc.game6': 'Envahisseurs',
+    'arc.game7': 'Course Réunion',
+    'game.race.score': 'DIST: ',
+    'game.arc.race': 'EN RETARD POUR LA RÉUNION',
+    'game.arc.race.desc': 'ÉVITEZ LE TRAFIC ET LES MESSAGES URGENTS. PRENEZ UN CAFÉ POUR RALENTIR LE TEMPS.',
 
     // Game: Creative Invaders
     'game.invaders.title': 'Défenseurs Créatifs',

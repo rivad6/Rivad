@@ -228,7 +228,7 @@ export function ArtRPG() {
   }
 
   return (
-    <div ref={containerRef} className="w-full max-w-3xl mx-auto min-h-[500px] h-[75vh] md:h-[550px] flex flex-col justify-between p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+    <div ref={containerRef} className="w-full h-full max-w-3xl mx-auto min-h-[350px] flex flex-col justify-between p-4 sm:p-8 bg-[#020202] border border-white/10 relative overflow-hidden font-mono rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.5)]">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
       {/* Decorative Scanlines & Grain */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat" />

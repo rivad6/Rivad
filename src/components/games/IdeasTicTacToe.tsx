@@ -111,12 +111,12 @@ export function IdeasTicTacToe() {
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center font-[var(--font-pixel)] w-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[400px] sm:min-h-0 sm:aspect-[4/3] rounded-xl border-4 border-gray-800 p-4 shadow-xl">
+    <div ref={containerRef} className="flex flex-col items-center justify-center font-[var(--font-pixel)] w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-hidden">
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
-      <div className="mb-2 text-center w-full">
-         <p className="text-[#8a63d2] text-[10px] md:text-xs">{t('game.objective')}{t('game.ttt.goal')}</p>
+      <div className="mb-1 text-center w-full">
+         <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase">{t('game.objective')}{t('game.ttt.goal')}</p>
       </div>
-      <div className="mb-4 text-center text-[10px] md:text-sm leading-loose w-full h-16 flex flex-col justify-center">
+      <div className="mb-2 text-center text-[10px] md:text-xs leading-tight w-full h-10 flex flex-col justify-center">
         {winner ? (
           <p className="text-brand-accent animate-pulse">
             {t('game.ttt.win', { winner: winner === 'X' ? t('game.ttt.reason') : t('game.ttt.tradition') })}
@@ -125,13 +125,13 @@ export function IdeasTicTacToe() {
           <p className="text-gray-400">{t('game.ttt.draw')}</p>
         ) : (
           <>
-            <p className="text-white mb-2">{t('game.ttt.turn')}{xIsNext ? <span className="text-brand-accent">{t('game.ttt.you')}</span> : <span className="text-blue-400">{t('game.ttt.bot')}</span>}</p>
-            <p className="text-gray-500 text-[8px] md:text-[10px] uppercase">[{log}]</p>
+            <p className="text-white mb-1">{t('game.ttt.turn')}{xIsNext ? <span className="text-brand-accent">{t('game.ttt.you')}</span> : <span className="text-blue-400">{t('game.ttt.bot')}</span>}</p>
+            <p className="text-gray-500 text-[8px] md:text-[10px] uppercase truncate px-2">[{log}]</p>
           </>
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-3 bg-zinc-900/50 p-3 rounded-[2rem] backdrop-blur-xl relative border border-white/5 shadow-2xl overflow-hidden">
+      <div className="grid grid-cols-3 gap-2 bg-zinc-900/50 p-2 rounded-2xl backdrop-blur-xl relative border border-white/5 shadow-2xl scale-95 sm:scale-100">
         {/* Background Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
         
@@ -141,7 +141,7 @@ export function IdeasTicTacToe() {
             onClick={() => handleClick(i)}
             disabled={!!square || !!winner || !xIsNext}
             className={cn(
-              "w-20 h-20 md:w-24 md:h-24 bg-zinc-950/80 backdrop-blur-sm text-3xl flex items-center justify-center transition-all hover:bg-zinc-900 border-2 border-white/5 rounded-2xl relative group",
+              "w-16 h-16 sm:w-20 sm:h-20 bg-zinc-950/80 backdrop-blur-sm text-2xl sm:text-3xl flex items-center justify-center transition-all hover:bg-zinc-900 border-2 border-white/5 rounded-xl relative group",
               !square && !winner && xIsNext && "hover:border-brand-accent/50 cursor-pointer active:scale-95",
               square === 'X' && "text-brand-accent",
               square === 'O' && "text-blue-400"
@@ -156,7 +156,7 @@ export function IdeasTicTacToe() {
             )}
             
             {/* Cell visual flair */}
-            <div className="absolute inset-0 rounded-2xl border border-white/5 pointer-events-none" />
+            <div className="absolute inset-0 rounded-xl border border-white/5 pointer-events-none" />
           </button>
         ))}
       </div>
@@ -164,7 +164,7 @@ export function IdeasTicTacToe() {
       <button
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
         onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
-        className="mt-8 bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto"
+        className="mt-4 bg-brand-accent text-white px-4 py-2 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto rounded"
       >
         {t('game.ttt.reset')}
       </button>

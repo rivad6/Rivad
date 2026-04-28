@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
 import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
 import { CreativeInvaders } from './games/CreativeInvaders';
+import { MeetingRace } from './games/MeetingRace';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 
@@ -20,6 +21,9 @@ export function Arcade() {
   const [powerState, setPowerState] = useState<'off' | 'booting' | 'waiting' | 'inserting' | 'playing'>('off');
   const [bootLog, setBootLog] = useState<string[]>([]);
 
+  const arcadeCabinetRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const games = [
     { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-blue-600', label: 'DEBATE PONG' },
     { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-red-600', label: 'POLITICAL UNO' },
@@ -27,6 +31,7 @@ export function Arcade() {
     { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-purple-600', label: 'ART RPG' },
     { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-yellow-600', label: 'SELLOUT GAME' },
     { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-pink-600', label: 'CREATIVE INVADERS' },
+    { id: 'race', title: t('arc.game7', 'Meeting Race'), icon: <Gamepad2 size={24} />, color: 'bg-orange-600', label: 'MEETING RACE' },
   ] as const;
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -34,6 +39,13 @@ export function Arcade() {
   useEffect(() => {
     // Unlock first blood achievement when entering the arcade
     unlockAchievement('first_blood');
+    
+    // 60 seconds popup
+    const popupInterval = setInterval(() => {
+      setShowPopup(true);
+    }, 60000);
+    
+    return () => clearInterval(popupInterval);
   }, [unlockAchievement]);
 
   const handlePower = () => {
@@ -119,6 +131,26 @@ export function Arcade() {
     window.dispatchEvent(new KeyboardEvent('keyup', { key }));
   };
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (arcadeCabinetRef.current?.requestFullscreen) {
+        arcadeCabinetRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
     <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40 relative">
       {/* 60s Interruption Popup */}
@@ -201,7 +233,7 @@ export function Arcade() {
         </div>
 
         {/* Arcade Machine Component */}
-        <div className="relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl max-w-4xl">
+        <div ref={arcadeCabinetRef} className={`relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl max-w-4xl ${isFullscreen ? 'h-screen max-w-none w-screen border-none rounded-none m-0' : ''}`}>
           
           {/* Wood panel texture effect */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 8px)' }}></div>
@@ -209,13 +241,24 @@ export function Arcade() {
           <div className="flex justify-between items-center mb-6 relative z-10 block">
             <h2 className="text-[#8a63d2] font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-sm md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.8)] uppercase">SISYPHUS_ENTERTAINMENT</h2>
             
-            {/* Power Button */}
-            <button 
-              onClick={handlePower}
-              className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-4 flex items-center justify-center transition-all ${powerState !== 'off' ? 'bg-red-500 border-red-300 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'bg-red-950 border-red-900 shadow-inner'}`}
-            >
-              <Power className={powerState !== 'off' ? 'text-white' : 'text-red-800'} size={20} />
-            </button>
+            <div className="flex gap-4 items-center">
+              {/* Fullscreen Button */}
+              <button
+                onClick={toggleFullscreen}
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 flex items-center justify-center transition-all bg-zinc-800 border-zinc-700 shadow-inner hover:bg-zinc-700 text-zinc-400 hover:text-white"
+                title="Toggle Fullscreen"
+              >
+                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              </button>
+              
+              {/* Power Button */}
+              <button 
+                onClick={handlePower}
+                className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-4 flex items-center justify-center transition-all ${powerState !== 'off' ? 'bg-red-500 border-red-300 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'bg-red-950 border-red-900 shadow-inner'}`}
+              >
+                <Power className={powerState !== 'off' ? 'text-white' : 'text-red-800'} size={20} />
+              </button>
+            </div>
           </div>
 
           {/* CRT Screen Frame */}
@@ -273,6 +316,7 @@ export function Arcade() {
                     {activeGame === 'rpg' && <ArtRPG />}
                     {activeGame === 'sellout' && <SellOutGame />}
                     {activeGame === 'invaders' && <CreativeInvaders />}
+                    {activeGame === 'race' && <MeetingRace />}
                   </motion.div>
                 )}
               </AnimatePresence>
