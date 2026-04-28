@@ -24,13 +24,13 @@ export function Arcade() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const games = [
-    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-blue-600', label: t('arc.game1.lbl') },
-    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-red-600', label: t('arc.game2.lbl') },
-    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-green-600', label: t('arc.game3.lbl') },
-    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-purple-600', label: t('arc.game4.lbl') },
-    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-yellow-600', label: t('arc.game5.lbl') },
-    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-pink-600', label: t('arc.game6.lbl') },
-    { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-orange-600', label: t('arc.game7.lbl') },
+    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-brand-accent', label: t('arc.game1.lbl') },
+    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-brand-accent', label: t('arc.game2.lbl') },
+    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-brand-accent', label: t('arc.game3.lbl') },
+    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-brand-accent', label: t('arc.game4.lbl') },
+    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-brand-accent', label: t('arc.game5.lbl') },
+    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-brand-accent', label: t('arc.game6.lbl') },
+    { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-brand-accent', label: t('arc.game7.lbl') },
   ] as const;
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -160,15 +160,15 @@ export function Arcade() {
       <div className="w-full max-w-5xl mx-auto px-6 md:px-0">
         <div className="mb-12 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-12 md:mt-4">
           <div>
-            <h2 className="text-sm font-mono tracking-[0.2em] text-[#8a63d2] uppercase mb-4 border-b border-[#3a2d59] pb-2 inline-block">
+            <h2 className="text-sm font-mono tracking-[0.2em] text-brand-accent uppercase mb-4 border-b border-brand-accent/30 pb-2 inline-block">
               {t('arc.restricted')}
             </h2>
-            <h3 className="text-6xl md:text-8xl font-display uppercase tracking-tighter text-[#e2d5f8] leading-none">
+            <h3 className="text-6xl md:text-8xl font-display uppercase tracking-tighter text-brand-ink leading-none">
               Arcade <br className="hidden md:block" />
-              <span className="font-display text-[#b58df8] lowercase font-medium tracking-normal ml-0 md:ml-12">{t('arc.sisyphus')}</span>
+              <span className="font-display text-brand-ink lowercase font-medium tracking-normal ml-0 md:ml-12">{t('arc.sisyphus')}</span>
             </h3>
           </div>
-          <p className="text-[#a591c8] font-sans font-light max-w-sm text-sm md:text-base leading-relaxed border-l border-[#8a63d2]/30 pl-4 py-2">
+          <p className="text-brand-ink/80 font-sans font-light max-w-sm text-sm md:text-base leading-relaxed border-l border-brand-accent/30 pl-4 py-2">
             {t('arc.desc')}
           </p>
         </div>
@@ -224,7 +224,7 @@ export function Arcade() {
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ y: 0, scale: 0.98 }}
                     disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                    className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-[#8a63d2] -translate-y-4 shadow-[0_10px_20px_rgba(138,99,210,0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-brand-accent -translate-y-4 shadow-[0_10px_20px_rgba(var(--color-brand-accent-rgb),0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {/* Cartridge Ridges */}
                     <div className="w-full flex justify-between px-2 opacity-30 mt-1">

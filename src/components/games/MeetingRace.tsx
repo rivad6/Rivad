@@ -115,7 +115,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
     const GOAL_DISTANCE = 5000;
     let currentGas = 100;
     const MAX_GAS = 100;
-    const GAS_DEPLETION_RATE = 2.5; // Gas drained per second
+    const GAS_DEPLETION_RATE = (currentCar.speed / 200) + (currentCar.maxHp * 0.5); // Gas drained per second based on stats
     let speedMultiplier = 1;
     let baseRoadSpeed = currentCar.speed; // pixels per second
     let roadOffset = 0;
@@ -161,33 +161,55 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
     const obstacles: Obstacle[] = [];
     const particles: Particle[] = [];
     
+    const snapToLane = (lane: number) => {
+      const newIndex = Math.max(0, Math.min(LANE_COUNT - 1, lane));
+      player.laneIndex = newIndex;
+      player.targetX = LANES[newIndex] - player.width / 2;
+    };
+
     const keys = { ArrowLeft: false, ArrowRight: false, a: false, d: false };
+    const lastKeyTime = useRef(0);
+    const KEY_REPEAT_DELAY = 150; // ms between lane shifts if held
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const currentTime = Date.now();
       const key = e.key as keyof typeof keys;
       if (keys.hasOwnProperty(key)) {
-        if (!keys[key]) { // On first press, shift lane
+        if (!keys[key] || currentTime - lastKeyTime.current > KEY_REPEAT_DELAY) {
           if (key === 'ArrowLeft' || key === 'a') {
-            player.laneIndex = Math.max(0, player.laneIndex - 1);
-            player.targetX = LANES[player.laneIndex] - player.width / 2;
+            snapToLane(player.laneIndex - 1);
             playSound('hover');
           }
           if (key === 'ArrowRight' || key === 'd') {
-            player.laneIndex = Math.min(LANE_COUNT - 1, player.laneIndex + 1);
-            player.targetX = LANES[player.laneIndex] - player.width / 2;
+            snapToLane(player.laneIndex + 1);
             playSound('hover');
           }
+          lastKeyTime.current = currentTime;
         }
         keys[key] = true;
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       const key = e.key as keyof typeof keys;
-      if (keys.hasOwnProperty(key)) keys[key] = false;
+      if (keys.hasOwnProperty(key)) {
+        keys[key] = false;
+        lastKeyTime.current = 0; // Reset repeat timer
+      }
+    };
+    const handleClick = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      if (clickX < rect.width / 2) {
+         snapToLane(player.laneIndex - 1);
+      } else {
+         snapToLane(player.laneIndex + 1);
+      }
+      playSound('hover');
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    canvas.addEventListener('click', handleClick);
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
@@ -219,6 +241,8 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
     const spawnObstacle = () => {
       const typeRand = Math.random();
+      const progress = Math.min(1, currentDistance / GOAL_DISTANCE);
+      
       let type: ObstacleType = 'microbus';
       let width = 44;
       let height = 80;
@@ -226,53 +250,40 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       let speedVar = 50;
       let vx = 0;
       
-      // Adjusted item probabilities for Pay Day theme
-      if (typeRand > 0.98) {
-        type = 'gas'; // Fuel jerrycan
-        width = 24; height = 26;
-        color = '#ef4444';
-      } else if (typeRand > 0.96) {
-        type = 'nitro'; // Payday Bonus
-        width = 30; height = 30;
-        color = '#facc15';
-      } else if (typeRand > 0.90) {
-        type = 'shield'; // Lawyer/Insurance
-        width = 30; height = 30;
-        color = '#818cf8';
-      } else if (typeRand > 0.80) {
-        type = 'enemy'; // Debt Collector
-        width = 45; height = 75;
-        color = '#ef4444';
-        speedVar = 100;
-        vx = (Math.random() - 0.5) * 80;
-      } else if (typeRand > 0.70) {
-        type = 'msg'; // Pending Bill
-        width = 50; height = 40;
-        color = '#f97316';
-      } else if (typeRand > 0.60) {
-        type = 'oil'; // Coffee spill / budget leak
-        width = 50; height = 30;
-        color = '#451a03';
-        speedVar = 0;
-      } else if (typeRand > 0.50) {
-        type = 'cone'; // Construction
-        width = 18; height = 24;
-        color = '#f97316';
-        speedVar = 0;
-      } else if (typeRand > 0.40) {
-        type = 'taco'; // Quick lunch
-        width = 32; height = 20;
-        color = '#22c55e';
-      } else if (typeRand > 0.25) {
-        type = 'bache'; // Financial hole
-        width = 40 + Math.random() * 20; height = 25 + Math.random() * 10;
-        color = '#1c1917';
-        speedVar = 0;
+      // Progression-based probabilities
+      // Items become rarer, enemies and hazards become more frequent over time
+      const itemChance = 0.05 + (1 - progress) * 0.15; // 20% to 5%
+      const enemyChance = 0.1 + progress * 0.4; // 10% to 50%
+      
+      if (typeRand < itemChance) {
+        // Items: Gas, Nitro, Shield
+        const itemRand = Math.random();
+        if (itemRand > 0.6) {
+          type = 'gas'; width = 24; height = 26; color = '#ef4444';
+        } else if (itemRand > 0.3) {
+          type = 'nitro'; width = 30; height = 30; color = '#facc15';
+        } else {
+          type = 'shield'; width = 30; height = 30; color = '#818cf8';
+        }
+      } else if (typeRand < itemChance + enemyChance) {
+        // Enemies
+        type = 'enemy'; width = 45; height = 75; color = '#ef4444';
+        speedVar = 80 + progress * 100;
+        vx = (Math.random() - 0.5) * (100 + progress * 200);
       } else {
-        type = 'microbus'; // Work Traffic
-        width = 44; height = 80;
-        color = '#334155';
-        speedVar = -30;
+        // Hazards
+        const hazardRand = Math.random();
+        if (hazardRand > 0.8) {
+           type = 'microbus'; width = 44; height = 80; color = '#334155'; speedVar = -30;
+        } else if (hazardRand > 0.6) {
+           type = 'msg'; width = 50; height = 40; color = '#f97316';
+        } else if (hazardRand > 0.4) {
+           type = 'oil'; width = 50; height = 30; color = '#451a03'; speedVar = 0;
+        } else if (hazardRand > 0.2) {
+           type = 'cone'; width = 18; height = 24; color = '#f97316'; speedVar = 0;
+        } else {
+           type = 'bache'; width = 40 + Math.random() * 20; height = 25 + Math.random() * 10; color = '#1c1917'; speedVar = 0;
+        }
       }
 
       // 1. Identify which lanes are currently occupied at the top of the screen
@@ -293,7 +304,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       const availableLanes = LANES.map((_, i) => i).filter(i => !occupiedLanes.has(i));
       
       // If too many lanes are blocked, don't spawn a hazard, maybe spawn a powerup or nothing
-      if (availableLanes.length < 2 && (type !== 'shield' && type !== 'nitro' && type !== 'taco')) {
+      if (availableLanes.length < 2 && !['shield', 'nitro', 'gas'].includes(type)) {
         return; 
       }
 
@@ -548,13 +559,37 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
     const drawEnemy = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
       const bx = obs.x; const by = obs.y; const w = obs.width; const h = obs.height;
-      ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(bx + 4, by + 4, w, h);
-      ctx.fillStyle = '#450a0a'; ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
-      // Police or bad car details
-      ctx.fillStyle = '#fef08a'; ctx.fillRect(bx+2, by+2, 8, 4); ctx.fillRect(bx+w-10, by+2, 8, 4);
+      
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(bx + 6, by + 6, w, h);
+      
+      // Car Body
+      ctx.fillStyle = '#7f1d1d'; // Dark red
+      ctx.beginPath(); ctx.roundRect(bx, by, w, h, 8); ctx.fill();
+      
+      // Windshield
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(bx + 6, by + 10, w - 12, 15);
+      
+      // Headlights (Flickering)
+      if(Math.floor(Date.now()/100) % 3 === 0) {
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowBlur = 10; ctx.shadowColor = '#fef08a';
+        ctx.fillRect(bx + 5, by + 2, 8, 6);
+        ctx.fillRect(bx + w - 13, by + 2, 8, 6);
+        ctx.shadowBlur = 0;
+      }
+      
       // Siren
-      ctx.fillStyle = Math.floor(Date.now()/100) % 2 === 0 ? '#ef4444' : '#3b82f6';
-      ctx.fillRect(bx + w/2 - 6, by + h/2 - 4, 12, 8);
+      ctx.fillStyle = Math.floor(Date.now()/150) % 2 === 0 ? '#ef4444' : '#3b82f6';
+      ctx.beginPath(); ctx.arc(bx + w/2, by + h/2, 4, 0, Math.PI*2); ctx.fill();
+      
+      // Wheels
+      ctx.fillStyle = '#000';
+      ctx.fillRect(bx - 4, by + 10, 6, 15);
+      ctx.fillRect(bx + w - 2, by + 10, 6, 15);
+      ctx.fillRect(bx - 4, by + h - 25, 6, 15);
+      ctx.fillRect(bx + w - 2, by + h - 25, 6, 15);
     };
 
     const drawPowerup = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -728,25 +763,18 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
       if (damageTimer > 0) damageTimer -= dt;
 
-      // Handling based on 6 Lanes - Smooth snap only (discrete switches are in handleKeyDown)
-      const isLeft = keys.ArrowLeft || keys.a || keysGamepad.current.left;
-      const isRight = keys.ArrowRight || keys.d || keysGamepad.current.right;
-
+      // Handling based on 6 Lanes - Snap-based movement
       const currentHandling = oilTimer > 0 ? currentCar.handling * 0.3 : currentCar.handling;
       
-      // Fine-tuning for smooth hold if user wants to stay between lanes
-      if (isLeft) player.targetX -= currentHandling * 2 * normalDt;
-      if (isRight) player.targetX += currentHandling * 2 * normalDt;
-
-      player.targetX = Math.max(15, Math.min(GAME_W - player.width - 15, player.targetX));
+      // Removed continuous shift in loop
       
-      // Snap laneIndex to nearest for consistency
+      // Snap laneIndex to nearest for consistency (though handled by event listeners now)
       player.laneIndex = LANES.reduce((prev, curr, idx) => {
         return Math.abs(curr - (player.targetX + player.width/2)) < Math.abs(LANES[prev] - (player.targetX + player.width/2)) ? idx : prev;
       }, 0);
       
       const diff = player.targetX - player.x;
-      player.vx = diff * 15; 
+      player.vx = diff * 15 * (oilTimer > 0 ? 0.3 : 1.0); 
       player.x += player.vx * dt;
       
       // Visual Tilt for "Steering Wheel" effect
@@ -1110,6 +1138,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       cancelAnimationFrame(animFrame);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('blur', onBlur);
     };
@@ -1155,11 +1184,11 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
         )}
       </AnimatePresence>
       
-      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg shrink-0">
+      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-brand-accent font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-brand-accent/50 shadow-lg shrink-0">
          <div className="flex items-center gap-4">
             <button 
               onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
-              className={`flex items-center gap-1 uppercase text-[8px] font-bold border px-1.5 py-1 transition-all ${showMobileControls ? 'bg-orange-500/10 border-orange-500 text-orange-400' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
+              className={`flex items-center gap-1 uppercase text-[8px] font-bold border px-1.5 py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
             >
               <Zap className="w-3 h-3" /> {showMobileControls ? 'CONTROLS ON' : 'OFF'}
             </button>
@@ -1177,7 +1206,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
          <span className="flex items-center gap-1 opacity-50"><TerminalSquare size={14} /> {t('arc.game7')}</span>
       </div>
 
-      <div className="relative border-4 border-zinc-800 rounded-b-xl shadow-2xl bg-[#27272a] overflow-hidden w-full max-w-lg flex-grow h-full max-h-[800px] touch-none">
+      <div className="relative border-4 border-brand-accent/50 rounded-b-xl shadow-2xl bg-[#27272a] overflow-hidden w-full max-w-lg flex-grow h-full max-h-[800px] touch-none">
         
         {/* STORY COMIC OVERLAY */}
         <AnimatePresence>
@@ -1248,7 +1277,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
           <div className="absolute inset-0 flex flex-col bg-[#111]/90 backdrop-blur-md p-4 z-20 overflow-y-auto">
             <div className="flex flex-col items-center mb-4">
               <Car size={32} className="text-orange-500 mb-1" />
-              <h3 className="text-xl font-bold text-orange-400 leading-none uppercase tracking-widest">{t('game.arc.race')}</h3>
+              <h3 className="text-xl font-bold text-brand-accent leading-none uppercase tracking-widest">{t('game.arc.race')}</h3>
             </div>
 
             <p className="text-[10px] text-zinc-500 mb-4 uppercase text-center max-w-[300px] mx-auto">
@@ -1262,7 +1291,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
                 <button
                   key={car.id}
                   onClick={() => setSelectedCarId(car.id)}
-                  className={`flex flex-col items-start p-2 border-2 transition-all rounded-lg ${selectedCarId === car.id ? 'border-orange-500 bg-orange-500/10' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}
+                  className={`flex flex-col items-start p-2 border-2 transition-all rounded-lg ${selectedCarId === car.id ? 'border-brand-accent bg-brand-accent/10' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}
                 >
                   <div className="flex justify-between w-full items-center mb-1">
                     <span className="text-[10px] font-bold uppercase" style={{ color: car.color }}>{car.name}</span>
