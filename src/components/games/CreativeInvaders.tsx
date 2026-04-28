@@ -30,6 +30,8 @@ export function CreativeInvaders() {
   const [hudPower, setHudPower] = useState(1);
   const [hudTurbo, setHudTurbo] = useState(0);
 
+  const scoreRefDOM = useRef<HTMLDivElement>(null);
+
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
   const [highScore, setHighScore] = useState(() => Number(localStorage.getItem('invaders_highscore') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('invaders_chars') || '["classic"]'));
@@ -497,6 +499,18 @@ export function CreativeInvaders() {
     }
   };
 
+  const triggerGameOver = useCallback(() => {
+    const s = state.current;
+    playSound('explosion');
+    setGameState("gameover");
+    setScore(s.score);
+    if (s.score > highScore) setHighScore(s.score);
+    if (s.pendingCoins > 0) {
+      setFestCoins(prev => prev + s.pendingCoins);
+      s.pendingCoins = 0;
+    }
+  }, [highScore, playSound]);
+
   const update = useCallback(() => {
     const s = state.current;
     if (gameState !== "playing" && gameState !== "asteroids" && gameState !== "takeoff") return;
@@ -693,7 +707,7 @@ export function CreativeInvaders() {
            s.player.y + s.player.height > enemy.y + 5
          ) {
            createExplosion(s.player.x + s.player.width/2, s.player.y + s.player.height/2, "#f87171", 20);
-           setGameState("gameover");
+           triggerGameOver();
          }
       } else {
         const moveX = s.enemyDirection * currentSpeed;
@@ -701,7 +715,7 @@ export function CreativeInvaders() {
         if (hitEdge) {
           if (enemy.type !== "block") enemy.y += 20; // Reduced from 25
           if (enemy.y >= s.player.y - enemy.height) {
-            setGameState("gameover");
+            triggerGameOver();
           }
         } else {
           if (enemy.type === "block") {
@@ -742,9 +756,7 @@ export function CreativeInvaders() {
                 s.playerFlash = 15;
                 hit = true;
              } else {
-                playSound('explosion');
-                s.shake = 30;
-                setGameState("gameover");
+                triggerGameOver();
              }
          }
       } else {
@@ -820,12 +832,10 @@ export function CreativeInvaders() {
 
             s.enemies.splice(j, 1);
             s.score += enemy.maxHp * 10;
-            setScore(s.score);
-            if (s.score > highScore) setHighScore(s.score);
             
             // Earn Karmas (FestCoins)
             const earnedKarmas = Math.ceil(enemy.maxHp / 2) + (s.level);
-            setFestCoins(prev => prev + earnedKarmas);
+            s.pendingCoins = (s.pendingCoins || 0) + earnedKarmas;
             createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#facc15", earnedKarmas, true);
           } else {
             playSound('hit');
@@ -1157,6 +1167,9 @@ export function CreativeInvaders() {
          const ctx = canvas.getContext("2d");
          if (ctx) draw(ctx);
        }
+       if (scoreRefDOM.current) {
+         scoreRefDOM.current.innerText = state.current.score.toString().padStart(5, "0");
+       }
     }
     requestRef.current = requestAnimationFrame(tick);
   }, [update, draw]);
@@ -1216,8 +1229,8 @@ export function CreativeInvaders() {
              <p className="text-brand-accent text-xs font-mono tracking-widest uppercase mb-1">
                {t("game.invaders.score")}
              </p>
-             <div className="bg-black/50 border border-brand-accent/30 px-4 py-2 rounded-md">
-               <p className="text-3xl font-mono text-white tracking-widest">
+               <div className="bg-black/50 border border-brand-accent/30 px-4 py-2 rounded-md">
+               <p ref={scoreRefDOM} className="text-3xl font-mono text-white tracking-widest">
                  {score.toString().padStart(5, "0")}
                </p>
              </div>

@@ -39,6 +39,7 @@ export function MeetingRace() {
   const [score, setScore] = useState(0);
   const [hp, setHp] = useState(3);
   const [gameOver, setGameOver] = useState(false);
+  const scoreRefDOM = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -62,6 +63,9 @@ export function MeetingRace() {
     let speedMultiplier = 1;
     let baseRoadSpeed = 350; // pixels per second
     let roadOffset = 0;
+    
+    let lastRenderedScore = -1;
+    let lastRenderedHp = -1;
     
     let nextObstacleId = 0;
 
@@ -391,11 +395,19 @@ export function MeetingRace() {
         if (p.life >= p.maxLife) particles.splice(i, 1);
       }
 
-      // Sync state sparingly (every 0.1s ish, but react state is fine if batched, actually we do it every frame which might be bad, let's sync local vars to state)
-      setScore(Math.floor(currentScore));
-      setHp(currentHp);
+      // Sync state sparingly
+      const newScore = Math.floor(currentScore);
+      if (newScore !== lastRenderedScore) {
+         lastRenderedScore = newScore;
+         if (scoreRefDOM.current) scoreRefDOM.current.innerText = newScore.toString();
+      }
+      if (currentHp !== lastRenderedHp) {
+         lastRenderedHp = currentHp;
+         setHp(currentHp);
+      }
 
       if (isGameOver) {
+         setScore(newScore); // Only sync react state exactly when game ends
          setGameOver(true);
          setIsPlaying(false);
          return; // STOP!
@@ -473,7 +485,7 @@ export function MeetingRace() {
       <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50" />
       <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg">
          <span className="flex items-center gap-2">
-            {t('game.race.score')}{score}
+            <span>{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
             {hp > 0 && Array.from({length: hp}).map((_, i) => <Heart key={i} size={12} className="text-red-500 fill-red-500" />)}
          </span>
          <span className="flex items-center gap-1"><TerminalSquare size={14} /> {t('arc.game7')}</span>

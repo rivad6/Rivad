@@ -45,8 +45,11 @@ export function Arcade() {
       setShowPopup(true);
     }, 60000);
     
-    return () => clearInterval(popupInterval);
-  }, [unlockAchievement]);
+    return () => {
+      clearInterval(popupInterval);
+      playMusic('none');
+    };
+  }, [unlockAchievement, playMusic]);
 
   const handlePower = () => {
     if (powerState === 'off') {

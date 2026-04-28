@@ -97,11 +97,10 @@ export function FestJump() {
     if (isPlaying) {
       playMusic('jump');
     } else {
-      playMusic('arcade');
+      playMusic('none');
     }
     return () => {
-      // Just in case we unmount, return to arcade music
-      playMusic('arcade');
+      playMusic('none');
     };
   }, [isPlaying, playMusic]);
 
@@ -190,6 +189,7 @@ export function FestJump() {
 
     let cameraY = 0;
     let maxScore = 0;
+    let bonusScore = 0;
     let shake = 0;
 
     const keys = keysRef.current; // Use the ref
@@ -390,10 +390,14 @@ export function FestJump() {
         cameraY += diff;
         player.y = canvas.height / 2;
         maxScore = Math.floor(cameraY);
-        if (scoreRefDOM.current && Math.floor(maxScore) !== parseInt(scoreRefDOM.current.innerText)) {
-           scoreRefDOM.current.innerText = maxScore.toString();
-        }
+      }
+      
+      const displayScore = Math.floor(maxScore) + bonusScore;
+      if (scoreRefDOM.current && displayScore !== parseInt(scoreRefDOM.current.innerText)) {
+         scoreRefDOM.current.innerText = displayScore.toString();
+      }
 
+      if (player.y < canvas.height / 2) {
         // Codes logic
         if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
         if (maxScore > 2000) setUnlockedCodes(prev => prev.includes('BEATS10') ? prev : [...prev, 'BEATS10']);
@@ -470,14 +474,14 @@ export function FestJump() {
             const isPerfect = distFromCenter < 10;
             
             if (comboTimer > 0) {
-              setScore(prev => prev + 10 * comboMultiplier);
+              bonusScore += 10 * comboMultiplier;
               addFloatingText(player.x, player.y - 10, `+${10*comboMultiplier}`, '#facc15');
             } else {
               comboMultiplier = 1;
             }
 
             if (isPerfect) {
-              setScore(prev => prev + 50 * comboMultiplier);
+              bonusScore += 50 * comboMultiplier;
               setFestCoins(prev => prev + 2);
               createParticles(p.x + p.width/2, p.y, '#ffffff');
               shake = 5;
@@ -532,7 +536,7 @@ export function FestJump() {
             createParticles(pw.x, pw.y, '#10b981'); // Green glowstick
             comboTimer = 180;
           } else if (pw.type === 'beer') {
-            setScore(prev => prev + 100 * comboMultiplier);
+            bonusScore += 100 * comboMultiplier;
             addFloatingText(pw.x, pw.y, `+${100*comboMultiplier} PTS!`, '#f59e0b');
             playSound('powerup');
             createParticles(pw.x, pw.y, '#f59e0b');
@@ -590,7 +594,7 @@ export function FestJump() {
              // Stomped!
              enemies.splice(index, 1);
              player.vy = selectedChar.jumpForce; // bounce off
-             setScore(prev => prev + 200 * comboMultiplier);
+             bonusScore += 200 * comboMultiplier;
              addFloatingText(e.x, e.y, `STOMP! +${200*comboMultiplier}`, '#facc15');
              createParticles(e.x + e.width/2, e.y, '#ef4444');
              playSound('score');
@@ -617,8 +621,8 @@ export function FestJump() {
       // Game Over
       if (player.y > canvas.height) {
         playSound('lose');
-        setScore(maxScore);
-        if (maxScore > highScore) setHighScore(maxScore);
+        setScore(maxScore + bonusScore);
+        if ((maxScore + bonusScore) > highScore) setHighScore(maxScore + bonusScore);
         setIsPlaying(false);
       }
     };
@@ -907,18 +911,28 @@ export function FestJump() {
       }
 
       update();
-      setHudShield(player.shield);
-      setHudJetpack(player.jetpack);
     };
 
     let lastTime = performance.now();
     const TIME_STEP = 1000 / 60;
+
+    let lastShield = -1;
+    let lastJetpack = -1;
 
     const gameLoop = (time: number) => {
       const dt = time - lastTime;
       if (dt >= TIME_STEP) {
         lastTime = time - (dt % TIME_STEP);
         draw();
+        
+        if (player.shield !== lastShield) {
+          lastShield = player.shield;
+          setHudShield(player.shield);
+        }
+        if (player.jetpack !== lastJetpack) {
+          lastJetpack = player.jetpack;
+          setHudJetpack(player.jetpack);
+        }
       }
       if (isPlaying) {
         animationFrameId = requestAnimationFrame(gameLoop);
