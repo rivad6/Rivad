@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
@@ -15,28 +15,109 @@ import { useLanguage } from '../context/LanguageContext';
 export function Arcade() {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const [showPopup, setShowPopup] = useState(false);
+  const [powerState, setPowerState] = useState<'off' | 'booting' | 'waiting' | 'inserting' | 'playing'>('off');
+  const [bootLog, setBootLog] = useState<string[]>([]);
+
   const games = [
-    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={16} /> },
-    { id: 'uno', title: t('arc.game2'), icon: <Layers size={16} /> },
-    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={16} /> },
-    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={16} /> },
-    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={16} /> },
-    { id: 'invaders', title: t('arc.game6'), icon: <Target size={16} /> },
+    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-blue-600', label: 'DEBATE PONG' },
+    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-red-600', label: 'POLITICAL UNO' },
+    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-green-600', label: 'IDEAS TIC TAC TOE' },
+    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-purple-600', label: 'ART RPG' },
+    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-yellow-600', label: 'SELLOUT GAME' },
+    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-pink-600', label: 'CREATIVE INVADERS' },
   ] as const;
 
-  const [activeGame, setActiveGame] = useState<'pong' | 'tictactoe' | 'uno' | 'rpg' | 'sellout' | 'invaders'>('rpg');
+  const [activeGame, setActiveGame] = useState<string | null>(null);
 
   useEffect(() => {
     // Unlock first blood achievement when entering the arcade
     unlockAchievement('first_blood');
-    
-    const interval = setInterval(() => {
-      setShowPopup(true);
-    }, 60000);
-    return () => clearInterval(interval);
   }, [unlockAchievement]);
+
+  const handlePower = () => {
+    if (powerState === 'off') {
+      playSound('score');
+      playMusic('arcade');
+      setPowerState('booting');
+      setBootLog([]);
+      
+      const lines = [
+        "RIVAD OS v2.0 - Arcade Mode",
+        "BIOS Date 04/28/26 19:20:00 Ver 1.00",
+        "CPU: Sisyphus Processor, Speed: 66 MHz",
+        "Memory Test: 640K OK",
+        "Initializing sound system... OK",
+        "Checking cartridge slot...",
+        "NO CARTRIDGE DETECTED.",
+        "",
+        "PLEASE SELECT & INSERT CARTRIDGE TO PLAY"
+      ];
+      
+      lines.forEach((line, index) => {
+        setTimeout(() => {
+          setBootLog(prev => [...prev, line]);
+          if (index === lines.length - 1) {
+            setPowerState('waiting');
+          }
+        }, index * 400 + 500);
+      });
+
+    } else {
+      playSound('hit');
+      playMusic('none');
+      setPowerState('off');
+      setActiveGame(null);
+      setBootLog([]);
+    }
+  };
+
+  const handleInsertCartridge = (id: string) => {
+    if (powerState !== 'waiting' && powerState !== 'playing') return;
+    playSound('powerup');
+    setPowerState('inserting');
+    setActiveGame(null);
+    setBootLog(["LOADING CARTRIDGE...", "VERIFYING CHECKSUM...", "ROM OK", "STARTING GAME..."]);
+    
+    setTimeout(() => {
+      setActiveGame(id);
+      setPowerState('playing');
+    }, 2000);
+  };
+
+  const startHoldKey = (key: string) => {
+    // For clickable games, simulate TAB/Shift+TAB for Arrows if needed, but it's risky
+    if (activeGame === 'uno' || activeGame === 'tictactoe' || activeGame === 'sellout') {
+       const arcadeScreen = document.getElementById('arcade-screen-container');
+       if (arcadeScreen && (key === 'ArrowRight' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowUp')) {
+         const focusable = Array.from(arcadeScreen.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')) as HTMLElement[];
+         const filtered = focusable.filter(el => {
+            const rect = el.getBoundingClientRect();
+            return rect.width > 0 && rect.height > 0 && window.getComputedStyle(el).visibility !== 'hidden';
+         });
+         const currentIndex = filtered.findIndex(el => el === document.activeElement);
+         let nextIndex = 0;
+
+         if (key === 'ArrowRight' || key === 'ArrowDown') {
+            nextIndex = (currentIndex + 1) % filtered.length;
+         } else {
+            nextIndex = currentIndex <= 0 ? filtered.length - 1 : currentIndex - 1;
+         }
+         filtered[nextIndex]?.focus();
+       } else if (key === 'Enter' || key === ' ') {
+         if (document.activeElement instanceof HTMLElement && arcadeScreen?.contains(document.activeElement)) {
+             document.activeElement.click();
+         }
+       }
+    }
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+  };
+
+  const stopHoldKey = (key: string) => {
+    window.dispatchEvent(new KeyboardEvent('keyup', { key }));
+  };
 
   return (
     <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40 relative">
@@ -85,79 +166,180 @@ export function Arcade() {
           </p>
         </div>
 
-        {/* Game Selector */}
-        <div className="flex flex-wrap justify-start gap-2 mb-12 relative z-20">
-          {games.map((g) => (
-            <motion.button
-              key={g.id}
-              onClick={() => setActiveGame(g.id)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              animate={activeGame === g.id ? { borderColor: '#8a63d2', backgroundColor: '#8a63d2' } : { borderColor: '#3a2d59', backgroundColor: 'transparent' }}
-              className={`flex items-center gap-2 px-4 py-3 font-mono text-xs uppercase tracking-[0.2em] transition-all ${
-                activeGame === g.id 
-                  ? 'text-white border rounded-none shadow-[0_0_15px_rgba(138,99,210,0.5)]' 
-                  : 'border text-[#8a63d2] hover:text-white hover:border-[#8a63d2] rounded-none'
-              }`}
-            >
-              {g.icon}
-              {g.title}
-            </motion.button>
-          ))}
+        {/* Physical Cartridges outside the machine */}
+        <div className="mb-8 relative z-20">
+          <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
+            <ArrowDown size={14} className="animate-bounce" /> Select a Cartridge
+          </p>
+          <div className="flex flex-wrap justify-center sm:justify-start gap-4">
+            {games.map((g) => (
+              <motion.button
+                key={g.id}
+                onClick={() => handleInsertCartridge(g.id)}
+                whileHover={{ y: -5, scale: 1.02 }}
+                whileTap={{ y: 0, scale: 0.98 }}
+                disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
+                className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-[#8a63d2] -translate-y-4 shadow-[0_10px_20px_rgba(138,99,210,0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {/* Cartridge Ridges */}
+                <div className="w-full flex justify-between px-2 opacity-30 mt-1">
+                  <div className="w-1 h-3 bg-black"></div>
+                  <div className="w-1 h-3 bg-black"></div>
+                  <div className="w-1 h-3 bg-black"></div>
+                  <div className="w-1 h-3 bg-black"></div>
+                  <div className="w-1 h-3 bg-black"></div>
+                </div>
+                {/* Cartridge Label */}
+                <div className={`w-full flex-grow mx-1 my-1 md:my-2 border-2 border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm`}>
+                  <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
+                  <span className="text-white drop-shadow-md z-10 mb-1">{g.icon}</span>
+                  <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase drop-shadow-md">{g.label}</span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
         </div>
 
-        {/* Game Screen / Arcade Cabinet */}
-        <div className="relative bg-[#2d2d2d] p-4 md:p-6 border-4 border-zinc-900 mx-auto overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,0.8)] rounded-xl">
-          {/* Machine Header */}
-          <div className="absolute top-0 left-0 right-0 h-4 bg-zinc-950 flex items-center justify-center gap-2">
-            <div className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
-            <div className="w-1 h-1 rounded-full bg-yellow-500" />
-            <div className="w-1 h-1 rounded-full bg-green-500" />
+        {/* Arcade Machine Component */}
+        <div className="relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl max-w-4xl">
+          
+          {/* Wood panel texture effect */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 8px)' }}></div>
+          
+          <div className="flex justify-between items-center mb-6 relative z-10 block">
+            <h2 className="text-[#8a63d2] font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-sm md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.8)] uppercase">SISYPHUS_ENTERTAINMENT</h2>
+            
+            {/* Power Button */}
+            <button 
+              onClick={handlePower}
+              className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-4 flex items-center justify-center transition-all ${powerState !== 'off' ? 'bg-red-500 border-red-300 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'bg-red-950 border-red-900 shadow-inner'}`}
+            >
+              <Power className={powerState !== 'off' ? 'text-white' : 'text-red-800'} size={20} />
+            </button>
           </div>
 
           {/* CRT Screen Frame */}
-          <div className="bg-[#05040a] border-4 border-zinc-950 min-h-[500px] flex items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-lg">
+          <div className="bg-[#05040a] border-[8px] md:border-[12px] border-[#111] min-h-[400px] md:min-h-[500px] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-3xl overflow-hidden p-0 md:p-4">
             
             {/* CRT Screen Effect overlay */}
-            <div className="absolute inset-0 pointer-events-none z-10 mix-blend-overlay opacity-50">
-              <div className="w-full h-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]" />
+            <div className="absolute inset-0 pointer-events-none z-20 mix-blend-overlay opacity-[0.35]">
+              <div className="w-full h-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
             </div>
             
             {/* Bezel vignette */}
-            <div className="absolute inset-0 z-20 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+            <div className="absolute inset-0 z-[15] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.8)_100%)]" />
             
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeGame}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.05 }}
-                transition={{ duration: 0.3 }}
-                className="w-full flex justify-center p-4"
-              >
-                {activeGame === 'pong' && <DebatePong />}
-                {activeGame === 'tictactoe' && <IdeasTicTacToe />}
-                {activeGame === 'uno' && <PoliticalUno />}
-                {activeGame === 'rpg' && <ArtRPG />}
-                {activeGame === 'sellout' && <SellOutGame />}
-                {activeGame === 'invaders' && <CreativeInvaders />}
-              </motion.div>
-            </AnimatePresence>
+            {/* Screen Content */}
+            <div id="arcade-screen-container" className="relative z-10 w-full h-full flex-grow flex flex-col items-center justify-center [&_*:focus-visible]:outline-2 [&_*:focus-visible]:outline-brand-accent [&_*:focus]:outline-offset-2">
+              {powerState === 'off' && (
+                <div className="w-full h-full min-h-[400px] bg-black"></div>
+              )}
 
+              {(powerState === 'booting' || powerState === 'waiting' || powerState === 'inserting') && (
+                <div className="w-full h-full min-h-[400px] bg-black flex justify-start items-start p-6 md:p-12 overflow-hidden relative">
+                  {/* Scanline overlay specifically for terminal text */}
+                  <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] z-10" />
+                  
+                  <div className="text-green-500 font-mono text-xs md:text-sm leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(34,197,94,0.8)] z-0">
+                    {bootLog.map((line, i) => (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }} 
+                        animate={{ opacity: 1, x: 0 }} 
+                        key={i} 
+                        className={`mb-1 ${line === "PLEASE INSERT CARTRIDGE" || line === "STARTING GAME..." ? "animate-pulse font-bold mt-4" : ""}`}
+                      >
+                        {line}
+                      </motion.div>
+                    ))}
+                    {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 ml-1 translate-y-1"></motion.span>}
+                    {powerState === 'waiting' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 ml-1 translate-y-1"></motion.span>}
+                  </div>
+                </div>
+              )}
+
+              <AnimatePresence mode="wait">
+                {powerState === 'playing' && (
+                  <motion.div
+                    key={activeGame}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full flex justify-center p-0 md:p-4 bg-black"
+                  >
+                    {activeGame === 'pong' && <DebatePong />}
+                    {activeGame === 'tictactoe' && <IdeasTicTacToe />}
+                    {activeGame === 'uno' && <PoliticalUno />}
+                    {activeGame === 'rpg' && <ArtRPG />}
+                    {activeGame === 'sellout' && <SellOutGame />}
+                    {activeGame === 'invaders' && <CreativeInvaders />}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           
           {/* Arcade Cabinet Control Area */}
-          <div className="mt-6 flex justify-between items-center px-4 md:px-8">
-             <div className="flex gap-4">
-                <button 
-                  onClick={() => playSound('click')}
-                  className="w-10 h-10 rounded-full bg-red-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] border-t-4 border-red-400 active:translate-y-[2px] transition-all" />
-                <button 
-                  onClick={() => playSound('click')}
-                  className="w-10 h-10 rounded-full bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] border-t-4 border-yellow-200 active:translate-y-[2px] transition-all" />
+          <div className="mt-8 flex justify-between items-center px-4 md:px-12 bg-zinc-900 py-6 rounded-xl border-t border-zinc-700 shadow-inner relative z-10">
+             {/* Joysticks/Buttons decorative */}
+             <div className="flex gap-4 md:gap-6 items-center">
+                {/* D-Pad / Joystick Replacement for aesthetics and function */}
+                <div className="relative w-16 h-16 md:w-20 md:h-20 bg-zinc-800 rounded-full shadow-[inset_0_0_10px_rgba(0,0,0,0.8),0_0_5px_rgba(0,0,0,0.5)] border-2 border-zinc-900 flex items-center justify-center p-1">
+                   <div className="absolute top-0 bottom-0 left-1/3 right-1/3 bg-zinc-900/50"></div>
+                   <div className="absolute left-0 right-0 top-1/3 bottom-1/3 bg-zinc-900/50"></div>
+                   
+                   <button 
+                     onMouseDown={() => startHoldKey('ArrowUp')} onMouseUp={() => stopHoldKey('ArrowUp')} onMouseLeave={() => stopHoldKey('ArrowUp')}
+                     onTouchStart={() => startHoldKey('ArrowUp')} onTouchEnd={() => stopHoldKey('ArrowUp')}
+                     className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-6 md:w-8 md:h-8 bg-zinc-700 hover:bg-zinc-600 rounded-t-md active:bg-zinc-500 transition-colors" />
+                   <button 
+                     onMouseDown={() => startHoldKey('ArrowDown')} onMouseUp={() => stopHoldKey('ArrowDown')} onMouseLeave={() => stopHoldKey('ArrowDown')}
+                     onTouchStart={() => startHoldKey('ArrowDown')} onTouchEnd={() => stopHoldKey('ArrowDown')}
+                     className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-6 md:w-8 md:h-8 bg-zinc-700 hover:bg-zinc-600 rounded-b-md active:bg-zinc-500 transition-colors" />
+                   <button 
+                     onMouseDown={() => startHoldKey('ArrowLeft')} onMouseUp={() => stopHoldKey('ArrowLeft')} onMouseLeave={() => stopHoldKey('ArrowLeft')}
+                     onTouchStart={() => startHoldKey('ArrowLeft')} onTouchEnd={() => stopHoldKey('ArrowLeft')}
+                     className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-zinc-700 hover:bg-zinc-600 rounded-l-md active:bg-zinc-500 transition-colors" />
+                   <button 
+                     onMouseDown={() => startHoldKey('ArrowRight')} onMouseUp={() => stopHoldKey('ArrowRight')} onMouseLeave={() => stopHoldKey('ArrowRight')}
+                     onTouchStart={() => startHoldKey('ArrowRight')} onTouchEnd={() => stopHoldKey('ArrowRight')}
+                     className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-zinc-700 hover:bg-zinc-600 rounded-r-md active:bg-zinc-500 transition-colors" />
+                   
+                   <div className="w-6 h-6 md:w-8 md:h-8 bg-zinc-600 rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.2)] pointer-events-none z-10" />
+                </div>
+                
+                <div className="flex gap-2 md:gap-3 items-end h-full mt-4">
+                  <div className="flex flex-col items-center gap-1">
+                    <button 
+                      onMouseDown={() => startHoldKey(' ')} onMouseUp={() => stopHoldKey(' ')} onMouseLeave={() => stopHoldKey(' ')}
+                      onTouchStart={() => startHoldKey(' ')} onTouchEnd={() => stopHoldKey(' ')}
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-600 shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_4px_0_#1e3a8a] border border-blue-400 active:translate-y-1 active:shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_0px_0_#1e3a8a] transition-all"></button>
+                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">Action / Space</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 -mt-4 md:-mt-6">
+                    <button 
+                      onMouseDown={() => startHoldKey('Enter')} onMouseUp={() => stopHoldKey('Enter')} onMouseLeave={() => stopHoldKey('Enter')}
+                      onTouchStart={() => startHoldKey('Enter')} onTouchEnd={() => stopHoldKey('Enter')}
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-yellow-500 shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_4px_0_#a16207] border border-yellow-300 active:translate-y-1 active:shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_0px_0_#a16207] transition-all"></button>
+                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">Enter / Select</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <button 
+                      onMouseDown={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onMouseUp={() => stopHoldKey('Escape')} onMouseLeave={() => stopHoldKey('Escape')}
+                      onTouchStart={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onTouchEnd={() => stopHoldKey('Escape')}
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-red-600 shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_4px_0_#7f1d1d] border border-red-400 active:translate-y-1 active:shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.5),0_0px_0_#7f1d1d] transition-all"></button>
+                    <span className="text-[8px] md:text-[10px] font-mono text-zinc-500 font-bold uppercase">Back / Esc</span>
+                  </div>
+                </div>
              </div>
-             <div className="w-20 h-10 bg-zinc-950 border-4 border-zinc-800 rounded-sm flex items-center justify-center">
-                <div className="w-3 h-6 bg-zinc-700" />
+             
+             {/* Coin Slot */}
+             <div className="flex flex-col items-center gap-2">
+               <div className="w-10 h-14 md:w-12 md:h-16 bg-zinc-800 border-2 border-zinc-950 rounded-sm flex flex-col items-center justify-start py-2 shadow-inner">
+                  <div className="w-2 h-6 md:h-8 bg-black rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.2)]" />
+                  <div className="w-5 h-2 md:w-6 md:h-3 bg-orange-500 mt-2 rounded-sm opacity-80 shadow-[0_0_5px_#f97316]"></div>
+               </div>
+               <span className="text-zinc-500 text-[8px] md:text-[10px] tracking-widest font-mono font-black uppercase">INSERT COIN</span>
              </div>
           </div>
         </div>
@@ -165,3 +347,4 @@ export function Arcade() {
     </div>
   );
 }
+

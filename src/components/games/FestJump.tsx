@@ -69,7 +69,7 @@ import { FullscreenButton } from '../ui/FullscreenButton';
 
 export function FestJump() {
   const { t } = useLanguage();
-  const { playSound } = useAudio();
+  const { playSound, playMusic } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -92,6 +92,18 @@ export function FestJump() {
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   const selectedChar = useMemo(() => CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0], [selectedCharId]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      playMusic('jump');
+    } else {
+      playMusic('arcade');
+    }
+    return () => {
+      // Just in case we unmount, return to arcade music
+      playMusic('arcade');
+    };
+  }, [isPlaying, playMusic]);
 
   useEffect(() => {
     localStorage.setItem('fest_coins', festCoins.toString());
@@ -138,8 +150,11 @@ export function FestJump() {
 
     let animationFrameId: number;
     let particles: {x: number, y: number, life: number, color: string}[] = [];
-    let powerups: {x: number, y: number, type: 'spring' | 'rocket' | 'shield' | 'coin'}[] = [];
-    let enemies: {x: number, y: number, speed: number, width: number}[] = [];
+    let powerups: {x: number, y: number, type: 'vip' | 'merch' | 'glowstick' | 'beer'}[] = [];
+    let enemies: {x: number, y: number, speed: number, width: number, isBouncer?: boolean, minX?: number, maxX?: number}[] = [];
+    let floatingTexts: {x: number, y: number, text: string, alpha: number, color: string, color2: string}[] = [];
+    let comboMultiplier = 1;
+    let comboTimer = 0;
 
     const PLATFORM_WIDTH = 60;
     const PLATFORM_HEIGHT = 12;
@@ -227,13 +242,27 @@ export function FestJump() {
       }
     };
 
-    const spawnEnemy = () => {
-      if (maxScore > 1000 && Math.random() > 0.98) {
+    const addFloatingText = (x: number, y: number, text: string, color = 'white', color2 = 'black') => {
+      floatingTexts.push({ x, y, text, alpha: 1, color, color2 });
+    };
+
+    const spawnEnemy = (platform?: any) => {
+      if (maxScore > 1000 && Math.random() > 0.98 && !platform) {
         enemies.push({
           x: Math.random() > 0.5 ? -40 : canvas.width + 40,
           y: -100,
           speed: (Math.random() * 2 + 1) * (Math.random() > 0.5 ? 1 : -1),
           width: 32
+        });
+      } else if (platform && maxScore > 3000 && Math.random() > 0.9) {
+        enemies.push({
+          x: platform.x,
+          y: platform.y - 32,
+          speed: 1.5 * (Math.random() > 0.5 ? 1 : -1),
+          width: 32,
+          isBouncer: true,
+          minX: platform.x,
+          maxX: platform.x + platform.width - 32
         });
       }
     };
@@ -244,19 +273,25 @@ export function FestJump() {
          powerups.push({
            x: platform.x + 10,
            y: platform.y - 20,
-           type: 'rocket'
+           type: 'vip'
          });
        } else if (rand > 0.95) {
          powerups.push({
            x: platform.x + 10,
            y: platform.y - 20,
-           type: 'shield'
+           type: 'merch'
          });
-       } else if (rand > 0.8) {
+       } else if (rand > 0.90) {
+         powerups.push({
+           x: platform.x + 10,
+           y: platform.y - 20,
+           type: 'beer'
+         });
+       } else if (rand > 0.75) {
          powerups.push({
            x: platform.x + platform.width / 2 - 5,
            y: platform.y - 15,
-           type: 'coin'
+           type: 'glowstick'
          });
        }
     };
@@ -363,10 +398,6 @@ export function FestJump() {
         if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
         if (maxScore > 2000) setUnlockedCodes(prev => prev.includes('BEATS10') ? prev : [...prev, 'BEATS10']);
         if (maxScore > 5000) setUnlockedCodes(prev => prev.includes('VIPPRO') ? prev : [...prev, 'VIPPRO']);
-        if (maxScore > 1000 && !coupon) {
-            setCoupon({code: 'JUMP2026', discount: '20% OFF'});
-            playSound('win');
-        }
 
         platforms.forEach((p, idx) => {
           p.y += diff;
@@ -392,6 +423,7 @@ export function FestJump() {
             p.y = minY - (80 + Math.random() * 40); // Consistent gap
             if (p.type !== 'breaking') {
               spawnPowerup(p);
+              spawnEnemy(p);
             }
             spawnEnemy();
           }
@@ -437,11 +469,23 @@ export function FestJump() {
             const distFromCenter = Math.abs((player.x + player.width/2) - (p.x + p.width/2));
             const isPerfect = distFromCenter < 10;
             
+            if (comboTimer > 0) {
+              setScore(prev => prev + 10 * comboMultiplier);
+              addFloatingText(player.x, player.y - 10, `+${10*comboMultiplier}`, '#facc15');
+            } else {
+              comboMultiplier = 1;
+            }
+
             if (isPerfect) {
-              setScore(prev => prev + 50);
+              setScore(prev => prev + 50 * comboMultiplier);
               setFestCoins(prev => prev + 2);
               createParticles(p.x + p.width/2, p.y, '#ffffff');
               shake = 5;
+              comboMultiplier++;
+              comboTimer = 180; // 3 seconds at 60fps
+              addFloatingText(player.x, player.y - 20, 'PERFECT!', '#ec4899', '#be185d');
+            } else {
+               comboMultiplier = 1;
             }
 
             player.vy = p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce;
@@ -481,23 +525,51 @@ export function FestJump() {
           }
         }
         if (hit) {
-          if (pw.type === 'coin') {
+          if (pw.type === 'glowstick') {
             setFestCoins(prev => prev + 5);
+            addFloatingText(pw.x, pw.y, '+5 KARMAS', '#10b981');
             playSound('powerup');
-            createParticles(pw.x, pw.y, '#facc15');
+            createParticles(pw.x, pw.y, '#10b981'); // Green glowstick
+            comboTimer = 180;
+          } else if (pw.type === 'beer') {
+            setScore(prev => prev + 100 * comboMultiplier);
+            addFloatingText(pw.x, pw.y, `+${100*comboMultiplier} PTS!`, '#f59e0b');
+            playSound('powerup');
+            createParticles(pw.x, pw.y, '#f59e0b');
+            comboTimer = 180;
+            comboMultiplier++;
           } else {
             playSound('score');
-            if (pw.type === 'rocket') player.jetpack = 120;
-            if (pw.type === 'shield') player.shield = 1;
+            if (pw.type === 'vip') {
+               player.jetpack = 120;
+               addFloatingText(pw.x, pw.y, 'BACKSTAGE PASS!', '#f59e0b');
+            }
+            if (pw.type === 'merch') {
+               player.shield = 1;
+               addFloatingText(pw.x, pw.y, 'MERCH EQUIPPED', '#3b82f6');
+            }
           }
         }
         return !hit && pw.y < canvas.height;
       });
 
+      if (comboTimer > 0) comboTimer--;
+
+      floatingTexts.forEach(ft => {
+         ft.y -= 1;
+         ft.alpha -= 0.02;
+      });
+      floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
+
       // Collisions Enemies
       enemies.forEach((e, index) => {
-        e.x += e.speed;
-        if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
+        if (e.isBouncer && e.minX !== undefined && e.maxX !== undefined) {
+           e.x += e.speed;
+           if (e.x < e.minX || e.x > e.maxX) e.speed *= -1;
+        } else {
+           e.x += e.speed;
+           if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
+        }
 
         let hit = false;
         for (const pr of playerRects) {
@@ -513,11 +585,27 @@ export function FestJump() {
         }
 
         if (hit) {
-          if (player.shield > 0) {
+          // Check if stomping (moving down and bottom of player is near top of enemy)
+          if (player.vy > 0 && player.y + player.height < e.y + 15) {
+             // Stomped!
+             enemies.splice(index, 1);
+             player.vy = selectedChar.jumpForce; // bounce off
+             setScore(prev => prev + 200 * comboMultiplier);
+             addFloatingText(e.x, e.y, `STOMP! +${200*comboMultiplier}`, '#facc15');
+             createParticles(e.x + e.width/2, e.y, '#ef4444');
+             playSound('score');
+             shake = 5;
+             comboMultiplier++;
+             comboTimer = 180;
+          } else if (player.shield > 0) {
             player.shield = 0;
             enemies.splice(index, 1);
             shake = 15;
             playSound('alert');
+          } else if (player.jetpack > 0) {
+            enemies.splice(index, 1);
+            createParticles(e.x + e.width/2, e.y, '#ef4444');
+            playSound('score');
           } else {
             playSound('hit');
             setIsPlaying(false);
@@ -560,6 +648,32 @@ export function FestJump() {
         ctx.arc(sx, sy, layer * 0.8, 0, Math.PI*2);
         ctx.fill();
       }
+
+      // Festival Lasers and Spotlights
+      ctx.globalCompositeOperation = 'screen';
+      for(let i=0; i<4; i++) {
+         const angle = Math.sin(Date.now() * 0.001 + i) * 0.5 + (i%2 ? Math.PI/4 : -Math.PI/4);
+         const originX = (i * canvas.width) / 3;
+         const originY = canvas.height;
+         
+         ctx.save();
+         ctx.translate(originX, originY);
+         ctx.rotate(angle);
+         
+         let laserGrad = ctx.createLinearGradient(0, 0, 0, -canvas.height*1.5);
+         laserGrad.addColorStop(0, `rgba(${i%2===0 ? '255,0,255' : '0,255,255'}, 0.3)`);
+         laserGrad.addColorStop(1, 'rgba(0,0,0,0)');
+         
+         ctx.fillStyle = laserGrad;
+         ctx.beginPath();
+         ctx.moveTo(-10, 0);
+         ctx.lineTo(10, 0);
+         ctx.lineTo(80, -canvas.height*1.5);
+         ctx.lineTo(-80, -canvas.height*1.5);
+         ctx.fill();
+         ctx.restore();
+      }
+      ctx.globalCompositeOperation = 'source-over';
 
       // Floating Geometric Shapes
       ctx.globalAlpha = 0.05;
@@ -612,6 +726,23 @@ export function FestJump() {
       ctx.stroke();
       ctx.setLineDash([]);
 
+      // Stage Name Text Background
+      let currentStageName = "Underground";
+      if (maxScore > 10000) currentStageName = "Cosmos";
+      else if (maxScore > 5000) currentStageName = "Afterparty";
+      else if (maxScore > 2000) currentStageName = "VIP Lounge";
+      else if (maxScore > 500) currentStageName = "Main Stage";
+
+      ctx.save();
+      ctx.translate(canvas.width/2, canvas.height/2);
+      ctx.rotate(-Math.PI/4);
+      ctx.fillStyle = 'rgba(255,255,255,0.03)';
+      ctx.font = '900 80px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(currentStageName.toUpperCase(), 0, 0);
+      ctx.restore();
+
       const drawWithWrap = (origX: number, drawFn: (x: number) => void) => {
         drawFn(origX);
         drawFn(origX - canvas.width);
@@ -623,19 +754,46 @@ export function FestJump() {
         if (p.broken) return; // don't draw broken platforms
 
         drawWithWrap(p.x, (pX) => {
-          // Platform Shadow
-          ctx.fillStyle = 'rgba(0,0,0,0.2)';
+          // Platform drop shadow
+          ctx.fillStyle = 'rgba(0,0,0,0.5)';
           ctx.fillRect(pX + 4, p.y + 4, p.width, PLATFORM_HEIGHT);
 
+          // Sub-structure (Truss)
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+          ctx.lineWidth = 1;
+          for(let i=0; i<p.width; i+=10) {
+             ctx.moveTo(pX + i, p.y + PLATFORM_HEIGHT);
+             ctx.lineTo(pX + i + 5, p.y + PLATFORM_HEIGHT + 8);
+             ctx.lineTo(pX + i + 10, p.y + PLATFORM_HEIGHT);
+          }
+          ctx.stroke();
+
           let pColor = '#a7f3d0';
-          if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving
-          else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking
+          if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving (Main Stage)
+          else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking (Fragile setup)
           else if (cameraY > 5000) pColor = '#e879f9'; // Zone 2 colors
           
           if (p.hasSpring) pColor = '#fde047';
 
-          ctx.fillStyle = pColor;
+          // Base structure
+          ctx.fillStyle = '#171717'; // Dark stage base
           ctx.fillRect(pX, p.y, p.width, PLATFORM_HEIGHT);
+
+          // Top Stage surface
+          ctx.fillStyle = pColor;
+          ctx.fillRect(pX, p.y, p.width, 3);
+          
+          // Speaker Details
+          if (p.width >= 40) {
+             ctx.fillStyle = 'black';
+             ctx.beginPath();
+             ctx.arc(pX + 10, p.y + PLATFORM_HEIGHT/2 + 1, 3, 0, Math.PI*2);
+             ctx.arc(pX + p.width - 10, p.y + PLATFORM_HEIGHT/2 + 1, 3, 0, Math.PI*2);
+             ctx.fill();
+             ctx.strokeStyle = '#333';
+             ctx.stroke();
+          }
 
           // Styling Details
           if (p.type === 'breaking') {
@@ -664,24 +822,29 @@ export function FestJump() {
       // Powerups
       powerups.forEach(pw => {
         drawWithWrap(pw.x, (pwX) => {
-          if (pw.type === 'coin') {
-            ctx.fillStyle = '#facc15';
+          if (pw.type === 'glowstick') {
+            ctx.fillStyle = '#10b981';
             ctx.beginPath();
-            ctx.arc(pwX + 10, pw.y + 10, 6, 0, Math.PI*2);
+            ctx.roundRect(pwX + 12, pw.y + 5, 4, 16, 2);
             ctx.fill();
-            // Inner circle
-            ctx.strokeStyle = '#eab308';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(pwX + 10, pw.y + 10, 4, 0, Math.PI*2);
-            ctx.stroke();
+            // Glow effect
+            ctx.shadowColor = '#34d399';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#6ee7b7';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          } else if (pw.type === 'beer') {
+            ctx.fillStyle = 'white';
+            ctx.font = '16px Arial';
+            ctx.fillText('🍺', pwX + 2, pw.y + 18);
           } else {
-            ctx.fillStyle = pw.type === 'rocket' ? '#f59e0b' : '#3b82f6';
+            ctx.fillStyle = pw.type === 'vip' ? '#f59e0b' : '#3b82f6';
             ctx.beginPath();
-            ctx.arc(pwX + 10, pw.y + 10, 8, 0, Math.PI*2);
+            ctx.arc(pwX + 10, pw.y + 10, 10, 0, Math.PI*2);
             ctx.fill();
             ctx.fillStyle = 'white';
-            ctx.fillText(pw.type === 'rocket' ? '🚀' : '🛡️', pwX + 2, pw.y + 15);
+            ctx.font = '12px Arial';
+            ctx.fillText(pw.type === 'vip' ? '🎟️' : '👕', pwX + 2, pw.y + 14);
           }
         });
       });
@@ -689,11 +852,17 @@ export function FestJump() {
       // Enemies
       enemies.forEach(e => {
         drawWithWrap(e.x, (eX) => {
+          ctx.fillStyle = '#171717';
+          ctx.beginPath();
+          ctx.roundRect(eX, e.y, e.width, e.width, 4);
+          ctx.fill();
+          
           ctx.fillStyle = '#ef4444';
-          ctx.fillRect(eX, e.y, e.width, e.width);
+          ctx.fillRect(eX, e.y, e.width, 4); // red cap line
+
           ctx.fillStyle = 'white';
-          ctx.font = '20px Arial';
-          ctx.fillText('👿', eX + 4, e.y + 22);
+          ctx.font = '18px Arial';
+          ctx.fillText('🙅‍♂️', eX + 6, e.y + 22);
         });
       });
 
@@ -710,6 +879,32 @@ export function FestJump() {
 
       // Player
       drawPlayer(player.x, player.y);
+
+      // Floating Texts
+      floatingTexts.forEach(ft => {
+         ctx.globalAlpha = ft.alpha;
+         ctx.fillStyle = ft.color2;
+         ctx.font = 'bold 12px monospace';
+         ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+         ctx.fillStyle = ft.color;
+         ctx.fillText(ft.text, ft.x, ft.y);
+      });
+      ctx.globalAlpha = 1;
+
+      // Combo Meter UI
+      if (comboTimer > 0 && comboMultiplier > 1) {
+         ctx.fillStyle = `rgba(236, 72, 153, ${comboTimer / 180})`;
+         ctx.font = 'bold 24px monospace';
+         ctx.textAlign = 'right';
+         ctx.fillText(`${comboMultiplier}x COMBO!`, canvas.width - 20, 60);
+         
+         // Combo bar
+         ctx.fillStyle = 'rgba(255,255,255,0.2)';
+         ctx.fillRect(canvas.width - 120, 70, 100, 4);
+         ctx.fillStyle = '#f43f5e';
+         ctx.fillRect(canvas.width - 120, 70, 100 * (comboTimer / 180), 4);
+         ctx.textAlign = 'left';
+      }
 
       update();
       setHudShield(player.shield);
@@ -901,8 +1096,8 @@ export function FestJump() {
                     className="w-full bg-zinc-900 border border-zinc-700 px-4 py-3 text-white text-center font-mono focus:outline-none focus:border-brand-accent uppercase mb-4"
                   />
                   <div className="flex gap-2">
-                    <button onClick={() => { playSound('hover'); setShowCodeInput(false); }} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">Atrás</button>
-                    <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 text-[10px] uppercase font-bold">Aplicar</button>
+                    <button onClick={() => { playSound('hover'); setShowCodeInput(false); }} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">BACK</button>
+                    <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 text-[10px] uppercase font-bold">APPLY</button>
                   </div>
                 </div>
               )}
@@ -910,17 +1105,6 @@ export function FestJump() {
           )}
         </AnimatePresence>
 
-        {isPlaying && coupon && (
-          <div className="absolute top-20 left-0 right-0 z-50 flex justify-center p-4">
-             <div className="bg-brand-accent p-4 rounded-lg shadow-xl text-center">
-                 <h2 className="text-white text-lg font-bold">{t('game.fest.coupon.title')}</h2>
-                 <p className="text-white text-xs">{t('game.fest.coupon.desc')}</p>
-                 <div className="mt-2 bg-white/20 p-2 font-mono text-2xl font-black text-white">{coupon.code}</div>
-                 <p className="mt-1 text-white text-sm font-bold">{coupon.discount}</p>
-                 <button onClick={() => setCoupon(null)} className="mt-4 bg-white text-brand-accent px-4 py-1 text-xs rounded-full font-bold">X</button>
-             </div>
-          </div>
-        )}
         <canvas 
           ref={canvasRef} 
           width={400} 
@@ -934,13 +1118,13 @@ export function FestJump() {
             {hudShield > 0 && (
               <div className="bg-blue-500/80 backdrop-blur-sm p-1.5 rounded-md border border-blue-400/50 flex flex-col items-center">
                 <Shield className="w-4 h-4 text-white animate-pulse" />
-                <span className="text-[6px] text-white font-mono uppercase mt-0.5">Escudo</span>
+                <span className="text-[6px] text-white font-mono uppercase mt-0.5">Merch VIP</span>
               </div>
             )}
             {hudJetpack > 0 && (
-              <div className="bg-amber-500/80 backdrop-blur-sm p-1.5 rounded-md border border-amber-400/50 flex flex-col items-center">
+              <div className="bg-rose-500/80 backdrop-blur-sm p-1.5 rounded-md border border-rose-400/50 flex flex-col items-center">
                 <Rocket className="w-4 h-4 text-white animate-bounce" />
-                <span className="text-[6px] text-white font-mono uppercase mt-0.5">Turbo</span>
+                <span className="text-[6px] text-white font-mono uppercase mt-0.5">Backstage</span>
               </div>
             )}
           </div>
@@ -976,17 +1160,18 @@ export function FestJump() {
 
       <div className="mt-6 grid grid-cols-2 gap-8 w-[400px] max-w-full px-4 text-[8px] text-zinc-500 uppercase tracking-widest font-mono">
         <div className="space-y-2">
-          <p className="text-white mb-2 underline decoration-brand-accent underline-offset-4">Consejos Pro</p>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-yellow-400 rounded-full"></div> Resortes: Super Salto</div>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> 🚀: Turbo-Arte</div>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> 🛡️: Inmunidad</div>
+          <p className="text-white mb-2 underline decoration-brand-accent underline-offset-4">Guía del Festival</p>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-yellow-400 rounded-full"></div> Trampolín: Gran Salto</div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> 🎟️: Pase Backstage (Vuela)</div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> 👕: Merch (Inmune 1 vez)</div>
+          <div className="flex items-center gap-2">🍺: +100 Pts</div>
           <p className="mt-4 text-pink-500 font-bold opacity-80">LEAKED CODES:</p>
           <p className="text-pink-400">RICHART, RIVAD2026, GODMODE</p>
         </div>
         <div className="space-y-2">
            <p className="text-white mb-2 underline decoration-red-500 underline-offset-4">Amenazas</p>
-           <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> Críticos de Arte</div>
-           <p className="mt-4 leading-relaxed opacity-60 italic">Escala la espiral infinita del éxito y derrota el conformismo.</p>
+           <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> Seguridad / Bouncers (Esquívalos)</div>
+           <p className="mt-4 leading-relaxed opacity-60 italic">Alcanza la gloria saltando en los escenarios del festival. ¡Consigue los mejores lugares!</p>
         </div>
       </div>
     </div>

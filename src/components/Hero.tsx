@@ -45,11 +45,11 @@ export function Hero() {
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-center"
+            className="text-center mb-0"
           >
-            <h1 className="text-[18vw] md:text-[14vw] leading-[0.75] font-display font-light uppercase tracking-tighter text-white flex flex-col items-center pointer-events-none select-none">
-              <span className="drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">{t('hero.title1')}</span>
-              <span className="font-serif font-black italic text-brand-accent transform -translate-y-2 md:-translate-y-6 lg:-translate-y-10 mix-blend-screen drop-shadow-[0_0_60px_rgba(242,74,41,0.5)]">{t('hero.title2')}</span>
+            <h1 className="text-[16vw] md:text-[12vw] leading-tight font-display font-light uppercase tracking-tighter text-white flex flex-col items-center pointer-events-none select-none mb-0">
+              <span className="drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] leading-[0.9]">{t('hero.title1')}</span>
+              <span className="font-serif font-black italic text-brand-accent mix-blend-screen drop-shadow-[0_0_60px_rgba(242,74,41,0.5)] transform -translate-y-1 md:-translate-y-2">{t('hero.title2')}</span>
             </h1>
           </motion.div>
 
@@ -92,9 +92,9 @@ export function Hero() {
             className="md:col-span-12 lg:col-span-7"
           >
             <p className="text-xl md:text-2xl lg:text-3xl text-gray-400 font-serif font-light leading-snug md:leading-relaxed text-balance">
-              <span className="text-white font-bold border-b border-brand-accent/30 pb-1" style={{ fontFamily: 'Times New Roman, serif' }}>{t('hero.job')}</span>
+              <span className="text-white font-bold border-b border-brand-accent/30 pb-1" style={{ fontFamily: 'Verdana, sans-serif' }}>{t('hero.job')}</span>
               <br className="hidden md:block"/><br className="hidden md:block"/>
-              <span className="opacity-80 font-sans text-lg lg:text-xl font-light">{t('hero.desc')}</span>
+              <span className="opacity-80 font-mono text-[18px] font-bold">{t('hero.desc')}</span>
             </p>
           </motion.div>
 
@@ -102,11 +102,11 @@ export function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1.2, delay: 0.6 }}
-            className="md:col-span-12 lg:col-span-5 flex flex-col items-end justify-end gap-4"
+            className="md:col-span-12 lg:col-span-5 flex flex-col items-center justify-center gap-4 w-full mx-auto"
           >
             <a 
               href="#proyectos"
-              className="group relative overflow-hidden flex-nowrap w-full sm:max-w-[320px] inline-flex items-center justify-between px-6 py-5 md:py-6 frosted-layer hover:border-brand-accent transition-all duration-500 rounded-2xl"
+              className="group relative overflow-hidden flex-nowrap w-full max-w-[320px] sm:max-w-md inline-flex items-center justify-between px-6 py-5 md:py-6 frosted-layer hover:border-brand-accent transition-all duration-500 rounded-2xl"
             >
               <div className="absolute inset-0 bg-brand-accent opacity-0 group-hover:opacity-10 transition-opacity duration-700" />
               <span className="relative z-10 font-mono text-[9px] tracking-[0.4em] uppercase text-white/70 group-hover:text-white transition-colors">
@@ -119,14 +119,14 @@ export function Hero() {
             
             <a 
               href="#servicios"
-              className="group flex-nowrap w-full sm:max-w-[320px] inline-flex items-center justify-center px-6 py-4 md:py-5 bg-transparent border border-white/5 hover:border-white/20 transition-all duration-500 rounded-2xl backdrop-blur-sm"
+              className="group flex-nowrap w-full max-w-[320px] sm:max-w-md inline-flex items-center justify-center px-6 py-4 md:py-5 bg-[#1d3146] border border-[#e6d5d5] text-[#ffffff] transition-all duration-500 rounded-2xl backdrop-blur-sm"
             >
-              <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-gray-500 group-hover:text-white transition-colors">
+              <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-[#e8e8e8] transition-colors">
                 {t('hero.services')}
               </span>
             </a>
 
-            <div className="w-full sm:max-w-[320px] flex justify-end">
+            <div className="w-full max-w-[320px] sm:max-w-md flex justify-center mt-2">
               <RandomFacts />
             </div>
           </motion.div>

@@ -28,7 +28,7 @@ export function RandomFacts() {
     <>
       <button
         onClick={handleOpen}
-        className="group relative inline-flex w-full sm:max-w-[320px] items-center gap-2 px-6 py-4 bg-brand-accent/10 border border-brand-accent/30 hover:bg-brand-accent hover:border-brand-accent transition-all duration-300 backdrop-blur-sm justify-center shadow-[4px_4px_0_rgba(242,74,41,0.3)] hover:shadow-[0_0_0_rgba(242,74,41,0)] hover:translate-x-[4px] hover:translate-y-[4px]"
+        className="group relative inline-flex w-full max-w-[320px] sm:max-w-md items-center gap-2 px-6 py-4 bg-brand-accent/10 border border-brand-accent/30 hover:bg-brand-accent hover:border-brand-accent transition-all duration-300 backdrop-blur-sm justify-center shadow-[4px_4px_0_rgba(242,74,41,0.3)] hover:shadow-[0_0_0_rgba(242,74,41,0)] hover:translate-x-[4px] hover:translate-y-[4px]"
       >
         <FileQuestion size={16} className="text-brand-accent group-hover:text-black transition-colors" />
         <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-brand-accent group-hover:text-black font-bold transition-colors">

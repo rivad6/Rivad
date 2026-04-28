@@ -143,6 +143,7 @@ export function ArtRPG() {
   const { playSound } = useAudio();
   const { unlockAchievement } = useAchievements();
   const [currentNode, setCurrentNode] = useState<NodeId>('start');
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const node = storyMap[currentNode];
 
@@ -151,6 +152,7 @@ export function ArtRPG() {
       playSound('win');
       unlockAchievement('red_pill');
     }
+    setSelectedIndex(0);
   }, [currentNode, node.isEnding, playSound, unlockAchievement]);
 
   const handleChoice = (next: NodeId) => {
@@ -161,6 +163,31 @@ export function ArtRPG() {
     }
     setCurrentNode(next);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (node.isEnding) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleChoice('start');
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowUp' || e.key === 'w') {
+        setSelectedIndex(prev => Math.max(0, prev - 1));
+        playSound('hover');
+      } else if (e.key === 'ArrowDown' || e.key === 's') {
+        setSelectedIndex(prev => Math.min(node.choices.length - 1, prev + 1));
+        playSound('hover');
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        if (node.choices[selectedIndex]) {
+          handleChoice(node.choices[selectedIndex].next);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [node, selectedIndex, playSound]);
 
   const renderEndingText = (text: string) => {
     const lines = text.split('\n');
@@ -282,9 +309,9 @@ export function ArtRPG() {
                   whileHover={{ x: 10, backgroundColor: 'rgba(138,99,210,0.1)' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleChoice(choice.next)}
-                  className="w-full px-5 py-4 border border-white/5 bg-zinc-950/40 text-zinc-400 text-[11px] md:text-sm hover:text-white transition-all text-left flex gap-4 items-center rounded-2xl group"
+                  className={`w-full px-5 py-4 border border-white/5 bg-zinc-950/40 text-[11px] md:text-sm transition-all text-left flex gap-4 items-center rounded-2xl group ${idx === selectedIndex ? 'text-white border-brand-accent/50 bg-brand-accent/10 translate-x-3' : 'text-zinc-400 hover:text-white'}`}
                 >
-                  <span className="text-brand-accent font-black opacity-40 group-hover:opacity-100 transition-opacity font-mono">
+                  <span className={`text-brand-accent font-black transition-opacity font-mono ${idx === selectedIndex ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
                     0{idx + 1}
                   </span>
                   <span className="font-bold tracking-tight">{t(choice.textKey)}</span>

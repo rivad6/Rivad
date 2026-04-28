@@ -84,12 +84,25 @@ export function DebatePong() {
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      player.y = getScaledY(e.touches[0].clientY) - paddleHeight / 2;
+      if (e.touches.length > 0) {
+        player.y = getScaledY(e.touches[0].clientY) - paddleHeight / 2;
+      }
+    };
+
+    let keys = { ArrowUp: false, ArrowDown: false };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp') keys.ArrowUp = true;
+      if (e.key === 'ArrowDown') keys.ArrowDown = true;
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp') keys.ArrowUp = false;
+      if (e.key === 'ArrowDown') keys.ArrowDown = false;
     };
 
     canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
 
     const draw = () => {
       if (player.score >= 5 || cpu.score >= 5) {
@@ -102,6 +115,14 @@ export function DebatePong() {
           unlockAchievement('pong_loser');
         }
         return;
+      }
+
+      const playerSpeed = 6;
+      if (keys.ArrowUp) {
+        player.y -= playerSpeed;
+      }
+      if (keys.ArrowDown) {
+        player.y += playerSpeed;
       }
 
       // Physics
@@ -248,6 +269,8 @@ export function DebatePong() {
       cancelAnimationFrame(animationFrameId);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [isPlaying]);
 
