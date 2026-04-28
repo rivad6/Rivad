@@ -252,15 +252,15 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       
       // Progression-based probabilities
       // Items become rarer, enemies and hazards become more frequent over time
-      const itemChance = 0.05 + (1 - progress) * 0.15; // 20% to 5%
+      const itemChance = 0.10 + (1 - progress) * 0.20; // 30% to 10%
       const enemyChance = 0.1 + progress * 0.4; // 10% to 50%
       
       if (typeRand < itemChance) {
         // Items: Gas, Nitro, Shield
         const itemRand = Math.random();
-        if (itemRand > 0.6) {
+        if (itemRand > 0.4) {
           type = 'gas'; width = 24; height = 26; color = '#ef4444';
-        } else if (itemRand > 0.3) {
+        } else if (itemRand > 0.2) {
           type = 'nitro'; width = 30; height = 30; color = '#facc15';
         } else {
           type = 'shield'; width = 30; height = 30; color = '#818cf8';
@@ -774,11 +774,11 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       }, 0);
       
       const diff = player.targetX - player.x;
-      player.vx = diff * 15 * (oilTimer > 0 ? 0.3 : 1.0); 
+      player.vx = diff * 12 * (oilTimer > 0 ? 0.5 : 1.0); 
       player.x += player.vx * dt;
       
       // Visual Tilt for "Steering Wheel" effect
-      player.tilt = (player.vx / 400) * 0.4;
+      player.tilt = (player.vx / 500) * 0.4;
       player.tilt = Math.max(-0.25, Math.min(0.25, player.tilt));
 
       if (isRaining) {
