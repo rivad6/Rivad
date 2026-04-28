@@ -1217,7 +1217,7 @@ export function CreativeInvaders() {
         </div>
       </div>
 
-      <div ref={containerRef} className="relative w-full h-[70vh] min-h-[500px] md:h-auto md:min-h-0 md:aspect-[4/3] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group">
+      <div ref={containerRef} className="relative w-full h-full min-h-[400px] bg-[#0a0a0B] border-2 border-white/10 rounded-xl overflow-hidden shadow-2xl flex items-center justify-center group flex-grow">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <canvas
           ref={canvasRef}

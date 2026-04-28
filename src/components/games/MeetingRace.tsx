@@ -3,11 +3,13 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { motion } from 'motion/react';
 import { AlertCircle, Car, Coffee, TerminalSquare } from 'lucide-react';
+import { FullscreenButton } from '../ui/FullscreenButton';
 
 export function MeetingRace() {
   const { t } = useLanguage();
   const { playSound } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
@@ -25,7 +27,7 @@ export function MeetingRace() {
 
     // Game state
     const player = { x: canvas.width / 2, y: canvas.height - 60, width: 30, height: 50, speed: 5 };
-    const obstacles: { x: number, y: number, width: number, height: number, speed: number, type: 'car' | 'coffee' | 'msg', color: string }[] = [];
+    const obstacles: { x: number, y: number, width: number, height: number, speed: number, type: 'microbus' | 'taco' | 'msg' | 'bache', color: string }[] = [];
     const particles: {x: number, y: number, vx: number, vy: number, life: number, type: string}[] = [];
     
     let frameCount = 0;
@@ -57,95 +59,183 @@ export function MeetingRace() {
 
     const spawnObstacle = () => {
       const typeRand = Math.random();
-      let type: 'car' | 'coffee' | 'msg' = 'car';
-      let width = 30;
-      let height = 50;
-      let color = '#ef4444'; // Red car
+      let type: 'microbus' | 'taco' | 'msg' | 'bache' = 'microbus';
+      let width = 40;
+      let height = 70;
+      let color = '#10b981'; // Green microbus
       
-      if (typeRand > 0.8) {
+      if (typeRand > 0.85) {
         type = 'msg';
-        width = 40; height = 30;
-        color = '#3b82f6'; // Blue msg
+        width = 60; height = 25;
+        color = '#25D366'; // WhatsApp green
       } else if (typeRand > 0.7) {
-        type = 'coffee';
-        width = 20; height = 20;
-        color = '#f59e0b'; // Coffee
+        type = 'taco';
+        width = 24; height = 14;
+        color = '#fde047'; // Taco yellow
+      } else if (typeRand > 0.5) {
+        type = 'bache';
+        width = 30 + Math.random() * 20; height = 20 + Math.random() * 10;
+        color = '#1c1917'; // Pothole dark
       }
 
       const x = Math.random() * (canvas.width - width);
       obstacles.push({
         x, y: -height, width, height,
-        speed: (Math.random() * 2 + 2) * speedMultiplier,
+        speed: (Math.random() * 2 + 3) * speedMultiplier,
         type, color
       });
     };
 
-    const drawCar = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, isPlayer: boolean, color: string) => {
-      ctx.fillStyle = color;
-      ctx.fillRect(x, y + 10, w, h - 20); // body
-      ctx.fillStyle = '#111'; // wheels
+    const drawTaxi = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+      // CDMX Pink Taxi
+      ctx.fillStyle = '#ec4899'; // pink top
+      ctx.fillRect(x, y + 5, w, h - 10);
+      ctx.fillStyle = '#ffffff'; // white bottom
+      ctx.fillRect(x, y + h/2, w, h/2 - 5);
+      
+      // Wheels
+      ctx.fillStyle = '#111';
       ctx.fillRect(x - 2, y + 15, 3, 10);
       ctx.fillRect(x + w - 1, y + 15, 3, 10);
       ctx.fillRect(x - 2, y + h - 25, 3, 10);
       ctx.fillRect(x + w - 1, y + h - 25, 3, 10);
       
-      ctx.fillStyle = isPlayer ? '#8a63d2' : '#333'; // glass
-      ctx.fillRect(x + 5, y + 15, w - 10, h - 30);
+      // Windows
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(x + 4, y + 12, w - 8, 12); // Windshield
+      ctx.fillRect(x + 4, y + 30, w - 8, 10); // Rear
+      
+      // Taxi sign
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(x + w/2 - 4, y + 2, 8, 4);
+    };
+
+    const drawMicrobus = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+      // CDMX Green/Gray Microbus
+      ctx.fillStyle = '#9ca3af'; // gray roof
+      ctx.fillRect(x, y, w, 15);
+      ctx.fillStyle = '#10b981'; // green body
+      ctx.fillRect(x, y + 15, w, h - 15);
+      
+      // Wheels
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x - 3, y + 20, 3, 15);
+      ctx.fillRect(x + w, y + 20, 3, 15);
+      ctx.fillRect(x - 3, y + h - 25, 3, 15);
+      ctx.fillRect(x + w, y + h - 25, 3, 15);
+
+      // Windows
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x + 2, y + 5, w - 4, 15); // Windshield
+      ctx.fillRect(x + 2, y + 25, 8, 12);
+      ctx.fillRect(x + w - 10, y + 25, 8, 12);
+      ctx.fillRect(x + 2, y + 40, 8, 12);
+      ctx.fillRect(x + w - 10, y + 40, 8, 12);
+    };
+
+    const drawTaco = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+      ctx.fillStyle = '#fef08a'; // tortilla
+      ctx.beginPath();
+      ctx.arc(x + w/2, y + h, w/2, Math.PI, 0);
+      ctx.fill();
+      
+      // meat (pastor)
+      ctx.fillStyle = '#9a3412';
+      ctx.fillRect(x + 4, y + h - 6, w - 8, 4);
+      // cilantro/onion
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(x + 6, y + h - 8, 4, 2);
+      ctx.fillRect(x + w - 10, y + h - 8, 4, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 10, y + h - 9, 3, 2);
+    };
+
+    const drawBache = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+      ctx.fillStyle = '#1c1917';
+      ctx.beginPath();
+      ctx.ellipse(x + w/2, y + h/2, w/2, h/2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#292524';
+      ctx.beginPath();
+      ctx.ellipse(x + w/2 - 2, y + h/2 + 1, w/2 - 4, h/2 - 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+    };
+
+    const drawMsg = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+      ctx.fillStyle = '#25D366'; // Whatsapp color
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, 4);
+      ctx.fill();
+      // Triangle tail
+      ctx.beginPath();
+      ctx.moveTo(x + w - 5, y + h);
+      ctx.lineTo(x + w + 5, y + h + 5);
+      ctx.lineTo(x + w, y + h - 5);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '8px Arial';
+      ctx.fillText('Jefe:', x + 4, y + 10);
+      ctx.font = '6px Arial';
+      ctx.fillText('Urgent!!', x + 4, y + 18);
     };
 
     const loop = () => {
       if (isGameOver) return;
-      ctx.fillStyle = '#222';
+      ctx.fillStyle = '#3f3f46'; // Asphalt gray
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Road lines
-      ctx.fillStyle = '#444';
+      ctx.fillStyle = '#fbbf24'; // Yellow lines
       for (let i = 0; i < 5; i++) {
-        const lineY = ((frameCount * 5 * speedMultiplier) + (i * 100)) % canvas.height;
-        ctx.fillRect(canvas.width / 2 - 5, lineY, 10, 50);
+        const lineY = ((frameCount * 6 * speedMultiplier) + (i * 100)) % canvas.height;
+        ctx.fillRect(canvas.width / 2 - 5, lineY, 10, 40);
       }
+      
+      // Side lines
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(10, 0, 4, canvas.height);
+      ctx.fillRect(canvas.width - 14, 0, 4, canvas.height);
 
       // Player Movement
       if (keys.ArrowLeft || keys.a) player.x -= player.speed;
       if (keys.ArrowRight || keys.d) player.x += player.speed;
       
       // Boundaries
-      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+      player.x = Math.max(14, Math.min(canvas.width - player.width - 14, player.x));
 
-      // Draw Player
-      drawCar(ctx, player.x, player.y, player.width, player.height, true, '#ffffff');
+      // Draw Player Taxi
+      drawTaxi(ctx, player.x, player.y, player.width, player.height);
 
       // Update and draw obstacles
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const obs = obstacles[i];
         obs.y += obs.speed;
 
-        if (obs.type === 'car') {
-           drawCar(ctx, obs.x, obs.y, obs.width, obs.height, false, obs.color);
+        if (obs.type === 'microbus') {
+           drawMicrobus(ctx, obs.x, obs.y, obs.width, obs.height);
         } else if (obs.type === 'msg') {
-           ctx.fillStyle = obs.color;
-           ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-           ctx.fillStyle = '#fff';
-           ctx.font = '10px monospace';
-           ctx.fillText('URGENT', obs.x + 2, obs.y + 15);
-        } else if (obs.type === 'coffee') {
-           ctx.fillStyle = obs.color;
-           ctx.beginPath();
-           ctx.arc(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, 0, Math.PI * 2);
-           ctx.fill();
+           drawMsg(ctx, obs.x, obs.y, obs.width, obs.height);
+        } else if (obs.type === 'taco') {
+           drawTaco(ctx, obs.x, obs.y, obs.width, obs.height);
+        } else if (obs.type === 'bache') {
+           drawBache(ctx, obs.x, obs.y, obs.width, obs.height);
         }
 
-        // Collision
+        // Collision logic
+        // Baches have smaller hitboxes
+        const hitboxPadding = obs.type === 'bache' ? 10 : 2;
+        
         if (
-          player.x < obs.x + obs.width &&
-          player.x + player.width > obs.x &&
-          player.y < obs.y + obs.height &&
-          player.y + player.height > obs.y
+          player.x < obs.x + obs.width - hitboxPadding &&
+          player.x + player.width > obs.x + hitboxPadding &&
+          player.y < obs.y + obs.height - hitboxPadding &&
+          player.y + player.height > obs.y + hitboxPadding
         ) {
-           if (obs.type === 'coffee') {
+           if (obs.type === 'taco') {
               playSound('powerup');
-              currentScore += 200;
-              speedMultiplier = Math.max(1, speedMultiplier - 0.2); // Slow down time!
+              currentScore += 300;
+              speedMultiplier = Math.max(0.8, speedMultiplier - 0.2); // Slow down time!
               obstacles.splice(i, 1);
            } else {
               playSound('lose');
@@ -182,19 +272,20 @@ export function MeetingRace() {
   }, [isPlaying, playSound]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full font-mono text-white p-2">
-      <div className="flex justify-between w-full max-w-[300px] mb-2 px-2 text-xs text-orange-400 font-bold bg-[#111] p-2 rounded-t-xl border-x-4 border-t-4 border-zinc-800">
-         <span>{t('game.race.score', 'DIS: ')}{score}</span>
-         <span className="flex items-center gap-1"><TerminalSquare w={12} /> RACE</span>
+    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800">
+      <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50" />
+      <div className="flex justify-between w-full max-w-lg mb-2 px-4 py-2 text-xs text-orange-400 font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-zinc-800 shadow-lg">
+         <span>{t('game.race.score')}{score}</span>
+         <span className="flex items-center gap-1"><TerminalSquare size={14} /> {t('arc.game7')}</span>
       </div>
 
-      <div className="relative border-4 border-zinc-800 rounded-b-xl shadow-2xl bg-black overflow-hidden w-full max-w-[300px] aspect-[3/4]">
+      <div className="relative border-4 border-zinc-800 rounded-b-xl shadow-2xl bg-black overflow-hidden w-full max-w-lg h-[400px] md:h-[500px]">
         {!isPlaying ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#222] p-4 text-center z-10">
             <Car size={32} className="text-orange-500 mb-2" />
-            <h3 className="text-xl font-bold text-orange-400 mb-2 leading-none uppercase tracking-widest">{t('game.arc.race', 'LATE FOR MEETING')}</h3>
+            <h3 className="text-xl font-bold text-orange-400 mb-2 leading-none uppercase tracking-widest">{t('game.arc.race')}</h3>
             <p className="text-[10px] text-zinc-400 mb-4 max-w-[200px] uppercase">
-              {t('game.arc.race.desc', 'DODGE TRAFFIC AND URGENT MESSAGES. GRAB COFFEE TO SLOW TIME.')}
+              {t('game.arc.race.desc')}
             </p>
             <button 
               onClick={() => {
@@ -205,15 +296,15 @@ export function MeetingRace() {
               }}
               className="bg-orange-500 text-black px-6 py-2 font-black uppercase text-xs hover:bg-orange-400 transition-colors animate-pulse"
             >
-              {t('game.insert', 'INSERT COIN')}
+              {t('game.insert')}
             </button>
           </div>
         ) : (
           <canvas 
             ref={canvasRef} 
-            width={300} 
-            height={400} 
-            className="w-full h-full"
+            width={400} 
+            height={600} 
+            className="w-full h-full object-cover"
           />
         )}
 
@@ -224,7 +315,7 @@ export function MeetingRace() {
             className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
           >
             <AlertCircle size={32} className="text-red-500 mb-2" />
-            <h2 className="text-2xl text-red-500 font-black mb-2 tracking-widest">CRASHED</h2>
+            <h2 className="text-2xl text-red-500 font-black mb-2 tracking-widest text-center">{t('game.race.crash')}</h2>
             <p className="text-xs text-zinc-300 mb-4 uppercase">Score: {score}</p>
             <button
                onClick={() => {
@@ -234,7 +325,7 @@ export function MeetingRace() {
                }}
                className="border-2 border-zinc-500 text-white px-4 py-2 text-xs font-bold hover:bg-zinc-800 transition-colors uppercase"
             >
-              {t('game.retry', 'RETRY')}
+              {t('game.retry')}
             </button>
           </motion.div>
         )}

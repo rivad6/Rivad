@@ -198,42 +198,44 @@ export function Arcade() {
           </p>
         </div>
 
-        {/* Physical Cartridges outside the machine */}
-        <div className="mb-8 relative z-20">
-          <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
-            <ArrowDown size={14} className="animate-bounce" /> Select a Cartridge
-          </p>
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4">
-            {games.map((g) => (
-              <motion.button
-                key={g.id}
-                onClick={() => handleInsertCartridge(g.id)}
-                whileHover={{ y: -5, scale: 1.02 }}
-                whileTap={{ y: 0, scale: 0.98 }}
-                disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-[#8a63d2] -translate-y-4 shadow-[0_10px_20px_rgba(138,99,210,0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {/* Cartridge Ridges */}
-                <div className="w-full flex justify-between px-2 opacity-30 mt-1">
-                  <div className="w-1 h-3 bg-black"></div>
-                  <div className="w-1 h-3 bg-black"></div>
-                  <div className="w-1 h-3 bg-black"></div>
-                  <div className="w-1 h-3 bg-black"></div>
-                  <div className="w-1 h-3 bg-black"></div>
-                </div>
-                {/* Cartridge Label */}
-                <div className={`w-full flex-grow mx-1 my-1 md:my-2 border-2 border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm`}>
-                  <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
-                  <span className="text-white drop-shadow-md z-10 mb-1">{g.icon}</span>
-                  <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase drop-shadow-md">{g.label}</span>
-                </div>
-              </motion.button>
-            ))}
+        <div ref={arcadeCabinetRef} className={`flex flex-col items-center ${isFullscreen ? 'h-screen w-screen bg-[#110f1c] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
+          {/* Physical Cartridges outside the machine */}
+          <div className={`mb-8 relative z-20 w-full ${isFullscreen ? 'max-w-4xl mx-auto' : ''}`}>
+            <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
+              <ArrowDown size={14} className="animate-bounce" /> {t('arc.select_cartridge')}
+            </p>
+            <div className="flex flex-wrap justify-center sm:justify-start gap-4">
+              {games.map((g) => (
+                <motion.button
+                  key={g.id}
+                  onClick={() => handleInsertCartridge(g.id)}
+                  whileHover={{ y: -5, scale: 1.02 }}
+                  whileTap={{ y: 0, scale: 0.98 }}
+                  disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
+                  className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-[#8a63d2] -translate-y-4 shadow-[0_10px_20px_rgba(138,99,210,0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {/* Cartridge Ridges */}
+                  <div className="w-full flex justify-between px-2 opacity-30 mt-1">
+                    <div className="w-1 h-3 bg-black"></div>
+                    <div className="w-1 h-3 bg-black"></div>
+                    <div className="w-1 h-3 bg-black"></div>
+                    <div className="w-1 h-3 bg-black"></div>
+                    <div className="w-1 h-3 bg-black"></div>
+                  </div>
+                  {/* Cartridge Label */}
+                  <div className={`w-full flex-grow mx-1 my-1 md:my-2 border-2 border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm`}>
+                    <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
+                    <span className="text-white drop-shadow-md z-10 mb-1">{g.icon}</span>
+                    <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase drop-shadow-md">{g.label}</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Arcade Machine Component */}
-        <div ref={arcadeCabinetRef} className={`relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl max-w-4xl ${isFullscreen ? 'h-screen max-w-none w-screen border-none rounded-none m-0' : ''}`}>
+          {/* Arcade Machine Component */}
+          <div className={`relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl w-full max-w-4xl ${isFullscreen ? 'flex-grow min-h-[500px]' : ''}`}>
+
           
           {/* Wood panel texture effect */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 8px)' }}></div>
@@ -386,6 +388,8 @@ export function Arcade() {
                <span className="text-zinc-500 text-[8px] md:text-[10px] tracking-widest font-mono font-black uppercase">INSERT COIN</span>
              </div>
           </div>
+        </div>
+        {/* End of arcadeCabinetRef */}
         </div>
       </div>
     </div>

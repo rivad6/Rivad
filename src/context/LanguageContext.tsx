@@ -14,6 +14,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Inicio',
     'nav.minigames': 'un cv con juegos...',
     'nav.back_to_home': 'Ir al Inicio',
+    'arc.select_cartridge': 'Selecciona un Cartucho',
+    'game.insert': 'INSERTAR MONEDA',
+    'game.retry': 'REINTENTAR',
     
     // Hero
     'hero.title1': 'Catálogo',
@@ -334,10 +337,11 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game4': 'Simulador de Inauguración',
     'arc.game5': 'Venderse al Capitalismo',
     'arc.game6': 'Invasores',
-    'arc.game7': 'Carreras',
-    'game.race.score': 'DIST: ',
-    'game.arc.race': 'TARDE A LA REUNIÓN',
-    'game.arc.race.desc': 'ESQUIVA EL TRÁFICO Y MENSAJES URGENTES. TOMA CAFÉ PARA MÁS TIEMPO.',
+    'arc.game7': 'Fugitivo a Tlalpan',
+    'game.race.score': 'KM: ',
+    'game.arc.race': 'VIERNES DE QUINCENA',
+    'game.arc.race.desc': 'ESQUIVA BACHES, PESEROS Y MENSAJES. COME TACOS PARA TIEMPO EXTRA.',
+    'game.race.crash': '¡CHOCASTE WEY!',
     
     // Game: Creative Invaders
     'game.invaders.title': 'Defensores Creativos',
@@ -770,6 +774,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Home',
     'nav.minigames': 'a cv with games...',
     'nav.back_to_home': 'Back to Home',
+    'arc.select_cartridge': 'Select a Cartridge',
+    'game.insert': 'INSERT COIN',
+    'game.retry': 'RETRY',
     // Hero
     'hero.title1': 'Human',
     'hero.title2': 'Catalog',
@@ -1083,10 +1090,11 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game4': 'Inauguration Simulator',
     'arc.game5': 'The Art of Selling Out',
     'arc.game6': 'Invaders',
-    'arc.game7': 'Meeting Race',
-    'game.race.score': 'DIST: ',
-    'game.arc.race': 'LATE FOR MEETING',
-    'game.arc.race.desc': 'DODGE TRAFFIC AND URGENT MESSAGES. GRAB COFFEE TO SLOW TIME.',
+    'arc.game7': 'Fugitive to Tlalpan',
+    'game.race.score': 'KM: ',
+    'game.arc.race': 'PAYDAY FRIDAY RUSH',
+    'game.arc.race.desc': 'DODGE POTHOLES, PESEROS & BOSS TEXTS. EAT TACOS TO SLOW TIME.',
+    'game.race.crash': 'BOOM BRO!',
 
     // Game: Creative Invaders
     'game.invaders.title': 'Creative Defenders',
@@ -1519,6 +1527,9 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.home': 'Accueil',
     'nav.minigames': 'un cv avec des jeux...',
     'nav.back_to_home': 'Retour à l\'accueil',
+    'arc.select_cartridge': 'Sélectionnez une Cartouche',
+    'game.insert': 'INSÉRER UNE PIÈCE',
+    'game.retry': 'RÉESSAYER',
     // Hero
     'hero.title1': 'Catalogue',
     'hero.title2': 'Humain',
@@ -1832,10 +1843,11 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game4': 'Simulateur d\'Inauguration',
     'arc.game5': 'L\'Art de se Vendre',
     'arc.game6': 'Envahisseurs',
-    'arc.game7': 'Course Réunion',
-    'game.race.score': 'DIST: ',
-    'game.arc.race': 'EN RETARD POUR LA RÉUNION',
-    'game.arc.race.desc': 'ÉVITEZ LE TRAFIC ET LES MESSAGES URGENTS. PRENEZ UN CAFÉ POUR RALENTIR LE TEMPS.',
+    'arc.game7': 'Fugitif vers Tlalpan',
+    'game.race.score': 'KM: ',
+    'game.arc.race': 'RUSH DU VENDREDI DE PAIE',
+    'game.arc.race.desc': 'ESQUIVEZ LES NIDS-DE-POULE, PESEROS ET TEXTOS DU PATRON. MANGEZ DES TACOS POUR RALENTIR LE TEMPS.',
+    'game.race.crash': 'ACCIDENT WEY !',
 
     // Game: Creative Invaders
     'game.invaders.title': 'Défenseurs Créatifs',
