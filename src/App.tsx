@@ -121,7 +121,7 @@ function AppContent() {
     <div className={`bg-brand-bg min-h-screen text-brand-ink selection:bg-brand-accent selection:text-[#000] flex flex-col relative ${isGamePage ? 'overflow-hidden' : 'overflow-x-hidden'}`}>
       <div className="noise-bg"></div>
       <ScrollToTop />
-      <div className={`relative z-50 ${isGamePage ? 'opacity-0 hover:opacity-100 transition-opacity duration-500' : ''}`}>
+      <div className="relative z-[10000]">
         <Nav />
       </div>
       <MusicPlayer />

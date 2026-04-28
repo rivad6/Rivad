@@ -200,50 +200,66 @@ export function Arcade() {
 
         <div ref={arcadeCabinetRef} className={`flex flex-col items-center ${isFullscreen ? 'h-screen w-screen bg-[#110f1c] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
           {/* Physical Cartridges outside the machine */}
-          <div className={`mb-8 relative z-20 w-full ${isFullscreen ? 'max-w-4xl mx-auto' : ''}`}>
-            <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
-              <ArrowDown size={14} className="animate-bounce" /> {t('arc.select_cartridge')}
-            </p>
-            <div className="flex flex-wrap justify-center sm:justify-start gap-4">
-              {games.map((g) => (
-                <motion.button
-                  key={g.id}
-                  onClick={() => handleInsertCartridge(g.id)}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  whileTap={{ y: 0, scale: 0.98 }}
-                  disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                  className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-[#8a63d2] -translate-y-4 shadow-[0_10px_20px_rgba(138,99,210,0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {/* Cartridge Ridges */}
-                  <div className="w-full flex justify-between px-2 opacity-30 mt-1">
-                    <div className="w-1 h-3 bg-black"></div>
-                    <div className="w-1 h-3 bg-black"></div>
-                    <div className="w-1 h-3 bg-black"></div>
-                    <div className="w-1 h-3 bg-black"></div>
-                    <div className="w-1 h-3 bg-black"></div>
-                  </div>
-                  {/* Cartridge Label */}
-                  <div className={`w-full flex-grow mx-1 my-1 md:my-2 border-2 border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm`}>
-                    <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
-                    <span className="text-white drop-shadow-md z-10 mb-1">{g.icon}</span>
-                    <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase drop-shadow-md">{g.label}</span>
-                  </div>
-                </motion.button>
-              ))}
+          {!isFullscreen && (
+            <div className="mb-8 relative z-20 w-full">
+              <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
+                <ArrowDown size={14} className="animate-bounce" /> {t('arc.select_cartridge')}
+              </p>
+              <div className="flex flex-wrap justify-center sm:justify-start gap-4">
+                {games.map((g) => (
+                  <motion.button
+                    key={g.id}
+                    onClick={() => handleInsertCartridge(g.id)}
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    whileTap={{ y: 0, scale: 0.98 }}
+                    disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
+                    className={`flex-shrink-0 relative w-24 h-32 md:w-32 md:h-36 rounded-t-lg rounded-b-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-between p-1.5 md:p-2 shadow-[4px_4px_0_rgba(0,0,0,0.5)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-[#8a63d2] -translate-y-4 shadow-[0_10px_20px_rgba(138,99,210,0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {/* Cartridge Ridges */}
+                    <div className="w-full flex justify-between px-2 opacity-30 mt-1">
+                      <div className="w-1 h-3 bg-black"></div>
+                      <div className="w-1 h-3 bg-black"></div>
+                      <div className="w-1 h-3 bg-black"></div>
+                      <div className="w-1 h-3 bg-black"></div>
+                      <div className="w-1 h-3 bg-black"></div>
+                    </div>
+                    {/* Cartridge Label */}
+                    <div className={`w-full flex-grow mx-1 my-1 md:my-2 border-2 border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm`}>
+                      <div className="absolute inset-0 bg-black/10 mix-blend-overlay"></div>
+                      <span className="text-white drop-shadow-md z-10 mb-1">{g.icon}</span>
+                      <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase drop-shadow-md">{g.label}</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Arcade Machine Component */}
-          <div className={`relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl w-full max-w-4xl ${isFullscreen ? 'flex-grow min-h-[500px]' : ''}`}>
+          <div className={`relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl w-full max-w-4xl ${isFullscreen ? 'flex flex-col flex-grow min-h-[500px] max-h-screen' : ''}`}>
 
           
           {/* Wood panel texture effect */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 8px)' }}></div>
           
           <div className="flex justify-between items-center mb-6 relative z-10 block">
-            <h2 className="text-[#8a63d2] font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-sm md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.8)] uppercase">SISYPHUS_ENTERTAINMENT</h2>
+            <h2 className="text-[#8a63d2] font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-xs md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.8)] uppercase">SISYPHUS_ENTERTAINMENT</h2>
             
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-2 md:gap-4 items-center">
+              {isFullscreen && (
+                <select 
+                  value={activeGame || ''}
+                  onChange={(e) => handleInsertCartridge(e.target.value)}
+                  disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
+                  className="bg-zinc-800 text-zinc-300 font-mono text-[10px] md:text-xs border-2 border-zinc-700 rounded-md p-1 md:p-2 uppercase outline-none focus:border-brand-accent transition-colors"
+                >
+                  <option value="" disabled>{t('arc.select_cartridge')}</option>
+                  {games.map(g => (
+                    <option key={g.id} value={g.id}>{g.label}</option>
+                  ))}
+                </select>
+              )}
+
               {/* Fullscreen Button */}
               <button
                 onClick={toggleFullscreen}
@@ -264,7 +280,7 @@ export function Arcade() {
           </div>
 
           {/* CRT Screen Frame */}
-          <div className="bg-[#05040a] border-[8px] md:border-[12px] border-[#111] min-h-[400px] md:min-h-[500px] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-3xl overflow-hidden p-0 md:p-4">
+          <div className={`bg-[#05040a] border-[8px] md:border-[12px] border-[#111] min-h-[400px] md:min-h-[500px] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-3xl overflow-hidden p-0 md:p-4 ${isFullscreen ? 'flex-grow' : ''}`}>
             
             {/* CRT Screen Effect overlay */}
             <div className="absolute inset-0 pointer-events-none z-20 mix-blend-overlay opacity-[0.35]">
@@ -385,7 +401,7 @@ export function Arcade() {
                   <div className="w-2 h-6 md:h-8 bg-black rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.2)]" />
                   <div className="w-5 h-2 md:w-6 md:h-3 bg-orange-500 mt-2 rounded-sm opacity-80 shadow-[0_0_5px_#f97316]"></div>
                </div>
-               <span className="text-zinc-500 text-[8px] md:text-[10px] tracking-widest font-mono font-black uppercase">INSERT COIN</span>
+               <span className="text-zinc-500 text-[8px] md:text-[10px] tracking-widest font-mono font-black uppercase">{t('game.insert', 'INSERT COIN')}</span>
              </div>
           </div>
         </div>

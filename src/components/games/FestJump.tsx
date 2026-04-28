@@ -909,13 +909,23 @@ export function FestJump() {
       update();
       setHudShield(player.shield);
       setHudJetpack(player.jetpack);
+    };
 
+    let lastTime = performance.now();
+    const TIME_STEP = 1000 / 60;
+
+    const gameLoop = (time: number) => {
+      const dt = time - lastTime;
+      if (dt >= TIME_STEP) {
+        lastTime = time - (dt % TIME_STEP);
+        draw();
+      }
       if (isPlaying) {
-        animationFrameId = requestAnimationFrame(draw);
+        animationFrameId = requestAnimationFrame(gameLoop);
       }
     };
 
-    draw();
+    animationFrameId = requestAnimationFrame(gameLoop);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
@@ -994,7 +1004,7 @@ export function FestJump() {
         </div>
       </div>
       
-      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-[400px] max-w-full h-[65vh] min-h-[500px] md:h-auto md:min-h-0 md:aspect-[3/4] flex justify-center items-center flex-col shadow-2xl mx-auto">
+      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         <AnimatePresence>
           {message && (
@@ -1096,8 +1106,8 @@ export function FestJump() {
                     className="w-full bg-zinc-900 border border-zinc-700 px-4 py-3 text-white text-center font-mono focus:outline-none focus:border-brand-accent uppercase mb-4"
                   />
                   <div className="flex gap-2">
-                    <button onClick={() => { playSound('hover'); setShowCodeInput(false); }} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">BACK</button>
-                    <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 text-[10px] uppercase font-bold">APPLY</button>
+                    <button onClick={() => { playSound('hover'); setShowCodeInput(false); }} className="flex-1 bg-zinc-800 text-zinc-400 py-3 text-[10px] uppercase">{t('arc.back', 'BACK')}</button>
+                    <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 text-[10px] uppercase font-bold">{t('game.fest.unlock', 'APPLY')}</button>
                   </div>
                 </div>
               )}
@@ -1109,7 +1119,7 @@ export function FestJump() {
           ref={canvasRef} 
           width={400} 
           height={500} 
-          className="block w-full h-full object-contain touch-none"
+          className="w-full h-full object-contain touch-none"
         />
         
         {/* HUD while playing */}
@@ -1160,18 +1170,18 @@ export function FestJump() {
 
       <div className="mt-6 grid grid-cols-2 gap-8 w-[400px] max-w-full px-4 text-[8px] text-zinc-500 uppercase tracking-widest font-mono">
         <div className="space-y-2">
-          <p className="text-white mb-2 underline decoration-brand-accent underline-offset-4">Guía del Festival</p>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-yellow-400 rounded-full"></div> Trampolín: Gran Salto</div>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> 🎟️: Pase Backstage (Vuela)</div>
-          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> 👕: Merch (Inmune 1 vez)</div>
+          <p className="text-white mb-2 underline decoration-brand-accent underline-offset-4">{t('game.fest.guide', 'Guía del Festival')}</p>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-yellow-400 rounded-full"></div> {t('game.fest.spring', 'Trampolín: Gran Salto')}</div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> 🎟️: {t('game.fest.backstage', 'Pase Backstage')}</div>
+          <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> 👕: {t('game.fest.merch', 'Merch')}</div>
           <div className="flex items-center gap-2">🍺: +100 Pts</div>
-          <p className="mt-4 text-pink-500 font-bold opacity-80">LEAKED CODES:</p>
+          <p className="mt-4 text-pink-500 font-bold opacity-80">{t('game.fest.leaked_codes', 'LEAKED CODES:')}</p>
           <p className="text-pink-400">RICHART, RIVAD2026, GODMODE</p>
         </div>
         <div className="space-y-2">
-           <p className="text-white mb-2 underline decoration-red-500 underline-offset-4">Amenazas</p>
-           <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> Seguridad / Bouncers (Esquívalos)</div>
-           <p className="mt-4 leading-relaxed opacity-60 italic">Alcanza la gloria saltando en los escenarios del festival. ¡Consigue los mejores lugares!</p>
+           <p className="text-white mb-2 underline decoration-red-500 underline-offset-4">{t('game.fest.threats', 'Amenazas')}</p>
+           <div className="flex items-center gap-2"><div className="w-2 h-2 bg-red-500"></div> {t('game.fest.bouncers', 'Seguridad / Bouncers')}</div>
+           <p className="mt-4 leading-relaxed opacity-60 italic">{t('game.fest.instruction', 'Alcanza la gloria saltando en los escenarios del festival. ¡Consigue los mejores lugares!')}</p>
         </div>
       </div>
     </div>

@@ -1143,12 +1143,20 @@ export function CreativeInvaders() {
     ctx.restore();
   }, [t]);
 
-  const tick = useCallback(() => {
-    update();
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) draw(ctx);
+  const lastTimeRef = useRef<number>(performance.now());
+  const TIME_STEP = 1000 / 60; // 60 FPS target
+
+  const tick = useCallback((time: number) => {
+    let dt = time - lastTimeRef.current;
+    
+    if (dt >= TIME_STEP) {
+       lastTimeRef.current = time - (dt % TIME_STEP);
+       update();
+       const canvas = canvasRef.current;
+       if (canvas) {
+         const ctx = canvas.getContext("2d");
+         if (ctx) draw(ctx);
+       }
     }
     requestRef.current = requestAnimationFrame(tick);
   }, [update, draw]);

@@ -602,8 +602,6 @@ const translations: Record<Language, Record<string, string>> = {
     'popup.invite.text': '¡Un CV que se juega! 🎮 Descubre el modo Arcade.',
     'popup.invite.btn': 'IR AL ARCADE',
     'game.objective': 'Objetivo: ',
-    'game.retry': 'REINTENTAR',
-    'game.insert': 'INSERT COIN',
     'game.common.controls_on': 'CONTROLES ACTIVADOS',
     'game.common.controls_off': 'CONTROLES DESACTIVADOS',
 
@@ -1093,8 +1091,8 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game7': 'Fugitive to Tlalpan',
     'game.race.score': 'KM: ',
     'game.arc.race': 'PAYDAY FRIDAY RUSH',
-    'game.arc.race.desc': 'DODGE POTHOLES, PESEROS & BOSS TEXTS. EAT TACOS TO SLOW TIME.',
-    'game.race.crash': 'BOOM BRO!',
+    'game.arc.race.desc': 'DODGE POTHOLES, MINIBUSES & BOSS TEXTS. EAT TACOS TO SLOW TIME.',
+    'game.race.crash': 'CRASHED, BRO!',
 
     // Game: Creative Invaders
     'game.invaders.title': 'Creative Defenders',
@@ -1355,8 +1353,6 @@ const translations: Record<Language, Record<string, string>> = {
     'popup.invite.text': 'A CV you can play! 🎮 Enter the Arcade mode.',
     'popup.invite.btn': 'GO TO ARCADE',
     'game.objective': 'Objective: ',
-    'game.retry': 'RETRY',
-    'game.insert': 'INSERT COIN',
     'game.common.controls_on': 'CONTROLS ON',
     'game.common.controls_off': 'CONTROLS OFF',
 
@@ -1845,9 +1841,9 @@ const translations: Record<Language, Record<string, string>> = {
     'arc.game6': 'Envahisseurs',
     'arc.game7': 'Fugitif vers Tlalpan',
     'game.race.score': 'KM: ',
-    'game.arc.race': 'RUSH DU VENDREDI DE PAIE',
-    'game.arc.race.desc': 'ESQUIVEZ LES NIDS-DE-POULE, PESEROS ET TEXTOS DU PATRON. MANGEZ DES TACOS POUR RALENTIR LE TEMPS.',
-    'game.race.crash': 'ACCIDENT WEY !',
+    'game.arc.race': 'RUSH DU VENDREDI SOIR',
+    'game.arc.race.desc': 'ESQUIVE NIDS-DE-POULE, MINIBUS ET TEXTOS DU PATRON. MANGE DES TACOS POUR RALENTIR LE TEMPS.',
+    'game.race.crash': 'T\'AS CRASCHÉ, MEC !',
 
     // Game: Creative Invaders
     'game.invaders.title': 'Défenseurs Créatifs',
@@ -2119,8 +2115,6 @@ const translations: Record<Language, Record<string, string>> = {
     'popup.invite.text': 'Un CV auquel on joue ! 🎮 Entrez dans le mode Arcade.',
     'popup.invite.btn': 'ALLER À L\'ARCADE',
     'game.objective': 'Objectif : ',
-    'game.retry': 'RÉESSAYER',
-    'game.insert': 'INSÉRER PIÈCE',
     'game.common.controls_on': 'CONTRÔLES ACTIVÉS',
     'game.common.controls_off': 'CONTRÔLES DÉSACTIVÉS',
 

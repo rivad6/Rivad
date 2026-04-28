@@ -252,8 +252,18 @@ export function DebatePong() {
       });
 
       ctx.restore();
+    };
 
-      animationFrameId = requestAnimationFrame(draw);
+    let lastTime = performance.now();
+    const TIME_STEP = 1000 / 60;
+
+    const gameLoop = (time: number) => {
+      const dt = time - lastTime;
+      if (dt >= TIME_STEP) {
+        lastTime = time - (dt % TIME_STEP);
+        draw();
+      }
+      animationFrameId = requestAnimationFrame(gameLoop);
     };
 
     const resetBall = () => {
@@ -263,7 +273,7 @@ export function DebatePong() {
       ball.dy = (Math.random() > 0.5 ? 4 : -4);
     };
 
-    draw();
+    animationFrameId = requestAnimationFrame(gameLoop);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
@@ -338,7 +348,7 @@ export function DebatePong() {
           ref={canvasRef} 
           width={400} 
           height={300} 
-          className="block max-w-full h-auto cursor-none touch-none"
+          className="w-full h-full object-contain cursor-none touch-none"
         />
       </div>
       </div>
