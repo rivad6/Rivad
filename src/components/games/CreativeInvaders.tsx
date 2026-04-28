@@ -910,9 +910,10 @@ export function CreativeInvaders() {
     }
 
     // Sync HUD
-    setHudShield(s.player.shield);
-    setHudPower(s.player.power);
-    setHudTurbo(s.player.speedBoostTimer);
+    if (hudShield !== s.player.shield) setHudShield(s.player.shield);
+    if (hudPower !== s.player.power) setHudPower(s.player.power);
+    const turboActive = s.player.speedBoostTimer > 0 ? 1 : 0;
+    if (hudTurbo !== turboActive) setHudTurbo(turboActive);
   }, [gameState, loadLevel, playSound, upgrades, t, unlockAchievement]);
 
   const saveScore = () => {
@@ -1162,7 +1163,7 @@ export function CreativeInvaders() {
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col items-center gap-6">
       <div className="w-full flex flex-col">
-      <div className="w-full flex justify-between items-end border-b border-white/10 pb-4 mb-4">
+      <div className="w-full flex justify-between items-end border-b border-white/10 pb-4 mb-4 flex-wrap gap-4">
         <div>
           <h2 className="text-2xl font-display uppercase tracking-tight text-brand-accent flex items-center gap-2 mb-1">
             <Zap className="w-6 h-6" />
@@ -1172,7 +1173,7 @@ export function CreativeInvaders() {
             {t("game.invaders.desc")}
           </p>
         </div>
-        <div className="flex gap-8">
+        <div className="flex gap-4 md:gap-8 flex-wrap">
            <div className="flex items-center gap-4 mr-4">
               {hudShield > 0 && (
                 <div className="flex flex-col items-center">
@@ -1485,7 +1486,7 @@ export function CreativeInvaders() {
         )}
 
         {gameState === "gameover" && (
-          <div className="absolute inset-0 bg-red-950/90 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-red-500/30">
+          <div className="absolute inset-0 bg-red-950/90 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-red-500/30 pointer-events-auto z-50">
             <h3 className="text-5xl font-display text-red-500 mb-2 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
               {t("game.invaders.gameover")}
             </h3>
@@ -1497,8 +1498,9 @@ export function CreativeInvaders() {
               <span className="text-brand-accent text-2xl ml-2">{score}</span>
             </p>
             <button
-              onClick={initGame}
-              className="bg-red-600 text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex items-center gap-3 hover:bg-red-500 transition-colors shadow-[0_0_20px_rgba(239,68,68,0.4)]"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+              className="bg-red-600 text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex items-center gap-3 hover:bg-red-500 transition-colors shadow-[0_0_20px_rgba(239,68,68,0.4)] relative z-50 cursor-pointer pointer-events-auto"
             >
               <RefreshCw size={18} /> {t("game.invaders.tryagain")}
             </button>
@@ -1517,7 +1519,7 @@ export function CreativeInvaders() {
         )}
 
         {gameState === "win" && (
-          <div className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30 pointer-events-auto">
+          <div className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30 pointer-events-auto z-50">
             <h3 className="text-5xl font-display text-white mb-2 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(242,74,41,0.5)]">
               {t("game.invaders.win")}
             </h3>
@@ -1531,8 +1533,9 @@ export function CreativeInvaders() {
               </span>
             </p>
             <button
-              onClick={initGame}
-              className="bg-white text-brand-accent font-black font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-colors shadow-[0_0_30px_rgba(255,255,255,0.4)] cursor-pointer"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+              onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+              className="bg-white text-brand-accent font-black font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-full flex items-center gap-3 hover:bg-gray-100 transition-colors shadow-[0_0_30px_rgba(255,255,255,0.4)] relative z-50 cursor-pointer pointer-events-auto"
             >
               <RefreshCw size={18} /> {t("game.invaders.next")}
             </button>

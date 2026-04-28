@@ -162,8 +162,9 @@ export function IdeasTicTacToe() {
       </div>
 
       <button
-        onClick={resetGame}
-        className="mt-8 bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+        onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+        className="mt-8 bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto"
       >
         {t('game.ttt.reset')}
       </button>

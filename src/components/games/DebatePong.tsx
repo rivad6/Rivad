@@ -290,12 +290,21 @@ export function DebatePong() {
             </h3>
             <p className="text-[8px] text-gray-400 mb-6 uppercase tracking-widest">{t('game.objective')}{t('game.pong.goal')}</p>
             <button 
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setPlayerScore(0);
                 setCpuScore(0);
                 setIsPlaying(true);
               }}
-              className="bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors"
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setPlayerScore(0);
+                setCpuScore(0);
+                setIsPlaying(true);
+              }}
+              className="bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto"
             >
               {playerScore >= 5 || cpuScore >= 5 ? t('game.retry') : t('game.insert')}
             </button>

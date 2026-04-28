@@ -77,6 +77,8 @@ export function FestJump() {
   const [showCodeInput, setShowCodeInput] = useState(false);
   const [codeInput, setCodeInput] = useState('');
   const [score, setScore] = useState(0);
+  const scoreRefDOM = useRef<HTMLParagraphElement>(null);
+  const coinsRefDOM = useRef<HTMLSpanElement>(null);
   const [hudShield, setHudShield] = useState(0);
   const [hudJetpack, setHudJetpack] = useState(0);
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
@@ -145,7 +147,7 @@ export function FestJump() {
     
     let player = {
       x: canvas.width / 2,
-      y: canvas.height - 20 - 24, // Positioned on top of the starting platform
+      y: canvas.height / 2, // Start higher up
       vx: 0,
       vy: 0,
       width: 24,
@@ -159,7 +161,7 @@ export function FestJump() {
       const typeRand = Math.random();
       return {
         x: (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(height * 0.005) * 120,
-        y: height,
+        y: Math.max(height, 50), // Ensure it doesn't go off too far initially
         hasSpring: Math.random() > 0.9,
         type: (typeRand > 0.8 && i > 3) ? 'moving' : (typeRand > 0.6 && i > 5) ? 'breaking' : 'normal',
         vx: (typeRand > 0.8 && i > 3) ? (Math.random() > 0.5 ? 2 : -2) : 0,
@@ -168,8 +170,8 @@ export function FestJump() {
       };
     });
 
-    // Start platform
-    platforms[0] = { x: canvas.width / 2 - PLATFORM_WIDTH / 2, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: PLATFORM_WIDTH };
+    // Start platform: make it full width and indestructible so player never falls through instantly
+    platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width };
 
     let cameraY = 0;
     let maxScore = 0;
@@ -353,8 +355,9 @@ export function FestJump() {
         cameraY += diff;
         player.y = canvas.height / 2;
         maxScore = Math.floor(cameraY);
-        setScore(maxScore);
-        if (maxScore > highScore) setHighScore(maxScore);
+        if (scoreRefDOM.current && Math.floor(maxScore) !== parseInt(scoreRefDOM.current.innerText)) {
+           scoreRefDOM.current.innerText = maxScore.toString();
+        }
 
         // Codes logic
         if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
@@ -526,6 +529,8 @@ export function FestJump() {
       // Game Over
       if (player.y > canvas.height) {
         playSound('lose');
+        setScore(maxScore);
+        if (maxScore > highScore) setHighScore(maxScore);
         setIsPlaying(false);
       }
     };
@@ -779,14 +784,14 @@ export function FestJump() {
           </div>
         </div>
           <div className="flex items-baseline gap-1">
-            <p className="text-4xl font-black italic tracking-tighter">{score}</p>
+            <p ref={scoreRefDOM} className="text-4xl font-black italic tracking-tighter">{score}</p>
             <span className="text-[10px] text-zinc-500 font-mono">/ {highScore} HI</span>
           </div>
         </div>
         <div className="text-right flex flex-col items-end justify-end h-full">
           <div className="flex items-center gap-2 text-yellow-400 px-3 py-1 bg-yellow-400/10 rounded-full border border-yellow-400/20 mb-2">
             <Zap className="w-3 h-3 fill-yellow-400" />
-            <span className="text-xs font-black italic">{festCoins}</span>
+            <span ref={coinsRefDOM} className="text-xs font-black italic">{festCoins}</span>
           </div>
           <div className="flex flex-wrap justify-end gap-1 max-w-[120px]">
             {unlockedCodes.map(c => <span key={c} className="text-[7px] text-pink-400 bg-pink-500/10 px-1.5 py-0.5 border border-pink-500/20 rounded uppercase font-mono">{c}</span>)}
@@ -868,7 +873,11 @@ export function FestJump() {
 
                   <div className="w-full px-8 mt-2 flex flex-col gap-3">
                      {unlockedChars.includes(selectedCharId) ? (
-                       <button onClick={() => { playSound('click'); setIsPlaying(true); }} className="w-full bg-brand-accent text-white py-3 uppercase text-[12px] font-bold hover:bg-white hover:text-black transition-all">
+                       <button 
+                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); playSound('click'); setIsPlaying(true); }} 
+                         onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); playSound('click'); setIsPlaying(true); }} 
+                         className="w-full bg-brand-accent text-white py-3 uppercase text-[12px] font-bold hover:bg-white hover:text-black transition-all relative z-50 cursor-pointer pointer-events-auto"
+                       >
                          [ START GAME ]
                        </button>
                      ) : (

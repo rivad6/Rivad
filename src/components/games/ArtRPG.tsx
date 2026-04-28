@@ -190,8 +190,9 @@ export function ArtRPG() {
           {t('game.rpg.title')}
         </h3>
         <button
-          onClick={() => handleChoice('q1')}
-          className="px-6 py-3 bg-[#8a63d2] text-white font-mono text-xs md:text-sm uppercase tracking-widest hover:bg-[#6b47ab] focus:outline-none focus:ring-2 focus:ring-[#8a63d2]/50 transition-all shadow-[0_0_15px_rgba(138,99,210,0.5)] cursor-none z-10"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleChoice('q1'); }}
+          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleChoice('q1'); }}
+          className="px-6 py-3 bg-[#8a63d2] text-white font-mono text-xs md:text-sm uppercase tracking-widest hover:bg-[#6b47ab] focus:outline-none focus:ring-2 focus:ring-[#8a63d2]/50 transition-all shadow-[0_0_15px_rgba(138,99,210,0.5)] cursor-pointer z-50 relative pointer-events-auto"
         >
           {t('game.rpg.start')}
         </button>
@@ -268,8 +269,9 @@ export function ArtRPG() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleChoice('start')}
-                className="w-full px-6 py-4 bg-white text-black text-xs font-black uppercase tracking-[0.4em] hover:bg-brand-accent hover:text-white transition-all rounded-2xl text-center shadow-xl shadow-brand-accent/10"
+                onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); handleChoice('start'); }}
+                onTouchEnd={(e:any) => { e.preventDefault(); e.stopPropagation(); handleChoice('start'); }}
+                className="w-full px-6 py-4 bg-white text-black text-xs font-black uppercase tracking-[0.4em] hover:bg-brand-accent hover:text-white transition-all rounded-2xl text-center shadow-xl shadow-brand-accent/10 relative z-50 cursor-pointer pointer-events-auto"
               >
                 {t('game.rpg.restart')}
               </motion.button>

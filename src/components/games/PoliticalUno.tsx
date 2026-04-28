@@ -571,8 +571,9 @@ export function PoliticalUno() {
               <motion.button
                 whileHover={{ scale: 1.1, backgroundColor: '#fff', color: '#000' }}
                 whileTap={{ scale: 0.9 }}
-                onClick={initGame}
-                className="mt-8 bg-zinc-900 text-white px-16 py-5 font-black uppercase tracking-[0.4em] transition-all rounded-full border border-white/10 flex items-center gap-3 shadow-2xl relative z-10"
+                onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+                onTouchEnd={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+                className="mt-8 bg-zinc-900 text-white px-16 py-5 font-black uppercase tracking-[0.4em] transition-all rounded-full border border-white/10 flex items-center gap-3 shadow-2xl relative z-50 cursor-pointer pointer-events-auto"
               >
                 <ArrowLeftRight className="w-5 h-5" />
                 {t('game.uno.label.reset_btn')}

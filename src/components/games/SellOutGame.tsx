@@ -249,8 +249,9 @@ export const SellOutGame: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={resetGame}
-                className="bg-brand-accent text-white px-10 py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_10px_30px_rgba(138,99,210,0.3)] shadow-brand-accent/20"
+                onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                onTouchEnd={(e:any) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                className="bg-brand-accent text-white px-10 py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_10px_30px_rgba(138,99,210,0.3)] shadow-brand-accent/20 relative z-50 cursor-pointer pointer-events-auto"
               >
                 {t('game.sell.label.reset')}
               </motion.button>
