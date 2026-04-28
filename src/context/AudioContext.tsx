@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 
 type SoundType = 'click' | 'hover' | 'win' | 'lose' | 'hit' | 'score' | 'purchase' | 'alert' | 'fire' | 'explosion' | 'powerup' | 'shield';
 
@@ -20,15 +20,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (stored === 'true') setIsMuted(true);
   }, []);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const next = !prev;
       localStorage.setItem('art-capital-muted', String(next));
       return next;
     });
-  };
+  }, []);
 
-  const playSound = (type: SoundType) => {
+  const playSound = useCallback((type: SoundType) => {
     if (isMuted) return;
 
     // Initialize audio context on first user interaction
@@ -164,7 +164,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         osc.stop(now + 0.5);
         break;
     }
-  };
+  }, [isMuted]);
 
   return (
     <AudioContext.Provider value={{ playSound, isMuted, toggleMute }}>

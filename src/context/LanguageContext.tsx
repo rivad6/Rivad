@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
 type Language = 'es' | 'en' | 'fr';
 
@@ -2258,7 +2258,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('es');
 
-  const t = (key: string, variables?: Record<string, string>) => {
+  const t = useCallback((key: string, variables?: Record<string, string>) => {
     let text = translations[language]?.[key] || translations['es'][key] || key;
     if (variables) {
       for (const [v, val] of Object.entries(variables)) {
@@ -2266,7 +2266,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       }
     }
     return text;
-  };
+  }, [language]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
