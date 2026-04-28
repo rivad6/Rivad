@@ -85,6 +85,10 @@ export function FestJump() {
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_chars') || '["default"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('fest_selected_char') || 'default');
   const [highScore, setHighScore] = useState(() => Number(localStorage.getItem('fest_highscore') || 0));
+  const [upgrades, setUpgrades] = useState(() => {
+    const saved = localStorage.getItem('fest_upgrades');
+    return saved ? JSON.parse(saved) : { magnet: 0, jump: 0, shield: 0, luck: 0 };
+  });
   const [coupon, setCoupon] = useState<{code: string, discount: string} | null>(null);
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
   const [unlockedCodes, setUnlockedCodes] = useState<string[]>([]);
@@ -112,7 +116,8 @@ export function FestJump() {
     localStorage.setItem('fest_selected_char', selectedCharId);
     localStorage.setItem('fest_highscore', highScore.toString());
     localStorage.setItem('fest_mobile_controls', showMobileControls.toString());
-  }, [festCoins, unlockedChars, selectedCharId, highScore, showMobileControls]);
+    localStorage.setItem('fest_upgrades', JSON.stringify(upgrades));
+  }, [festCoins, unlockedChars, selectedCharId, highScore, showMobileControls, upgrades]);
 
   const showMsg = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
     setMessage({ text, type });
@@ -164,30 +169,35 @@ export function FestJump() {
     
     let player = {
       x: canvas.width / 2,
-      y: canvas.height / 2, // Start higher up
+      y: canvas.height / 2,
       vx: 0,
       vy: 0,
       width: 24,
       height: 24,
-      shield: 0,
+      shield: upgrades.shield > 0 ? 1 : 0,
       jetpack: 0,
       magnet: 0,
       lastShot: 0,
     };
+
+    const JUMP_BOOST = upgrades.jump * 0.5;
+    const MAGNET_RANGE = 150 + upgrades.magnet * 50;
 
     let platforms = Array.from({ length: 12 }, (_, i) => {
       const height = canvas.height - (i * 80 + 20);
       const typeRand = Math.random();
       return {
         x: (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(height * 0.005) * 120,
-        y: Math.max(height, 50), // Ensure it doesn't go off too far initially
+        y: Math.max(height, 50),
         hasSpring: Math.random() > 0.9,
-        type: (typeRand > 0.8 && i > 3) ? 'moving' : (typeRand > 0.6 && i > 5) ? 'breaking' : 'normal',
-        vx: (typeRand > 0.8 && i > 3) ? (Math.random() > 0.5 ? 2 : -2) : 0,
+        type: (typeRand > 0.9) ? 'moving' : (typeRand > 0.8) ? 'breaking' : (typeRand > 0.75) ? 'phantom' : 'normal',
+        vx: (typeRand > 0.9) ? (Math.random() > 0.5 ? 2 : -2) : 0,
         broken: false,
         width: PLATFORM_WIDTH,
         isStepped: false,
         crackValue: 0,
+        opacity: 1,
+        phantomTimer: Math.random() * 100,
       };
     });
 
@@ -484,23 +494,20 @@ export function FestJump() {
             const isMoving = Math.random() < Math.min(0.5, maxScore / 20000);
             const isBreaking = !isMoving && Math.random() < Math.min(0.4, maxScore / 25000);
             const isGlass = !isMoving && !isBreaking && Math.random() < Math.min(0.3, maxScore / 30000);
-            
-            p.type = isMoving ? 'moving' : isBreaking ? 'breaking' : isGlass ? 'glass' : 'normal';
-            p.vx = isMoving ? (Math.random() > 0.5 ? (Math.random() * 2 + 1) : -(Math.random() * 2 + 1)) : 0;
+            const isPhantom = !isMoving && !isBreaking && !isGlass && Math.random() < 0.15;
+            const isBoost = !isMoving && !isBreaking && !isGlass && !isPhantom && Math.random() < 0.1;
+
+            p.type = isMoving ? 'moving' : isBreaking ? 'breaking' : isGlass ? 'glass' : isPhantom ? 'phantom' : isBoost ? 'boost' : 'normal';
+            p.vx = isMoving ? (Math.random() * 2 + 1 + (maxScore / 10000)) * (Math.random() > 0.5 ? 1 : -1) : 0;
             p.broken = false;
-            p.crackValue = 0; // for glass
+            p.crackValue = 0;
             p.isStepped = false;
-            
-            // Layout structures
-            if (maxScore < 2000) {
-               p.x = (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(p.y * 0.005) * 120;
-            } else {
-               p.x = Math.random() * (canvas.width - PLATFORM_WIDTH);
-            }
-            
-            p.y = minY - (80 + Math.random() * 40); // Consistent gap
-            if (p.type !== 'breaking') {
+            p.opacity = 1;
+
+            if (p.type !== 'breaking' && p.type !== 'phantom' && p.type !== 'boost') {
               spawnPowerup(p);
+            }
+            if (p.type !== 'phantom') {
               spawnEnemy(p);
             }
             spawnEnemy();
@@ -522,10 +529,10 @@ export function FestJump() {
       if (player.vy > 0) {
         platforms.forEach(p => {
           if (p.broken) return;
+          if (p.type === 'phantom' && p.opacity < 0.3) return; // Can't jump on invisible
           
           if (p.type === 'moving') {
             p.x += p.vx;
-            // Platforms wrap around the screen too to feel fully cylindrical
             if (p.x < -p.width) p.x += canvas.width + p.width;
             if (p.x > canvas.width) p.x -= canvas.width + p.width;
           }
@@ -548,6 +555,17 @@ export function FestJump() {
             const distFromCenter = Math.abs((player.x + player.width/2) - (p.x + p.width/2));
             const isPerfect = distFromCenter < 10;
             
+            if (p.type === 'boost') {
+               player.vy = -20;
+               playSound('powerup');
+               shake = 15;
+               screenFlash = 0.5;
+               addFloatingText(player.x, player.y, 'SONIC BOOST!', '#facc15');
+               comboMultiplier += 2;
+               comboTimer = 180 + (upgrades.luck * 60);
+               return;
+            }
+
             if (comboTimer > 0) {
               bonusScore += 10 * comboMultiplier;
               addFloatingText(player.x, player.y - 10, `+${10*comboMultiplier}`, '#facc15');
@@ -561,16 +579,17 @@ export function FestJump() {
               createParticles(p.x + p.width/2, p.y, '#ffffff');
               shake = 5;
               comboMultiplier++;
-              comboTimer = 180; // 3 seconds at 60fps
+              comboTimer = 180 + (upgrades.luck * 60);
               addFloatingText(player.x, player.y - 20, 'PERFECT!', '#ec4899', '#be185d');
             } else {
                comboMultiplier = 1;
             }
 
-            player.vy = p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce;
+            player.vy = (p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce) - JUMP_BOOST;
             if (p.type === 'breaking') {
               p.broken = true;
               createParticles(p.x + p.width/2, p.y + PLATFORM_HEIGHT/2, '#9ca3af');
+              playSound('hit');
             } else if (p.type === 'glass') {
               p.isStepped = true;
               playSound('click');
@@ -586,9 +605,13 @@ export function FestJump() {
           }
         });
       } else {
-        // Evaluate moving platforms even when going up, just so they keep moving
+        // Evaluate moving platforms even when going up
         platforms.forEach(p => {
           if (p.broken) return;
+          if (p.type === 'phantom') {
+             p.phantomTimer = (p.phantomTimer || 0) + 1;
+             p.opacity = 0.5 + Math.sin(p.phantomTimer * 0.05) * 0.5;
+          }
           if (p.isStepped && p.type === 'glass') {
              p.crackValue = (p.crackValue || 0) + 0.05;
              if (p.crackValue >= 1) {
@@ -612,9 +635,9 @@ export function FestJump() {
             const dx = player.x + player.width / 2 - (pw.x + 10);
             const dy = player.y + player.height / 2 - (pw.y + 10);
             const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 150) {
-               pw.x += (dx / dist) * 8;
-               pw.y += (dy / dist) * 8;
+            if (dist < MAGNET_RANGE) {
+               pw.x += (dx / dist) * 10;
+               pw.y += (dy / dist) * 10;
             }
           }
         });
@@ -1017,20 +1040,37 @@ export function FestJump() {
           ctx.stroke();
 
           let pColor = '#a7f3d0';
-          if (p.type === 'moving') pColor = '#60a5fa'; // Blue for moving (Main Stage)
-          else if (p.type === 'breaking') pColor = '#fca5a5'; // Red/Pink for breaking (Fragile setup)
+          if (p.type === 'moving') pColor = '#60a5fa';
+          else if (p.type === 'breaking') pColor = '#fca5a5';
           else if (p.type === 'glass') pColor = `rgba(147, 197, 253, ${0.8 - (p.crackValue || 0)})`;
-          else if (cameraY > 5000) pColor = '#e879f9'; // Zone 2 colors
+          else if (p.type === 'phantom') pColor = `rgba(168, 85, 247, ${p.opacity * 0.8})`;
+          else if (p.type === 'boost') pColor = '#facc15';
+          else if (cameraY > 5000) pColor = '#e879f9';
           
           if (p.hasSpring) pColor = '#fde047';
 
           // Base structure
-          ctx.fillStyle = p.type === 'glass' ? 'rgba(0,0,0,0)' : '#171717'; // Dark stage base
+          ctx.fillStyle = (p.type === 'glass' || p.type === 'phantom') ? 'rgba(0,0,0,0)' : '#171717';
           ctx.fillRect(pX, p.y, p.width, PLATFORM_HEIGHT);
 
           // Top Stage surface
           ctx.fillStyle = pColor;
-          ctx.fillRect(pX, p.y, p.width, p.type === 'glass' ? PLATFORM_HEIGHT : 3);
+          ctx.globalAlpha = p.type === 'phantom' ? p.opacity : 1;
+          ctx.fillRect(pX, p.y, p.width, (p.type === 'glass' || p.type === 'phantom') ? PLATFORM_HEIGHT : 3);
+          ctx.globalAlpha = 1;
+
+          if (p.type === 'boost') {
+            // Draw animated arrows
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            const arrowPos = (Date.now() * 0.01) % 10;
+            for(let i=0; i<p.width; i+=15) {
+               ctx.beginPath();
+               ctx.moveTo(pX + i + 2, p.y + 10 - arrowPos);
+               ctx.lineTo(pX + i + 6, p.y + 4 - arrowPos);
+               ctx.lineTo(pX + i + 10, p.y + 10 - arrowPos);
+               ctx.stroke();
+            }
+          }
           
           if (p.type === 'glass') {
              ctx.strokeStyle = `rgba(255,255,255,${0.5 - (p.crackValue || 0)})`;
@@ -1275,6 +1315,28 @@ export function FestJump() {
     }
   };
 
+  const buyUpgrade = (type: keyof typeof upgrades) => {
+    const cost = (upgrades[type] + 1) * 300;
+    if (festCoins >= cost) {
+       setFestCoins(prev => prev - cost);
+       setUpgrades(prev => ({ ...prev, [type]: prev[type] + 1 }));
+       showMsg(`UPGRADED: ${type.toUpperCase()} LV. ${upgrades[type] + 1}`, 'success');
+       playSound('purchase');
+    } else {
+       showMsg(`NEED ${cost} KARMAS`, 'error');
+       playSound('alert');
+    }
+  };
+
+  const [shopTab, setShopTab] = useState<'chars' | 'upgrades'>('chars');
+
+  const UPGRADE_DATA = [
+    { key: 'magnet' as const, icon: <Zap className="w-3 h-3" />, name: 'MAGNET POW', desc: 'Attract items from further' },
+    { key: 'jump' as const, icon: <ChevronRight className="w-3 h-3 rotate-[-90deg]" />, name: 'LEAP SKILL', desc: 'Jump higher by default' },
+    { key: 'shield' as const, icon: <Shield className="w-3 h-3" />, name: 'START SHIELD', desc: 'Survive one initial hit' },
+    { key: 'luck' as const, icon: <Rocket className="w-3 h-3" />, name: 'HYPE MASTERY', desc: 'Combos last much longer' },
+  ];
+
   useEffect(() => {
     if (isPlaying) {
       document.body.style.overflow = 'hidden';
@@ -1346,13 +1408,13 @@ export function FestJump() {
               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-black/90 p-6 text-center overflow-y-auto"
             >
               {!showCodeInput ? (
-                <div className="w-full flex flex-col items-center flex-1 py-4 justify-between h-full">
+                <div className="w-full flex flex-col items-center flex-1 py-2 justify-between h-full">
                   <div className="text-center w-full">
-                    <h3 className="text-brand-accent text-2xl mb-1 italic font-black">
+                    <h3 className="text-brand-accent text-xl mb-1 italic font-black">
                       {gameStats ? t('game.fest.gameover') : 'FEST JUMP II'}
                     </h3>
                     {gameStats ? (
-                      <div className="bg-zinc-900/80 p-4 border border-zinc-800 rounded-lg mb-4 space-y-1">
+                      <div className="bg-zinc-900/80 p-3 border border-zinc-800 rounded-lg mb-2 space-y-1">
                         <div className="flex justify-between text-[10px] uppercase font-mono">
                           <span className="text-zinc-500">{t('game.fest.final_score')}</span>
                           <span className="text-white font-bold">{gameStats.total}</span>
@@ -1360,14 +1422,6 @@ export function FestJump() {
                         <div className="flex justify-between text-[10px] uppercase font-mono">
                           <span className="text-zinc-500">{t('game.fest.karmas_earned')}</span>
                           <span className="text-yellow-500 font-bold">+{gameStats.earned}</span>
-                        </div>
-                        <div className="flex justify-between text-[8px] uppercase font-mono text-zinc-600">
-                          <span>{t('game.fest.bouncers')}:</span>
-                          <span>{gameStats.enemies}</span>
-                        </div>
-                        <div className="flex justify-between text-[8px] uppercase font-mono text-zinc-600">
-                          <span>{t('game.fest.items', 'ITEMS')}:</span>
-                          <span>{gameStats.items}</span>
                         </div>
                       </div>
                     ) : (
@@ -1377,62 +1431,115 @@ export function FestJump() {
                     )}
                   </div>
 
-                  <div className="w-full relative px-6 mt-4">
-                     <div className="flex justify-between items-center w-full overflow-hidden relative" style={{ height: "140px" }}>
-                       <button 
-                         onClick={() => {
-                           playSound('hover');
-                           const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
-                           const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
-                           setSelectedCharId(CHARACTERS[prevIndex].id);
-                         }}
-                         className="absolute left-0 z-10 w-8 h-8 flex items-center justify-center text-white bg-black/50 rounded-full"
-                       >
-                         &lt;
-                       </button>
-                       
-                       <div className="flex-1 flex flex-col items-center justify-center pointer-events-none">
-                         <div className="w-20 h-20 mb-3 flex items-center justify-center relative bg-black/40 border border-white/5" style={{ backgroundColor: `${selectedChar.color}15` }}>
-                            <div className="w-12 h-12 relative z-10" style={{ backgroundColor: selectedChar.color }}></div>
-                         </div>
-                         <p className="text-[12px] text-white uppercase font-bold tracking-widest">{t(selectedChar.nameKey)}</p>
-                         <p className="text-[8px] text-zinc-400 mt-1 h-8 max-w-[150px] leading-tight italic">{t(selectedChar.descKey)}</p>
-                       </div>
-
-                       <button 
-                         onClick={() => {
-                           playSound('hover');
-                           const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
-                           const nextIndex = (currentIndex + 1) % CHARACTERS.length;
-                           setSelectedCharId(CHARACTERS[nextIndex].id);
-                         }}
-                         className="absolute right-0 z-10 w-8 h-8 flex items-center justify-center text-white bg-black/50 rounded-full"
-                       >
-                         &gt;
-                       </button>
-                     </div>
+                  {/* Tabs */}
+                  <div className="flex w-full px-4 gap-2 mb-2">
+                    <button 
+                      onClick={() => { playSound('hover'); setShopTab('chars'); }} 
+                      className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest border-b-4 transition-all ${shopTab === 'chars' ? 'border-brand-accent text-white' : 'border-zinc-800 text-zinc-600'}`}
+                    >
+                      Lineup
+                    </button>
+                    <button 
+                      onClick={() => { playSound('hover'); setShopTab('upgrades'); }} 
+                      className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest border-b-4 transition-all ${shopTab === 'upgrades' ? 'border-brand-accent text-white' : 'border-zinc-800 text-zinc-600'}`}
+                    >
+                      Upgrades
+                    </button>
                   </div>
 
-                  <div className="w-full px-8 mt-2 flex flex-col gap-3">
-                     {unlockedChars.includes(selectedCharId) ? (
-                       <button 
-                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); playSound('click'); setIsPlaying(true); }} 
-                         onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); playSound('click'); setIsPlaying(true); }} 
-                         className="w-full bg-brand-accent text-white py-3 uppercase text-[12px] font-bold hover:bg-white hover:text-black transition-all relative z-50 cursor-pointer pointer-events-auto"
-                       >
-                         [ START GAME ]
-                       </button>
-                     ) : (
-                       <button onClick={() => buyChar(selectedChar)} className={`w-full py-3 uppercase text-[12px] font-bold transition-all ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>
-                         UNLOCK - {selectedChar.price} KARMAS
-                       </button>
-                     )}
+                  <div className="flex-1 w-full overflow-y-auto px-4 custom-scrollbar">
+                    {shopTab === 'chars' ? (
+                      <div className="w-full relative py-2">
+                        <div className="flex justify-between items-center w-full overflow-hidden relative" style={{ height: "140px" }}>
+                          <button 
+                            onClick={() => {
+                              playSound('hover');
+                              const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                              const prevIndex = (currentIndex - 1 + CHARACTERS.length) % CHARACTERS.length;
+                              setSelectedCharId(CHARACTERS[prevIndex].id);
+                            }}
+                            className="absolute left-0 z-10 w-8 h-8 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors"
+                          >
+                            <ChevronLeft size={16} />
+                          </button>
+                          
+                          <div className="flex-1 flex flex-col items-center justify-center pointer-events-none">
+                            <div className="w-20 h-20 mb-3 flex items-center justify-center relative bg-black/40 border border-white/5" style={{ backgroundColor: `${selectedChar.color}15` }}>
+                                <motion.div 
+                                  key={selectedCharId}
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  className="w-12 h-12 relative z-10" 
+                                  style={{ backgroundColor: selectedChar.color }}
+                                />
+                            </div>
+                            <p className="text-[12px] text-white uppercase font-bold tracking-widest">{t(selectedChar.nameKey)}</p>
+                            <p className="text-[8px] text-zinc-400 mt-1 h-8 max-w-[150px] leading-tight italic text-center">{t(selectedChar.descKey)}</p>
+                          </div>
+
+                          <button 
+                            onClick={() => {
+                              playSound('hover');
+                              const currentIndex = CHARACTERS.findIndex(c => c.id === selectedCharId);
+                              const nextIndex = (currentIndex + 1) % CHARACTERS.length;
+                              setSelectedCharId(CHARACTERS[nextIndex].id);
+                            }}
+                            className="absolute right-0 z-10 w-8 h-8 flex items-center justify-center text-white bg-black/50 rounded-full hover:bg-brand-accent transition-colors"
+                          >
+                            <ChevronRight size={16} />
+                          </button>
+                        </div>
+
+                        <div className="mt-2">
+                          {unlockedChars.includes(selectedCharId) ? (
+                            <button 
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); playSound('click'); setIsPlaying(true); }} 
+                              className="w-full bg-brand-accent text-white py-3 uppercase text-[12px] font-bold hover:bg-white hover:text-black transition-all relative z-50 cursor-pointer pointer-events-auto"
+                            >
+                              [ START SHOW ]
+                            </button>
+                          ) : (
+                            <button onClick={() => buyChar(selectedChar)} className={`w-full py-3 uppercase text-[12px] font-bold transition-all ${festCoins >= selectedChar.price ? 'bg-yellow-500 text-black hover:bg-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)] border-2 border-yellow-200' : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'}`}>
+                              UNLOCK - {selectedChar.price} KARMAS
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2 pt-2 pb-4">
+                        {UPGRADE_DATA.map((upg) => {
+                          const level = upgrades[upg.key];
+                          const cost = (level + 1) * 300;
+                          return (
+                            <div key={upg.key} className="bg-zinc-900/50 p-2 border border-white/5 rounded-lg flex items-center gap-3">
+                              <div className="w-10 h-10 bg-black flex items-center justify-center text-brand-accent border border-brand-accent/20 rounded-md shrink-0">
+                                {upg.icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-center mb-0.5">
+                                  <p className="text-[10px] font-black text-white">{upg.name}</p>
+                                  <p className="text-[10px] text-brand-accent italic font-bold">LV. {level}</p>
+                                </div>
+                                <p className="text-[7px] text-zinc-500 tracking-tighter uppercase mb-2">{upg.desc}</p>
+                                <button 
+                                  onClick={() => buyUpgrade(upg.key)}
+                                  disabled={festCoins < cost}
+                                  className={`w-full py-1.5 text-[8px] font-bold uppercase transition-all ${festCoins >= cost ? 'bg-white text-black hover:bg-brand-accent hover:text-white' : 'bg-zinc-800 text-zinc-600'}`}
+                                >
+                                  UPGRADE - {cost} KARMAS
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                      <p className="text-[8px] text-zinc-400 text-center uppercase tracking-widest leading-relaxed mt-2">Space / Touch = Shoot</p>
                      <button onClick={() => { playSound('hover'); setShowCodeInput(true); }} className="text-[8px] text-zinc-500 hover:text-white uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
                        <Key className="w-3 h-3" /> Insert Code
                      </button>
                   </div>
-                </div>
               ) : (
                 <div className="w-full max-w-[240px]">
                   <h4 className="text-white text-[10px] mb-4 uppercase tracking-[0.2em]">{t('game.fest.code.input')}</h4>
