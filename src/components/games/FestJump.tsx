@@ -202,7 +202,7 @@ export function FestJump() {
     });
 
     // Start platform: make it full width and indestructible so player never falls through instantly
-    platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width, isStepped: false, crackValue: 0 };
+    platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width, isStepped: false, crackValue: 0, opacity: 1, phantomTimer: 0 };
 
     let cameraY = 0;
     let maxScore = 0;
@@ -415,16 +415,18 @@ export function FestJump() {
     let enemiesDefeated = 0;
     let itemsCollected = 0;
 
-    const update = () => {
+    const update = (dt: number) => {
+      const normalDt = dt / 16.666; // Normalized to 60fps
+      
       if (gameState === 'ready') {
-        readyTimer--;
+        readyTimer -= normalDt;
         if (readyTimer <= 0) gameState = 'playing';
         return;
       }
       if (gameState === 'gameover') return;
 
-      if (shake > 0) shake *= 0.9;
-      if (screenFlash > 0) screenFlash *= 0.8;
+      if (shake > 0) shake *= Math.pow(0.9, normalDt);
+      if (screenFlash > 0) screenFlash *= Math.pow(0.8, normalDt);
 
       // Shooting
       if (isShooting && Date.now() - player.lastShot > 300) {
@@ -434,42 +436,40 @@ export function FestJump() {
            y: player.y,
            vy: -15
          });
-         playSound('score'); // small click sound
+         playSound('score'); 
       }
 
       // Bullets
       bullets.forEach(b => {
-         b.y += b.vy;
+         b.y += b.vy * normalDt;
       });
       bullets = bullets.filter(b => b.y > -50);
 
       // Movement
-      if (keys.left) player.vx -= 1;
-      else if (keys.right) player.vx += 1;
-      else player.vx *= 0.8;
+      if (keys.left) player.vx -= 1 * normalDt;
+      else if (keys.right) player.vx += 1 * normalDt;
+      else player.vx *= Math.pow(0.8, normalDt);
 
       player.vx = Math.max(-selectedChar.speed, Math.min(selectedChar.speed, player.vx));
-
-      player.x += player.vx;
+      player.x += player.vx * normalDt;
       
       if (player.jetpack > 0) {
         player.vy = -15;
-        player.jetpack--;
+        player.jetpack -= normalDt;
       } else {
-        player.vy += GRAVITY;
+        player.vy += GRAVITY * normalDt;
       }
-      player.y += player.vy;
+      player.y += player.vy * normalDt;
 
-      // Screen wrap
       if (player.x < 0) player.x += canvas.width;
       if (player.x >= canvas.width) player.x -= canvas.width;
 
       // Camera follow
-      let diff = 0;
-      if (player.y < canvas.height / 2) {
-        diff = canvas.height / 2 - player.y;
-        cameraY += diff;
-        player.y = canvas.height / 2;
+      let vDiff = 0;
+      if (player.y < canvas.height * 0.4) {
+        vDiff = canvas.height * 0.4 - player.y;
+        cameraY += vDiff;
+        player.y = canvas.height * 0.4;
         maxScore = Math.floor(cameraY);
       }
       
@@ -478,24 +478,18 @@ export function FestJump() {
          scoreRefDOM.current.innerText = displayScore.toString();
       }
 
-      if (diff > 0) {
-        // Codes logic
-        if (maxScore > 500) setUnlockedCodes(prev => prev.includes('FEST5') ? prev : [...prev, 'FEST5']);
-        if (maxScore > 2000) setUnlockedCodes(prev => prev.includes('BEATS10') ? prev : [...prev, 'BEATS10']);
-        if (maxScore > 5000) setUnlockedCodes(prev => prev.includes('VIPPRO') ? prev : [...prev, 'VIPPRO']);
-
-        platforms.forEach((p, idx) => {
-          p.y += diff;
+      if (vDiff > 0) {
+        platforms.forEach((p) => {
+          p.y += vDiff;
           if (p.y > canvas.height) {
             let minY = Math.min(...platforms.map(p2 => p2.y));
-            p.y = minY - (Math.random() * 40 + 60);
+            p.y = minY - (Math.random() * 40 + 75);
             
-            // Advance generation patterns based on score
             const isMoving = Math.random() < Math.min(0.5, maxScore / 20000);
             const isBreaking = !isMoving && Math.random() < Math.min(0.4, maxScore / 25000);
             const isGlass = !isMoving && !isBreaking && Math.random() < Math.min(0.3, maxScore / 30000);
             const isPhantom = !isMoving && !isBreaking && !isGlass && Math.random() < 0.15;
-            const isBoost = !isMoving && !isBreaking && !isGlass && !isPhantom && Math.random() < 0.1;
+            const isBoost = !isMoving && !isBreaking && !isGlass && !isPhantom && Math.random() < 0.08;
 
             p.type = isMoving ? 'moving' : isBreaking ? 'breaking' : isGlass ? 'glass' : isPhantom ? 'phantom' : isBoost ? 'boost' : 'normal';
             p.vx = isMoving ? (Math.random() * 2 + 1 + (maxScore / 10000)) * (Math.random() > 0.5 ? 1 : -1) : 0;
@@ -514,9 +508,9 @@ export function FestJump() {
           }
         });
 
-        enemies.forEach(e => e.y += diff);
-        powerups.forEach(pw => pw.y += diff);
-        bullets.forEach(b => b.y += diff);
+        enemies.forEach(e => e.y += vDiff);
+        powerups.forEach(pw => pw.y += vDiff);
+        bullets.forEach(b => b.y += vDiff);
       }
 
       const playerRects = [
@@ -529,10 +523,10 @@ export function FestJump() {
       if (player.vy > 0) {
         platforms.forEach(p => {
           if (p.broken) return;
-          if (p.type === 'phantom' && p.opacity < 0.3) return; // Can't jump on invisible
+          if (p.type === 'phantom' && p.opacity < 0.3) return; 
           
           if (p.type === 'moving') {
-            p.x += p.vx;
+            p.x += p.vx * normalDt;
             if (p.x < -p.width) p.x += canvas.width + p.width;
             if (p.x > canvas.width) p.x -= canvas.width + p.width;
           }
@@ -543,7 +537,7 @@ export function FestJump() {
               pr.x + 4 < p.x + p.width &&
               pr.x + pr.w - 4 > p.x &&
               player.y + player.height >= p.y &&
-              player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy
+              player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy * normalDt
             ) {
               hit = true;
               break;
@@ -551,16 +545,15 @@ export function FestJump() {
           }
 
           if (hit) {
-            // Check for Perfect Jump
             const distFromCenter = Math.abs((player.x + player.width/2) - (p.x + p.width/2));
             const isPerfect = distFromCenter < 10;
             
             if (p.type === 'boost') {
-               player.vy = -20;
+               player.vy = -22;
                playSound('powerup');
-               shake = 15;
-               screenFlash = 0.5;
-               addFloatingText(player.x, player.y, 'SONIC BOOST!', '#facc15');
+               shake = 18;
+               screenFlash = 0.6;
+               addFloatingText(player.x, player.y, 'SONIC BOOST!!', '#facc15');
                comboMultiplier += 2;
                comboTimer = 180 + (upgrades.luck * 60);
                return;
@@ -568,7 +561,7 @@ export function FestJump() {
 
             if (comboTimer > 0) {
               bonusScore += 10 * comboMultiplier;
-              addFloatingText(player.x, player.y - 10, `+${10*comboMultiplier}`, '#facc15');
+              addFloatingText(player.x, player.y - 10, `+${Math.floor(10*comboMultiplier)}`, '#facc15');
             } else {
               comboMultiplier = 1;
             }
@@ -581,11 +574,9 @@ export function FestJump() {
               comboMultiplier++;
               comboTimer = 180 + (upgrades.luck * 60);
               addFloatingText(player.x, player.y - 20, 'PERFECT!', '#ec4899', '#be185d');
-            } else {
-               comboMultiplier = 1;
             }
 
-            player.vy = (p.hasSpring ? selectedChar.jumpForce * 1.8 : selectedChar.jumpForce) - JUMP_BOOST;
+            player.vy = (p.hasSpring ? selectedChar.jumpForce * 1.85 : selectedChar.jumpForce) - JUMP_BOOST;
             if (p.type === 'breaking') {
               p.broken = true;
               createParticles(p.x + p.width/2, p.y + PLATFORM_HEIGHT/2, '#9ca3af');
@@ -593,120 +584,100 @@ export function FestJump() {
             } else if (p.type === 'glass') {
               p.isStepped = true;
               playSound('click');
+            } else if (p.hasSpring) {
+               shake = 10;
+               playSound('score');
             } else {
-              if (p.hasSpring) {
-                shake = 10;
-                playSound('score');
-              } else {
-                playSound('click');
-              }
-              createParticles(player.x + player.width/2, player.y + player.height, selectedChar.color);
+               playSound('click');
+               createParticles(player.x + player.width/2, player.y + player.height, selectedChar.color);
             }
           }
         });
       } else {
-        // Evaluate moving platforms even when going up
         platforms.forEach(p => {
           if (p.broken) return;
           if (p.type === 'phantom') {
-             p.phantomTimer = (p.phantomTimer || 0) + 1;
+             p.phantomTimer = (p.phantomTimer || 0) + normalDt;
              p.opacity = 0.5 + Math.sin(p.phantomTimer * 0.05) * 0.5;
           }
           if (p.isStepped && p.type === 'glass') {
-             p.crackValue = (p.crackValue || 0) + 0.05;
+             p.crackValue = (p.crackValue || 0) + 0.06 * normalDt;
              if (p.crackValue >= 1) {
                 p.broken = true;
-                createParticles(p.x + p.width/2, p.y, '#93c5fd');
+                playSound('hit');
+                createParticles(p.x + p.width/2, p.y + PLATFORM_HEIGHT/2, '#93c5fd');
              }
           }
           if (p.type === 'moving') {
-            p.x += p.vx;
+            p.x += p.vx * normalDt;
             if (p.x < -p.width) p.x += canvas.width + p.width;
             if (p.x > canvas.width) p.x -= canvas.width + p.width;
           }
         });
       }
 
-      // Collisions Powerups
-      if (player.magnet > 0) {
-        player.magnet--;
-        powerups.forEach(pw => {
-          if (pw.type === 'glowstick' || pw.type === 'beer') {
-            const dx = player.x + player.width / 2 - (pw.x + 10);
-            const dy = player.y + player.height / 2 - (pw.y + 10);
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < MAGNET_RANGE) {
-               pw.x += (dx / dist) * 10;
-               pw.y += (dy / dist) * 10;
-            }
-          }
-        });
-      }
+      // Combo update
+      if (comboTimer > 0) comboTimer -= normalDt;
+      else comboMultiplier = 1;
 
-      powerups = powerups.filter(pw => {
-        let hit = false;
+      // Powerups logic
+      powerups.forEach((pw, idx) => {
+        if (player.magnet > 0 && pw.type !== 'vip') {
+          const dx = player.x + player.width / 2 - (pw.x + 10);
+          const dy = player.y + player.height / 2 - (pw.y + 10);
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < MAGNET_RANGE) {
+             pw.x += (dx / dist) * 12 * normalDt;
+             pw.y += (dy / dist) * 12 * normalDt;
+          }
+        }
+        
+        let collected = false;
         for (const pr of playerRects) {
           if (pr.x < pw.x + 20 && pr.x + pr.w > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y) {
-            hit = true;
+            collected = true;
             break;
           }
         }
-        if (hit) {
-          if (pw.type === 'glowstick') {
+
+        if (collected) {
+          itemsCollected++;
+          if (pw.type === 'vip') {
+            setFestCoins(prev => prev + 50);
+            bonusScore += 500;
+            playSound('powerup');
+            addFloatingText(pw.x, pw.y, 'VIP +50!', '#f59e0b', '#78350f');
+          } else if (pw.type === 'merch') {
+            player.shield = 1;
+            playSound('powerup');
+            addFloatingText(pw.x, pw.y, 'SHIELD ON', '#3b82f6');
+          } else if (pw.type === 'glowstick') {
             setFestCoins(prev => prev + 5);
             addFloatingText(pw.x, pw.y, '+5 KARMAS', '#10b981');
-            playSound('powerup');
-            createParticles(pw.x, pw.y, '#10b981'); // Green glowstick
-            comboTimer = 180;
-            itemsCollected++;
+            playSound('score');
           } else if (pw.type === 'beer') {
-            bonusScore += 100 * comboMultiplier;
-            addFloatingText(pw.x, pw.y, `+${100*comboMultiplier} PTS!`, '#f59e0b');
-            playSound('powerup');
-            createParticles(pw.x, pw.y, '#f59e0b');
-            comboTimer = 180;
-            comboMultiplier++;
-            itemsCollected++;
+            player.jetpack = 180;
+            playSound('start');
+            addFloatingText(pw.x, pw.y, 'HYPER BEAT!', '#facc15');
+            screenFlash = 0.4;
           } else if (pw.type === 'magnet') {
-            player.magnet = 300; // 5 seconds
-            playSound('score');
-            addFloatingText(pw.x, pw.y, 'MAGNET!', '#a855f7');
-            itemsCollected++;
-          } else {
-            playSound('score');
-            itemsCollected++;
-            if (pw.type === 'vip') {
-               player.jetpack = 120;
-               addFloatingText(pw.x, pw.y, 'BACKSTAGE PASS!', '#f59e0b');
-            }
-            if (pw.type === 'merch') {
-               player.shield = 1;
-               addFloatingText(pw.x, pw.y, 'MERCH EQUIPPED', '#3b82f6');
-            }
+            player.magnet = 600;
+            playSound('powerup');
+            addFloatingText(pw.x, pw.y, 'ATTRACTOR!', '#a855f7');
           }
+          powerups.splice(idx, 1);
         }
-        return !hit && pw.y < canvas.height;
       });
 
-      if (comboTimer > 0) comboTimer--;
-
-      floatingTexts.forEach(ft => {
-         ft.y -= 1;
-         ft.alpha -= 0.02;
-      });
-      floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
-
-      // Collisions Enemies
+      // Enemies behavior
       enemies.forEach((e, index) => {
+        e.x += e.speed * normalDt;
         if (e.isBouncer && e.minX !== undefined && e.maxX !== undefined) {
-           e.x += e.speed;
            if (e.x < e.minX || e.x > e.maxX) e.speed *= -1;
         } else {
-           e.x += e.speed;
            if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
         }
 
-        // Check for bullet hit
         let shot = false;
         bullets.forEach((b, bIndex) => {
            if (b.x > e.x && b.x < e.x + e.width && b.y > e.y && b.y < e.y + e.width) {
@@ -718,7 +689,7 @@ export function FestJump() {
         if (shot) {
             enemies.splice(index, 1);
             bonusScore += 200 * comboMultiplier;
-            addFloatingText(e.x, e.y, `BAM! +${200*comboMultiplier}`, '#facc15');
+            addFloatingText(e.x, e.y, `BOOM! +${Math.floor(200*comboMultiplier)}`, '#facc15');
             createParticles(e.x + e.width/2, e.y, '#ef4444');
             playSound('score');
             comboMultiplier++;
@@ -729,35 +700,28 @@ export function FestJump() {
 
         let hit = false;
         for (const pr of playerRects) {
-          if (
-            pr.x < e.x + e.width - 4 &&
-            pr.x + pr.w > e.x + 4 &&
-            player.y < e.y + e.width - 4 &&
-            player.y + player.height > e.y + 4
-          ) {
+          if (pr.x < e.x + e.width - 4 && pr.x + pr.w > e.x + 4 && player.y < e.y + e.width - 4 && player.y + player.height > e.y + 4) {
             hit = true;
             break;
           }
         }
 
         if (hit) {
-          // Check if stomping (moving down and bottom of player is near top of enemy)
           if (player.vy > 0 && player.y + player.height < e.y + 15) {
-             // Stomped!
              enemies.splice(index, 1);
-             player.vy = selectedChar.jumpForce; // bounce off
+             player.vy = selectedChar.jumpForce; 
              bonusScore += 200 * comboMultiplier;
-             addFloatingText(e.x, e.y, `STOMP! +${200*comboMultiplier}`, '#facc15');
+             addFloatingText(e.x, e.y, `STOMP! +${Math.floor(200*comboMultiplier)}`, '#facc15');
              createParticles(e.x + e.width/2, e.y, '#ef4444');
              playSound('score');
-             shake = 5;
+             shake = 8;
              comboMultiplier++;
              comboTimer = 180;
              enemiesDefeated++;
           } else if (player.shield > 0) {
             player.shield = 0;
             enemies.splice(index, 1);
-            shake = 15;
+            shake = 18;
             screenFlash = 1;
             playSound('alert');
           } else if (player.jetpack > 0) {
@@ -766,38 +730,29 @@ export function FestJump() {
             playSound('score');
             enemiesDefeated++;
           } else {
-            playSound('hit');
-            screenFlash = 1;
-            shake = 20;
-            const finalScore = maxScore + bonusScore;
-            const earned = Math.floor(finalScore / 50);
-            setScore(finalScore);
-            if (finalScore > highScore) setHighScore(finalScore);
-            setGameStats({
-               earned,
-               total: finalScore,
-               enemies: enemiesDefeated,
-               items: itemsCollected
-            });
-            setIsPlaying(false);
+             playSound('lose');
+             setIsPlaying(false);
           }
         }
       });
-      enemies = enemies.filter(e => e.y < canvas.height);
+      
+      // Update auxiliary visual entities
+      floatingTexts.forEach(ft => {
+         ft.y -= 1.2 * normalDt;
+         ft.alpha -= 0.02 * normalDt;
+      });
+      floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
+
+      particles.forEach(p => {
+        p.life -= 0.04 * normalDt;
+        p.y += 1.5 * normalDt;
+        p.x += (Math.random() - 0.5) * normalDt;
+      });
+      particles = particles.filter(p => p.life > 0);
 
       // Game Over
       if (player.y > canvas.height) {
         playSound('lose');
-        const finalScore = maxScore + bonusScore;
-        const earned = Math.floor(finalScore / 50);
-        setScore(finalScore);
-        if (finalScore > highScore) setHighScore(finalScore);
-        setGameStats({
-           earned,
-           total: finalScore,
-           enemies: enemiesDefeated,
-           items: itemsCollected
-        });
         setIsPlaying(false);
       }
     };
@@ -814,7 +769,7 @@ export function FestJump() {
       }));
     });
 
-    const draw = () => {
+    const draw = (dt: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       // BG with dynamic gradient
@@ -1176,14 +1131,10 @@ export function FestJump() {
         });
       });
 
-      // Particles
-      particles = particles.filter(p => p.life > 0);
       particles.forEach(p => {
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.life;
         ctx.fillRect(p.x, p.y, 4, 4);
-        p.life -= 0.03;
-        p.y += 1;
       });
       ctx.globalAlpha = 1;
 
@@ -1230,7 +1181,7 @@ export function FestJump() {
          ctx.textAlign = 'left';
       }
 
-      update();
+      update(dt);
 
       if (screenFlash > 0) {
         ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash * 0.4})`;
@@ -1261,19 +1212,21 @@ export function FestJump() {
 
     const gameLoop = (time: number) => {
       const dt = time - lastTime;
-      if (dt >= TIME_STEP) {
-        lastTime = time - (dt % TIME_STEP);
-        draw();
-        
-        if (player.shield !== lastShield) {
-          lastShield = player.shield;
-          setHudShield(player.shield);
-        }
-        if (player.jetpack !== lastJetpack) {
-          lastJetpack = player.jetpack;
-          setHudJetpack(player.jetpack);
-        }
+      lastTime = time;
+      
+      const effectiveDt = Math.min(dt, 50); 
+      
+      if (player.shield !== lastShield) {
+        lastShield = player.shield;
+        setHudShield(player.shield);
       }
+      if (player.jetpack !== lastJetpack) {
+        lastJetpack = player.jetpack;
+        setHudJetpack(player.jetpack);
+      }
+
+      draw(effectiveDt);
+
       if (isPlaying) {
         animationFrameId = requestAnimationFrame(gameLoop);
       }
@@ -1320,7 +1273,7 @@ export function FestJump() {
     if (festCoins >= cost) {
        setFestCoins(prev => prev - cost);
        setUpgrades(prev => ({ ...prev, [type]: prev[type] + 1 }));
-       showMsg(`UPGRADED: ${type.toUpperCase()} LV. ${upgrades[type] + 1}`, 'success');
+       showMsg(`UPGRADED: ${(type as string).toUpperCase()} LV. ${upgrades[type] + 1}`, 'success');
        playSound('purchase');
     } else {
        showMsg(`NEED ${cost} KARMAS`, 'error');

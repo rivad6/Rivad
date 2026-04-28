@@ -50,10 +50,10 @@ export function MeetingRace() {
   const [selectedCarId, setSelectedCarId] = useState('taxi');
 
   const cars: CarConfig[] = [
-    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 400, handling: 8, maxHp: 3, color: '#ec4899' },
-    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 550, handling: 12, maxHp: 2, color: '#ef4444' },
-    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 300, handling: 6, maxHp: 6, color: '#3b82f6' },
-    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 500, handling: 15, maxHp: 1, color: '#f59e0b' },
+    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 420, handling: 4, maxHp: 3, color: '#ec4899' },
+    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 580, handling: 6, maxHp: 2, color: '#ef4444' },
+    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 320, handling: 3, maxHp: 6, color: '#3b82f6' },
+    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 520, handling: 8, maxHp: 1, color: '#f59e0b' },
   ];
 
   const currentCar = cars.find(c => c.id === selectedCarId) || cars[0];
@@ -72,6 +72,7 @@ export function MeetingRace() {
   const [gameOver, setGameOver] = useState(false);
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('race_mobile_controls') === 'true');
   const scoreRefDOM = useRef<HTMLSpanElement>(null);
+  const keysGamepad = useRef({ left: false, right: false });
 
   useEffect(() => {
     localStorage.setItem('race_mobile_controls', showMobileControls.toString());
@@ -460,21 +461,22 @@ export function MeetingRace() {
 
     const loop = (timestamp: number) => {
       if (isGameOver) return;
-      const dt = Math.min((timestamp - lastTime) / 1000, 0.1); // max 100ms
+      const dt = Math.min((timestamp - lastTime) / 1000, 0.05); 
       lastTime = timestamp;
+      const normalDt = dt * 60; // normalized delta
 
       // Logic Updates
       dayNightCycle = (dayNightCycle + dt * 0.01) % 1;
 
       if (slowMoTimer > 0) {
         slowMoTimer -= dt;
-        speedMultiplier = 0.5; // Slow down time
+        speedMultiplier = 0.5;
       } else if (nitroTimer > 0) {
         nitroTimer -= dt;
-        speedMultiplier = 2.0;
-        currentScore += dt * 500;
+        speedMultiplier = 2.2;
+        currentScore += dt * 800;
       } else {
-        speedMultiplier = 1 + Math.floor(currentScore / 1000) * 0.15; // Speed up over time
+        speedMultiplier = 1 + Math.floor(currentScore / 1000) * 0.12;
       }
 
       if (shieldTimer > 0) shieldTimer -= dt;
@@ -484,31 +486,27 @@ export function MeetingRace() {
 
       if (damageTimer > 0) damageTimer -= dt;
 
-      // Handle input -> player targetX
-      const handling = currentCar.handling * (nitroTimer > 0 ? 0.7 : 1);
-      const moveSpeed = player.speed * (slowMoTimer > 0 ? 0.8 : 1); // slightly slower handling in slomo for precision
+      const handling = currentCar.handling * (nitroTimer > 0 ? 0.6 : 1);
+      const moveSpeed = player.speed * (slowMoTimer > 0 ? 0.7 : 1);
       
-      if (keys.ArrowLeft || keys.a) player.targetX -= moveSpeed * handling * dt;
-      if (keys.ArrowRight || keys.d) player.targetX += moveSpeed * handling * dt;
+      if (keys.ArrowLeft || keys.a || keysGamepad.current.left) player.targetX -= moveSpeed * handling * dt;
+      if (keys.ArrowRight || keys.d || keysGamepad.current.right) player.targetX += moveSpeed * handling * dt;
       
-      // Prevent accumulating targetX way beyond bounds
       player.targetX = Math.max(14, Math.min(GAME_W - player.width - 14, player.targetX));
 
-      // Precision Lerp: increase the follow factor for tighter control
+      // Improved Lerp for smoother lateral movement
       const diff = player.targetX - player.x;
-      const followFactor = 15; 
-      const maxMovePerFrame = player.speed * 2 * dt; // Cap movement speed
-      const moveAmount = diff * followFactor * dt;
-      player.x += Math.max(-maxMovePerFrame, Math.min(maxMovePerFrame, moveAmount)); 
+      const followFactor = 10; 
+      const lerpStep = diff * (1 - Math.pow(1 - 0.25, normalDt));
+      player.x += lerpStep;
       
-      // Tilt based on actual movement speed, not just target diff
-      player.tilt = (diff / 15) * (Math.PI / 10); 
-      player.tilt = Math.max(-0.15, Math.min(0.15, player.tilt));
+      // Dynamic tilt
+      player.tilt = (lerpStep / (normalDt * 4)) * 0.5;
+      player.tilt = Math.max(-0.2, Math.min(0.2, player.tilt));
 
-      // Rain integration
       if (isRaining) {
         rainDrops.forEach(drop => {
-          drop.y += drop.s * (speedMultiplier * 2);
+          drop.y += drop.s * (speedMultiplier * 2.5) * normalDt;
           if (drop.y > GAME_H) {
             drop.y = -drop.l;
             drop.x = Math.random() * GAME_W;
@@ -600,7 +598,7 @@ export function MeetingRace() {
               setTimeout(() => { if (currentCar) currentCar.handling = prevHandling; }, 1000);
               spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 5, ['#000']);
               obs.markedForDeletion = true;
-           } else if (nitroTimer > 0 && (obs.type !== 'bache' && obs.type !== 'oil' && obs.type !== 'tree' && obs.type !== 'building')) {
+           } else if (nitroTimer > 0 && (obs.type !== 'bache' && obs.type !== 'tree' && obs.type !== 'building')) {
               // Destroy obstacle while in nitro
               obs.markedForDeletion = true;
               currentScore += 1000;
@@ -631,7 +629,7 @@ export function MeetingRace() {
         if (obstacles[i].markedForDeletion) obstacles.splice(i, 1);
       }
 
-      // Particles
+      // Particles update
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx * dt;
@@ -810,11 +808,11 @@ export function MeetingRace() {
           <>
             <div className="absolute bottom-10 left-4 z-20 pointer-events-none">
               <button 
-                onMouseDown={() => { keys.ArrowLeft = true; playSound('click'); }}
-                onMouseUp={() => keys.ArrowLeft = false}
-                onMouseLeave={() => keys.ArrowLeft = false}
-                onTouchStart={(e) => { e.preventDefault(); keys.ArrowLeft = true; playSound('click'); }}
-                onTouchEnd={(e) => { e.preventDefault(); keys.ArrowLeft = false; }}
+                onMouseDown={() => { keysGamepad.current.left = true; playSound('click'); }}
+                onMouseUp={() => keysGamepad.current.left = false}
+                onMouseLeave={() => keysGamepad.current.left = false}
+                onTouchStart={(e) => { e.preventDefault(); keysGamepad.current.left = true; playSound('click'); }}
+                onTouchEnd={(e) => { e.preventDefault(); keysGamepad.current.left = false; }}
                 className="w-24 h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
               >
                 <div className="w-0 h-0 border-t-[15px] border-t-transparent border-r-[25px] border-r-white/30 border-b-[15px] border-b-transparent mr-2" />
@@ -822,11 +820,11 @@ export function MeetingRace() {
             </div>
             <div className="absolute bottom-10 right-4 z-20 pointer-events-none">
               <button 
-                onMouseDown={() => { keys.ArrowRight = true; playSound('click'); }}
-                onMouseUp={() => keys.ArrowRight = false}
-                onMouseLeave={() => keys.ArrowRight = false}
-                onTouchStart={(e) => { e.preventDefault(); keys.ArrowRight = true; playSound('click'); }}
-                onTouchEnd={(e) => { e.preventDefault(); keys.ArrowRight = false; }}
+                onMouseDown={() => { keysGamepad.current.right = true; playSound('click'); }}
+                onMouseUp={() => keysGamepad.current.right = false}
+                onMouseLeave={() => keysGamepad.current.right = false}
+                onTouchStart={(e) => { e.preventDefault(); keysGamepad.current.right = true; playSound('click'); }}
+                onTouchEnd={(e) => { e.preventDefault(); keysGamepad.current.right = false; }}
                 className="w-24 h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
               >
                 <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white/30 border-b-[15px] border-b-transparent ml-2" />

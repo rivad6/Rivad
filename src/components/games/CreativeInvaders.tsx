@@ -527,23 +527,22 @@ export function CreativeInvaders() {
     }
   }, [highScore, playSound]);
 
-  const update = useCallback(() => {
+  const update = useCallback((dt: number) => {
     const s = state.current;
     if (gameState !== "playing" && gameState !== "asteroids" && gameState !== "takeoff") return;
+    
+    const normalDt = dt / 16.666; // Normalize to 60fps
 
-    if (s.shake > 0) s.shake *= 0.9;
-    if (s.playerFlash > 0) s.playerFlash--;
-    if (s.levelUpTimer > 0) s.levelUpTimer--;
+    if (s.shake > 0) s.shake *= Math.pow(0.9, normalDt);
+    if (s.playerFlash > 0) s.playerFlash -= normalDt;
+    if (s.levelUpTimer > 0) s.levelUpTimer -= normalDt;
 
     if (gameState === "takeoff") {
-        s.player.y -= 10;
-        
-        // Tilt player in takeoff
+        s.player.y -= 10 * normalDt;
         s.player.angle = Math.sin(s.time) * 0.1;
 
-        // Speed up stars for effect
         for (const star of s.stars) {
-          star.y += star.speed * 8;
+          star.y += star.speed * 8 * normalDt;
           if (star.y > GAME_HEIGHT) {
             star.y = 0;
             star.x = Math.random() * GAME_WIDTH;
@@ -553,12 +552,10 @@ export function CreativeInvaders() {
         if (s.player.y < -s.player.height) {
             setGameState("asteroids");
             loadAsteroidsLevel();
-            // Explosion at the center of 'Deep Space' transition
             createExplosion(GAME_WIDTH / 2, GAME_HEIGHT / 2, "#38bdf8", 100);
             playSound('win');
         }
         
-        // draw player taking off
         for (let i = 0; i < 3; i++) {
             s.particles.push({
               x: s.player.x + s.player.width / 2 + (Math.random() - 0.5) * 10,
@@ -570,29 +567,29 @@ export function CreativeInvaders() {
               color: "#fbbf24",
             });
         }
-        return; // Important: stay in takeoff sequence
+        return; 
     }
 
     // Update stars
     for (const star of s.stars) {
-      star.y += star.speed + (s.player.speedBoostTimer > 0 ? 5 : 0);
+      star.y += (star.speed + (s.player.speedBoostTimer > 0 ? 5 : 0)) * normalDt;
       if (star.y > GAME_HEIGHT) {
         star.y = 0;
         star.x = Math.random() * GAME_WIDTH;
       }
     }
 
-    s.time += 0.05;
+    s.time += 0.05 * normalDt;
 
     if (s.player.powerTimer > 0) {
-      s.player.powerTimer--;
+      s.player.powerTimer -= normalDt;
       if (s.player.powerTimer <= 0) s.player.power = 1;
     }
     if (s.player.speedBoostTimer > 0) {
-      s.player.speedBoostTimer--;
+      s.player.speedBoostTimer -= normalDt;
     }
 
-    const playerCurrentSpeed = s.player.speedBoostTimer > 0 ? s.player.speed * 1.5 : s.player.speed;
+    const playerCurrentSpeed = (s.player.speedBoostTimer > 0 ? s.player.speed * 1.5 : s.player.speed) * normalDt;
     if (s.player.isMovingLeft) s.player.x -= playerCurrentSpeed;
     if (s.player.isMovingRight) s.player.x += playerCurrentSpeed;
     if (s.player.isMovingUp) s.player.y -= playerCurrentSpeed;
@@ -604,9 +601,8 @@ export function CreativeInvaders() {
       if (s.player.y < -s.player.height) s.player.y = GAME_HEIGHT;
       if (s.player.y > GAME_HEIGHT) s.player.y = -s.player.height;
 
-      // Update planets for parallax
       for (const planet of s.planets) {
-          planet.y += planet.speed;
+          planet.y += planet.speed * normalDt;
           if (planet.y > GAME_HEIGHT + 100) {
               planet.y = -100;
               planet.x = Math.random() * GAME_WIDTH;
@@ -621,8 +617,8 @@ export function CreativeInvaders() {
 
     for (let i = s.projectiles.length - 1; i >= 0; i--) {
       if (s.isTransitioning) break;
-      s.projectiles[i].x += s.projectiles[i].vx;
-      s.projectiles[i].y += s.projectiles[i].vy;
+      s.projectiles[i].x += s.projectiles[i].vx * normalDt;
+      s.projectiles[i].y += s.projectiles[i].vy * normalDt;
       if (
         s.projectiles[i].y < 0 ||
         s.projectiles[i].y > GAME_HEIGHT ||
@@ -633,7 +629,7 @@ export function CreativeInvaders() {
       }
     }
 
-    const currentSpeed = s.enemySpeedBase + (1 - s.enemies.length / 45) * 3; // speed up as they die
+    const currentSpeed = (s.enemySpeedBase + (1 - s.enemies.length / 45) * 3) * normalDt;
 
     let minX = GAME_WIDTH;
     let maxX = 0;
@@ -647,7 +643,7 @@ export function CreativeInvaders() {
 
         let nextX = enemy.x + s.enemyDirection * enemySpeedX;
         if (enemy.type === "distraction") {
-           nextX += Math.cos(enemy.offset) * 4; 
+           nextX += Math.cos(enemy.offset) * 4 * normalDt; 
         }
         if (nextX < minX) minX = nextX;
         if (nextX + enemy.width > maxX) maxX = nextX + enemy.width;
@@ -655,7 +651,6 @@ export function CreativeInvaders() {
     }
 
     let hitEdge = false;
-    const now_ts = Date.now();
     if (gameState === "playing") {
       if (minX <= 5 && s.enemyDirection < 0) {
         hitEdge = true;
@@ -668,8 +663,7 @@ export function CreativeInvaders() {
       }
     }
 
-    // Enemy firing logic
-    if (gameState === "playing" && Math.random() < 0.02 + (s.level * 0.01)) {
+    if (gameState === "playing" && Math.random() < (0.02 + (s.level * 0.01)) * normalDt) {
       const shooters = s.enemies.filter(e => e.type !== 'block');
       if (shooters.length > 0) {
         const shooter = shooters[Math.floor(Math.random() * shooters.length)];
@@ -677,7 +671,7 @@ export function CreativeInvaders() {
         const isFast = shooter.type === "distraction";
         const variant = shooter.variant || 0;
         
-        let bulletColor = "#ff00ff"; // Default fast
+        let bulletColor = "#ff00ff";
         if (isBoss) {
           bulletColor = variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6";
         } else if (isFast) {
@@ -696,7 +690,6 @@ export function CreativeInvaders() {
 
         if (isBoss) {
           if (variant === 0 && Math.random() < 0.5) {
-             // Boss fires spread
              for (let d = -1; d <= 1; d += 2) {
                s.projectiles.push({
                   x: shooter.x + shooter.width/2,
@@ -709,19 +702,16 @@ export function CreativeInvaders() {
                });
              }
           } else if (variant === 1 && Math.random() < 0.3) {
-             // Rapid fire for blue boss
              for (let i = 0; i < 3; i++) {
-               setTimeout(() => {
-                 s.projectiles.push({
-                    x: shooter.x + shooter.width/2 + (Math.random() - 0.5) * 20,
-                    y: shooter.y + shooter.height,
-                    vx: 0,
-                    vy: 10 + s.level,
-                    speed: 10 + s.level,
-                    color: bulletColor,
-                    isEnemy: true
-                 });
-               }, i * 100);
+               s.projectiles.push({
+                  x: shooter.x + shooter.width/2 + (Math.random() - 0.5) * 20,
+                  y: shooter.y + shooter.height,
+                  vx: 0,
+                  vy: 10 + s.level,
+                  speed: 10 + s.level,
+                  color: bulletColor,
+                  isEnemy: true
+               });
              }
           }
         }
@@ -729,18 +719,17 @@ export function CreativeInvaders() {
     }
 
     for (const enemy of s.enemies) {
-      enemy.offset += 0.05;
+      enemy.offset += 0.05 * normalDt;
       
       if (gameState === "asteroids") {
-         enemy.x += enemy.vx || 0;
-         enemy.y += enemy.vy || 0;
+         enemy.x += (enemy.vx || 0) * normalDt;
+         enemy.y += (enemy.vy || 0) * normalDt;
          
          if (enemy.x < -enemy.width) enemy.x = GAME_WIDTH;
          if (enemy.x > GAME_WIDTH) enemy.x = -enemy.width;
          if (enemy.y < -enemy.height) enemy.y = GAME_HEIGHT;
          if (enemy.y > GAME_HEIGHT) enemy.y = -enemy.height;
          
-         // Player collision for asteroids
          if (
            s.player.x < enemy.x + enemy.width - 5 &&
            s.player.x + s.player.width > enemy.x + 5 &&
@@ -754,21 +743,21 @@ export function CreativeInvaders() {
         const moveX = s.enemyDirection * currentSpeed;
 
         if (hitEdge) {
-          if (enemy.type !== "block") enemy.y += 20; // Reduced from 25
+          if (enemy.type !== "block") enemy.y += 20 * normalDt; 
           if (enemy.y >= s.player.y - enemy.height) {
             triggerGameOver();
           }
         } else {
           if (enemy.type === "block") {
-             enemy.y += 0.1 + (s.level * 0.05);
+             enemy.y += (0.1 + (s.level * 0.05)) * normalDt;
              enemy.x += moveX * 0.3;
           } else if (enemy.type === "distraction") {
              enemy.x += moveX * 1.5;
-             enemy.x += Math.cos(enemy.offset) * 4;
-             enemy.y += Math.sin(enemy.offset * 2) * 2;
+             enemy.x += Math.cos(enemy.offset) * 4 * normalDt;
+             enemy.y += Math.sin(enemy.offset * 2) * 2 * normalDt;
           } else if (enemy.type === "boss") {
              enemy.x += moveX * 1.2;
-             enemy.y += Math.sin(enemy.offset) * 1.5;
+             enemy.y += Math.sin(enemy.offset) * 1.5 * normalDt;
           } else {
              enemy.x += moveX;
           }
@@ -792,7 +781,7 @@ export function CreativeInvaders() {
                  hit = true;
              } else if (s.player.power > 1) {
                 playSound('hit');
-                s.player.power = 1; // lose power
+                s.player.power = 1; 
                 s.shake = 15;
                 s.playerFlash = 15;
                 hit = true;
@@ -834,7 +823,6 @@ export function CreativeInvaders() {
               unlockAchievement('invaders_boss_kill');
               createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#ef4444", 50);
               playSound('powerup');
-              // Maybe drop multiple powerups
               for (let k = 0; k < 3; k++) {
                 const types = ["power", "shield", "speed"] as const;
                 s.drops.push({
@@ -874,7 +862,6 @@ export function CreativeInvaders() {
             s.enemies.splice(j, 1);
             s.score += enemy.maxHp * 10;
             
-            // Earn Karmas (FestCoins)
             const earnedKarmas = Math.ceil(enemy.maxHp / 2) + (s.level);
             s.pendingCoins = (s.pendingCoins || 0) + earnedKarmas;
             createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#facc15", earnedKarmas, true);
@@ -889,9 +876,8 @@ export function CreativeInvaders() {
       if (hit) s.projectiles.splice(i, 1);
     }
 
-    // update drops
     for (let i = s.drops.length - 1; i >= 0; i--) {
-      s.drops[i].y += 3;
+      s.drops[i].y += 3 * normalDt;
       const drop = s.drops[i];
 
       if (
@@ -903,7 +889,7 @@ export function CreativeInvaders() {
         playSound('powerup');
         if (drop.type === "power") {
            s.player.power = Math.min(3, s.player.power + 1);
-           s.player.powerTimer = 300; // 5 seconds approx
+           s.player.powerTimer = 300; 
         } else if (drop.type === "shield") {
            s.player.shield = Math.min(3, s.player.shield + 1);
         } else if (drop.type === "speed") {
@@ -927,16 +913,16 @@ export function CreativeInvaders() {
 
     for (let i = s.particles.length - 1; i >= 0; i--) {
       const p = s.particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life++;
+      p.x += p.vx * normalDt;
+      p.y += p.vy * normalDt;
+      p.life += normalDt;
       if (p.life >= p.maxLife) s.particles.splice(i, 1);
     }
 
-    if (s.enemies.length === 0 && s.levelUpTimer === 0 && !s.isTransitioning) {
+    if (s.enemies.length === 0 && s.levelUpTimer <= 0 && !s.isTransitioning) {
       if (gameState === "playing") {
         s.isTransitioning = true;
-        s.projectiles = []; // Clear current projectiles to avoid post-mortem hits
+        s.projectiles = []; 
         state.current.level++;
         if (state.current.level === 5) unlockAchievement('invaders_level_5');
         s.levelUpTimer = 100;
@@ -960,12 +946,11 @@ export function CreativeInvaders() {
       }
     }
 
-    // Sync HUD
     if (hudShield !== s.player.shield) setHudShield(s.player.shield);
     if (hudPower !== s.player.power) setHudPower(s.player.power);
     const turboActive = s.player.speedBoostTimer > 0 ? 1 : 0;
     if (hudTurbo !== turboActive) setHudTurbo(turboActive);
-  }, [gameState, loadLevel, playSound, upgrades, t, unlockAchievement]);
+  }, [gameState, loadLevel, playSound, upgrades, t, unlockAchievement, loadAsteroidsLevel, hudShield, hudPower, hudTurbo, setHudShield, setHudPower, setHudTurbo, setGameState, setScore, highScore, setHighScore, setFestCoins]);
 
   const saveScore = () => {
     const s = state.current;
@@ -1200,20 +1185,22 @@ export function CreativeInvaders() {
   const TIME_STEP = 1000 / 60; // 60 FPS target
 
   const tick = useCallback((time: number) => {
-    let dt = time - lastTimeRef.current;
+    const dt = time - lastTimeRef.current;
+    lastTimeRef.current = time;
     
-    if (dt >= TIME_STEP) {
-       lastTimeRef.current = time - (dt % TIME_STEP);
-       update();
-       const canvas = canvasRef.current;
-       if (canvas) {
-         const ctx = canvas.getContext("2d");
-         if (ctx) draw(ctx);
-       }
-       if (scoreRefDOM.current) {
-         scoreRefDOM.current.innerText = state.current.score.toString().padStart(5, "0");
-       }
+    // Smooth update with variable dt (clamped to avoid giant leaps)
+    const effectiveDt = Math.min(dt, 50);
+    update(effectiveDt);
+
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) draw(ctx);
     }
+    if (scoreRefDOM.current) {
+      scoreRefDOM.current.innerText = state.current.score.toString().padStart(5, "0");
+    }
+
     requestRef.current = requestAnimationFrame(tick);
   }, [update, draw]);
 

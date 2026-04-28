@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { FullscreenButton } from '../ui/FullscreenButton';
+import { cn } from '../../lib/utils';
 
 type NodeId = string;
 
