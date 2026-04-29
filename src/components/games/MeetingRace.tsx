@@ -1372,7 +1372,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md"
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm backdrop-blur-md"
           >
              {outOfGas ? (
               <>

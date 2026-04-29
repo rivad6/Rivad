@@ -575,7 +575,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[80] flex flex-col items-center justify-center bg-black/90 backdrop-blur-3xl p-6"
+            className="absolute inset-0 z-[80] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm backdrop-blur-3xl p-6"
           >
             <div className="mb-8 text-center">
               <Megaphone className="w-16 h-16 text-brand-accent mx-auto mb-4" />
@@ -809,7 +809,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.8 }}
                           className={cn(
-                            "bg-black/90 backdrop-blur-xl px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 md:gap-3 min-w-[150px] md:min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
+                            "bg-black/90 backdrop-blur-sm backdrop-blur-xl px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 md:gap-3 min-w-[150px] md:min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
                             turn === 0 ? "text-brand-accent ring-1 ring-brand-accent/30" : "text-red-400 ring-1 ring-red-500/30"
                           )}
                         >
