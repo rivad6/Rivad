@@ -52,8 +52,12 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('invaders_selected_char') || 'classic');
   const [storeTab, setStoreTab] = useState<"chars" | "upgrades">("chars");
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('invaders_mobile_controls') === 'true');
+  const [secretCode, setSecretCode] = useState("");
+  const [isAsteroidMode, setIsAsteroidMode] = useState(false);
+  const [hasDiscoveredSecret, setHasDiscoveredSecret] = useState(() => localStorage.getItem('invaders_secret_discovered') === 'true');
   const pendingCoinsRef = useRef(0);
   const pausedRef = useRef(false);
+  const secretSequence = useRef<string>("");
 
   const [upgrades, setUpgrades] = useState(() => {
     const saved = localStorage.getItem('invaders_upgrades');
@@ -91,6 +95,26 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       playSound('purchase');
     } else {
       playSound('alert');
+    }
+  };
+
+  const handleSecretSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (secretCode.toLowerCase() === "asteroid") {
+      playSound('powerup');
+      setIsAsteroidMode(true);
+      setHasDiscoveredSecret(true);
+      localStorage.setItem('invaders_secret_discovered', 'true');
+      initGame();
+      setTimeout(() => {
+        setGameState("takeoff");
+        state.current.score += 1000;
+        state.current.isAsteroidMode = true;
+      }, 100);
+      setSecretCode("");
+    } else {
+      playSound('alert');
+      setSecretCode("");
     }
   };
 
@@ -205,6 +229,8 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       powerTimer: 0,
       shield: 0,
       speedBoostTimer: 0,
+      magnetTimer: 0,
+      hasteTimer: 0
     },
     projectiles: [] as {
       x: number;
@@ -225,10 +251,11 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       type: "routine" | "block" | "distraction" | "boss" | "asteroid_l" | "asteroid_m" | "asteroid_s";
       hp: number;
       maxHp: number;
+      variant?: number;
       offset: number;
       hitFlash?: number;
     }[],
-    drops: [] as { x: number; y: number; type: "power" | "shield" | "speed" }[],
+    drops: [] as { x: number; y: number; type: "power" | "shield" | "speed" | "secret" | "magnet" | "repair" | "haste" }[],
     stars: Array.from({length: 100}).map(() => ({
       x: Math.random() * 800,
       y: Math.random() * 600,
@@ -261,6 +288,17 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     playerFlash: 0,
     isTransitioning: false,
     levelUpTimer: 0,
+    isAsteroidMode: false,
+    pendingCoins: 0,
+    joystick: {
+      active: false,
+      startX: 0,
+      startY: 0,
+      currentX: 0,
+      currentY: 0,
+      distance: 0,
+      angle: 0
+    }
   });
 
   const loadAsteroidsLevel = useCallback(() => {
@@ -281,9 +319,10 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         speed: 0.1 + Math.random() * 0.3
     }));
     
-    // Create 5 large asteroids
-    const asteroidSpeedMulti = difficulty === 'easy' ? 0.6 : difficulty === 'hard' ? 1.5 : 1.0;
-    for(let i = 0; i < 5; i++) {
+    // Create asteroids based on difficulty
+    const asteroidCount = difficulty === 'easy' ? 4 : difficulty === 'hard' ? 7 : 5;
+    const asteroidSpeedMulti = difficulty === 'easy' ? 0.6 : difficulty === 'hard' ? 1.4 : 1.0;
+    for(let i = 0; i < asteroidCount; i++) {
         state.current.enemies.push({
             x: Math.random() * GAME_WIDTH,
             y: Math.random() * GAME_HEIGHT * 0.5,
@@ -341,14 +380,18 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         let type: "routine" | "block" | "distraction" | "boss" = "routine";
         let hp = 1;
         
+        const rand = Math.random();
         if (currentMapLevel === 1) {
-           type = "routine";
+           if (r === 0 && rand < 0.2) { type = "block"; hp = 2; }
+           else { type = "routine"; hp = 1; }
         } else if (currentMapLevel === 2) {
            if (r === 0) { type = "block"; hp = 2 + Math.floor(level/2); }
+           else if (r === 1 && rand < 0.2) { type = "distraction"; hp = 1; }
            else { type = "routine"; hp = 1; }
         } else if (currentMapLevel === 3) {
            if (r === 0) { type = "block"; hp = 3 + Math.floor(level/2); }
            else if (r === 1) { type = "distraction"; hp = 1; }
+           else if (r === 2 && rand < 0.3) { type = "distraction"; hp = 1; }
            else { type = "routine"; hp = 1; }
         }
 
@@ -382,7 +425,9 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         powerTimer: 0,
         shield: (selectedChar.id === 'tank' ? 3 : 0) + upgrades.shield,
         speedBoostTimer: selectedChar.id === 'rapid' ? 500 : 0,
-        angle: 0,
+        magnetTimer: 0,
+        hasteTimer: 0,
+        angle: -Math.PI / 2,
       },
       projectiles: [],
       enemies: [],
@@ -395,7 +440,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       })),
       planets: [],
       enemyDirection: 1,
-      enemySpeedBase: 1.5,
+      enemySpeedBase: 1.5 * (difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.4 : 1.0),
       difficultyMultiplier: difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.3 : 1.0,
       enemyMoveTimer: 0,
       time: 0,
@@ -427,18 +472,19 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     // Use fireRateBase
     const baseFireDelay = 300 / selectedChar.fireRateBase;
     const diffFireMulti = difficulty === 'easy' ? 1.3 : difficulty === 'hard' ? 0.8 : 1.0;
+    const powerFireMulti = s.player.hasteTimer > 0 ? 0.4 : (s.player.power > 1 ? 0.5 : 1.0);
     const fireDelay = s.player.speedBoostTimer > 0 
       ? baseFireDelay * 0.33 
-      : (s.player.power > 1 ? baseFireDelay * 0.5 : baseFireDelay) / diffFireMulti;
+      : (baseFireDelay * powerFireMulti) / diffFireMulti;
 
     if (now - s.lastFireTime > fireDelay) {
       playSound('fire');
       
       const fireBullet = (angleOffset: number, color: string, vxOffset: number = 0, vyOffset: number = -10) => {
-        const angle = gameState === 'asteroids' ? s.player.angle + angleOffset : angleOffset;
-        const speed = 10;
-        const vx = gameState === 'asteroids' ? Math.cos(angle) * speed : vxOffset;
-        const vy = gameState === 'asteroids' ? Math.sin(angle) * speed : vyOffset;
+        const angle = (gameState === 'asteroids' || s.isAsteroidMode) ? s.player.angle + angleOffset : angleOffset;
+        const speed = s.isAsteroidMode ? 14 : 10;
+        const vx = (gameState === 'asteroids' || s.isAsteroidMode) ? Math.cos(angle) * speed : vxOffset;
+        const vy = (gameState === 'asteroids' || s.isAsteroidMode) ? Math.sin(angle) * speed : vyOffset;
         
         s.projectiles.push({
           x: s.player.x + s.player.width / 2,
@@ -446,29 +492,35 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
           vx: vx,
           vy: vy,
           speed: speed,
-          color: color,
+          color: s.isAsteroidMode && !color.includes('ef') ? '#f472b6' : color, 
         });
       };
 
       if (s.player.power === 1) {
-        fireBullet(gameState === 'asteroids' ? 0 : 0, "#facc15", 0, -10);
+        fireBullet((gameState === 'asteroids' || s.isAsteroidMode) ? 0 : 0, "#facc15", 0, -10);
       } else if (s.player.power >= 2) {
-        fireBullet(gameState === 'asteroids' ? -0.2 : 0, "#38bdf8", -2, -10);
-        fireBullet(gameState === 'asteroids' ? 0.2 : 0, "#38bdf8", 2, -10);
-        if (s.player.power >= 3) {
-          fireBullet(gameState === 'asteroids' ? 0 : 0, "#facc15", 0, -10);
+        fireBullet((gameState === 'asteroids' || s.isAsteroidMode) ? -0.2 : 0, "#38bdf8", -2, -10);
+        fireBullet((gameState === 'asteroids' || s.isAsteroidMode) ? 0.2 : 0, "#38bdf8", 2, -10);
+        if (s.player.power >= 3 || s.isAsteroidMode) {
+          fireBullet((gameState === 'asteroids' || s.isAsteroidMode) ? 0 : 0, "#facc15", 0, -10);
+        }
+        if (s.player.power >= 4) {
+          // Mega shots: side bursts
+          fireBullet((gameState === 'asteroids' || s.isAsteroidMode) ? -0.4 : 0, "#f472b6", -4, -12);
+          fireBullet((gameState === 'asteroids' || s.isAsteroidMode) ? 0.4 : 0, "#f472b6", 4, -12);
         }
       }
 
-      // Rear turret firing
-      if (gameState === 'asteroids' && upgrades.rear_turret > 0) {
-        const spread = upgrades.rear_turret > 1 ? 0.3 : 0;
+      // Rear turret firing - Auto-enabled in Asteroid Mode
+      if ((gameState === 'asteroids' || s.isAsteroidMode) && (upgrades.rear_turret > 0 || s.isAsteroidMode)) {
+        const turretPower = s.isAsteroidMode ? Math.max(3, upgrades.rear_turret + 1) : upgrades.rear_turret;
+        const spread = turretPower > 1 ? 0.3 : 0;
         fireBullet(Math.PI - spread, "#ef4444");
-        if (upgrades.rear_turret > 1) {
+        if (turretPower > 1) {
           fireBullet(Math.PI + spread, "#ef4444");
         }
-        if (upgrades.rear_turret > 2) {
-            fireBullet(Math.PI, "#facc15");
+        if (turretPower >= 3) {
+            fireBullet(Math.PI, s.isAsteroidMode ? "#f472b6" : "#facc15");
         }
       }
 
@@ -491,6 +543,25 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Secret code detection
+      secretSequence.current = (secretSequence.current + e.key.toLowerCase()).slice(-8);
+      if (secretSequence.current === "asteroid") {
+          playSound('powerup');
+          setIsAsteroidMode(true);
+          setHasDiscoveredSecret(true);
+          localStorage.setItem('invaders_secret_discovered', 'true');
+          if (gameState === 'start') {
+            initGame();
+          }
+          setTimeout(() => {
+            setGameState("takeoff");
+            state.current.score += 1000;
+            state.current.isAsteroidMode = true;
+          }, 100);
+          secretSequence.current = "";
+          return;
+      }
+
       const keysToPrevent = [" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "s", "a", "d"];
       if (keysToPrevent.includes(e.key)) {
         e.preventDefault();
@@ -613,12 +684,41 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     if (s.player.speedBoostTimer > 0) {
       s.player.speedBoostTimer -= normalDt;
     }
+    if (s.player.magnetTimer > 0) {
+      s.player.magnetTimer -= normalDt;
+    }
+    if (s.player.hasteTimer > 0) {
+      s.player.hasteTimer -= normalDt;
+    }
 
-    const playerCurrentSpeed = (s.player.speedBoostTimer > 0 ? s.player.speed * 1.5 : s.player.speed) * normalDt;
-    if (s.player.isMovingLeft) s.player.x -= playerCurrentSpeed;
-    if (s.player.isMovingRight) s.player.x += playerCurrentSpeed;
-    if (s.player.isMovingUp) s.player.y -= playerCurrentSpeed;
-    if (s.player.isMovingDown) s.player.y += playerCurrentSpeed;
+    const baseSpeed = s.player.speedBoostTimer > 0 ? s.player.speed * 1.5 : s.player.speed;
+    const playerCurrentSpeed = (s.player.hasteTimer > 0 ? baseSpeed * 1.4 : baseSpeed) * normalDt;
+
+    if (gameState === "asteroids" && s.joystick.active) {
+        const moveX = Math.cos(s.joystick.angle) * playerCurrentSpeed * Math.min(1, s.joystick.distance / 40);
+        const moveY = Math.sin(s.joystick.angle) * playerCurrentSpeed * Math.min(1, s.joystick.distance / 40);
+        s.player.x += moveX;
+        s.player.y += moveY;
+        s.player.angle = s.joystick.angle;
+    } else {
+        if (s.player.isMovingLeft) s.player.x -= playerCurrentSpeed;
+        if (s.player.isMovingRight) s.player.x += playerCurrentSpeed;
+        if (s.player.isMovingUp) s.player.y -= playerCurrentSpeed;
+        if (s.player.isMovingDown) s.player.y += playerCurrentSpeed;
+        
+        // Auto-rotate towards movement direction in asteroids mode for keyboard
+        if (gameState === "asteroids") {
+            let dx = 0;
+            let dy = 0;
+            if (s.player.isMovingLeft) dx -= 1;
+            if (s.player.isMovingRight) dx += 1;
+            if (s.player.isMovingUp) dy -= 1;
+            if (s.player.isMovingDown) dy += 1;
+            if (dx !== 0 || dy !== 0) {
+                s.player.angle = Math.atan2(dy, dx);
+            }
+        }
+    }
 
     if (gameState === "asteroids") {
       if (s.player.x < -s.player.width) s.player.x = GAME_WIDTH;
@@ -654,7 +754,8 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       }
     }
 
-    const currentSpeed = (s.enemySpeedBase + (1 - s.enemies.length / 45) * 3) * normalDt;
+    const enemySpeedProgression = Math.max(0, 1 - s.enemies.length / 80);
+    const currentSpeed = (s.enemySpeedBase + enemySpeedProgression * 2.5) * normalDt;
 
     let minX = GAME_WIDTH;
     let maxX = 0;
@@ -676,14 +777,17 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     }
 
     let hitEdge = false;
-    if (gameState === "playing") {
+    const nowTimestamp = Date.now();
+    if (gameState === "playing" && (nowTimestamp - s.lastHitEdgeTime > 500)) {
       if (minX <= 5 && s.enemyDirection < 0) {
         hitEdge = true;
         s.enemyDirection = 1;
+        s.lastHitEdgeTime = nowTimestamp;
         playSound('click');
       } else if (maxX >= GAME_WIDTH - 5 && s.enemyDirection > 0) {
         hitEdge = true;
         s.enemyDirection = -1;
+        s.lastHitEdgeTime = nowTimestamp;
         playSound('click');
       }
     }
@@ -703,7 +807,8 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
           bulletColor = "#fbbf24";
         }
 
-        const projSpeed = (isFast ? 8 + s.level : 5 + s.level) * s.difficultyMultiplier;
+        const projSpeedBase = isFast ? 6 : 4;
+        const projSpeed = (projSpeedBase + s.level * 0.5) * s.difficultyMultiplier;
         s.projectiles.push({
            x: shooter.x + shooter.width/2,
            y: shooter.y + shooter.height,
@@ -769,7 +874,11 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         const moveX = s.enemyDirection * currentSpeed;
 
         if (hitEdge) {
-          if (enemy.type !== "block") enemy.y += 12 * normalDt; 
+          if (enemy.type !== "block" && enemy.type !== "boss") {
+            enemy.y += 5 * normalDt; // Reduced from 10
+          } else if (enemy.type === "boss") {
+            enemy.y += 2 * normalDt; // Reduced from 5
+          }
           if (enemy.y >= s.player.y - enemy.height) {
             triggerGameOver();
           }
@@ -778,9 +887,9 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
              enemy.y += (0.1 + (s.level * 0.05)) * normalDt;
              enemy.x += moveX * 0.3;
           } else if (enemy.type === "distraction") {
-             enemy.x += moveX * 1.5;
-             enemy.x += Math.cos(enemy.offset) * 4 * normalDt;
-             enemy.y += Math.sin(enemy.offset * 2) * 2 * normalDt;
+             enemy.x += moveX * 1.3; // Reduced from 1.5
+             enemy.x += Math.cos(enemy.offset) * 3 * normalDt; // Reduced from 4
+             enemy.y += Math.sin(enemy.offset * 2) * 1.5 * normalDt; // Reduced from 2
           } else if (enemy.type === "boss") {
              enemy.x += moveX * 1.2;
              enemy.y += Math.sin(enemy.offset) * 1.5 * normalDt;
@@ -876,13 +985,44 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                }
             }
 
-            if (Math.random() < 0.15 && !enemy.type.startsWith("asteroid")) {
-              const types = ["power", "shield", "speed"] as const;
+            // Drop logic with level awareness and difficulty regulation
+            // Reduced base chance to avoid item clutter
+            const dropChanceBase = s.isAsteroidMode ? 0.15 : (s.level <= 4 ? 0.2 : 0.08); 
+            const diffDropMulti = difficulty === 'easy' ? 1.4 : difficulty === 'hard' ? 0.5 : 1.0;
+            const dropChance = dropChanceBase * diffDropMulti;
+
+            if (Math.random() < dropChance) {
+              let types: ("power" | "shield" | "speed" | "magnet" | "repair" | "haste")[] = ["power"];
+              
+              if (enemy.type.startsWith("asteroid")) {
+                  types = ["repair", "magnet", "shield"];
+              } else if (s.level === 1) {
+                  types.push("shield", "shield", "power", "magnet"); 
+              } else if (s.level === 2) {
+                  types.push("power", "shield", "speed", "haste");
+              } else if (s.level === 3) {
+                  types.push("speed", "magnet", "haste", "shield");
+              } else if (s.level === 4) {
+                  types.push("haste", "magnet", "power", "shield", "repair");
+              } else {
+                types.push("shield", "speed", "magnet", "haste");
+                if (Math.random() < 0.08) types.push("repair");
+              }
+
               s.drops.push({
                 x: enemy.x + enemy.width / 2,
                 y: enemy.y + enemy.height / 2,
                 type: types[Math.floor(Math.random() * types.length)],
               });
+            }
+            
+            // Randomly spawn secret drops in Asteroid Mode
+            if (s.isAsteroidMode && Math.random() < 0.05) {
+                s.drops.push({
+                  x: enemy.x + enemy.width / 2,
+                  y: enemy.y + enemy.height / 2,
+                  type: "secret",
+                });
             }
 
             s.enemies.splice(j, 1);
@@ -903,8 +1043,20 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     }
 
     for (let i = s.drops.length - 1; i >= 0; i--) {
-      s.drops[i].y += 3 * normalDt;
       const drop = s.drops[i];
+      if (s.player.magnetTimer > 0) {
+          const dx = (s.player.x + s.player.width / 2) - drop.x;
+          const dy = (s.player.y + s.player.height / 2) - drop.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 400) {
+              drop.x += (dx / dist) * 12 * normalDt;
+              drop.y += (dy / dist) * 12 * normalDt;
+          } else {
+              drop.y += 3 * normalDt;
+          }
+      } else {
+          drop.y += 3 * normalDt;
+      }
 
       if (
         drop.x > s.player.x &&
@@ -920,10 +1072,29 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
            s.player.shield = Math.min(3, s.player.shield + 1);
         } else if (drop.type === "speed") {
            s.player.speedBoostTimer = 300;
+        } else if (drop.type === "secret") {
+            s.player.power = 4; // MEGA POWER
+            s.player.powerTimer = 600;
+            s.player.shield = 3;
+            playSound('powerup');
+        } else if (drop.type === "magnet") {
+            s.player.magnetTimer = 400;
+        } else if (drop.type === "haste") {
+            s.player.hasteTimer = 300;
+        } else if (drop.type === "repair") {
+            // hull logic doesn't exist as separate hp, we'll give shield
+            s.player.shield = Math.min(3, s.player.shield + 2);
         }
 
         s.drops.splice(i, 1);
-        const color = drop.type === "shield" ? "#3b82f6" : drop.type === "speed" ? "#facc15" : "#8b5cf6";
+        const color = 
+           drop.type === "shield" ? "#3b82f6" : 
+           drop.type === "speed" ? "#facc15" : 
+           drop.type === "secret" ? "#f472b6" : 
+           drop.type === "magnet" ? "#a855f7" :
+           drop.type === "repair" ? "#22c55e" :
+           drop.type === "haste" ? "#f97316" :
+           "#8b5cf6";
         createExplosion(
           s.player.x + s.player.width / 2,
           s.player.y,
@@ -954,6 +1125,8 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         s.levelUpTimer = 100;
         if (state.current.level % 5 === 0) {
           setGameState("takeoff");
+          setHasDiscoveredSecret(true);
+          localStorage.setItem('invaders_secret_discovered', 'true');
         } else {
           loadLevel(state.current.level);
         }
@@ -1092,11 +1265,12 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       ctx.rotate(s.player.angle + Math.PI / 2); // Sprite faces up normally, so adjust
       drawSprite(ctx, sprites.player, -s.player.width / 2, -s.player.height / 2, s.player.width, s.player.height, playerPalette);
       
-      // Draw rear turret if upgraded
-      if (upgrades.rear_turret > 0) {
-        ctx.fillStyle = "#ef4444";
+      // Draw rear turret if upgraded or in secret mode
+      const effectiveTurret = s.isAsteroidMode ? Math.max(3, upgrades.rear_turret + 1) : upgrades.rear_turret;
+      if (effectiveTurret > 0) {
+        ctx.fillStyle = s.isAsteroidMode ? "#f472b6" : "#ef4444";
         ctx.fillRect(-5, s.player.height / 2 - 5, 10, 10);
-        if (upgrades.rear_turret > 1) {
+        if (effectiveTurret > 1) {
             ctx.fillRect(-12, s.player.height / 2 - 2, 6, 6);
             ctx.fillRect(6, s.player.height / 2 - 2, 6, 6);
         }
@@ -1149,11 +1323,34 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
 
     // Drops
     for (const drop of s.drops) {
-      ctx.shadowBlur = 10;
-      const glowColor = drop.type === "shield" ? "#3b82f6" : drop.type === "speed" ? "#facc15" : "#06b6d4";
-      const palette = ['#1e293b', drop.type === "shield" ? '#60a5fa' : drop.type === "speed" ? '#fde047' : '#d946ef', '#ffffff'];
+      ctx.shadowBlur = 15;
+      const t = drop.type;
+      const glowColor = 
+        t === "secret" ? "#f472b6" : 
+        t === "shield" ? "#3b82f6" : 
+        t === "speed" ? "#facc15" : 
+        t === "magnet" ? "#a855f7" :
+        t === "repair" ? "#22c55e" :
+        t === "haste" ? "#f97316" :
+        "#06b6d4";
+
+      const primaryColor = 
+        t === "secret" ? '#ffffff' :
+        t === "shield" ? '#60a5fa' : 
+        t === "speed" ? '#fde047' : 
+        t === "magnet" ? '#d8b4fe' :
+        t === "repair" ? '#4ade80' :
+        t === "haste" ? '#fb923c' :
+        '#d946ef';
+
+      const palette = ['#1e293b', primaryColor, t === "secret" ? '#f472b6' : '#ffffff'];
       ctx.shadowColor = glowColor;
       drawSprite(ctx, sprites.drop, drop.x - 10, drop.y - 10, 20, 20, palette);
+      if (t === "secret") {
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(drop.x - 12, drop.y - 12, 24, 24);
+      }
       ctx.shadowBlur = 0;
     }
 
@@ -1202,6 +1399,22 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       ctx.globalAlpha = Math.min(1, state.current.levelUpTimer / 50);
       ctx.fillText(`${t('game.invaders.level_up')} ${state.current.level}`, GAME_WIDTH / 2, GAME_HEIGHT / 2);
       ctx.globalAlpha = 1.0;
+    }
+
+    // Draw virtual joystick
+    if (gameState === "asteroids" && s.joystick.active) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(s.joystick.startX, s.joystick.startY, 50, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.fillStyle = "rgba(252, 211, 77, 0.3)";
+        ctx.beginPath();
+        const jX = s.joystick.startX + Math.cos(s.joystick.angle) * Math.min(50, s.joystick.distance);
+        const jY = s.joystick.startY + Math.sin(s.joystick.angle) * Math.min(50, s.joystick.distance);
+        ctx.arc(jX, jY, 20, 0, Math.PI * 2);
+        ctx.fill();
     }
     
     ctx.restore();
@@ -1253,20 +1466,20 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
             <div className="flex flex-col items-center gap-2">
               <Target className="w-12 h-12 md:w-16 md:h-16 text-brand-accent animate-pulse" />
               <h2 className="text-white font-black text-xl md:text-2xl uppercase tracking-[0.3em]">
-                {isPausedGlobal ? t('game.paused.system', 'SYSTEM HALTED') : 'MISSION PAUSED'}
+                {isPausedGlobal ? t('game.paused.system') : t('game.invaders.mission_paused')}
               </h2>
             </div>
             <p className="text-zinc-500 text-[8px] md:text-[10px] uppercase font-bold text-center px-4 md:px-16 leading-relaxed max-w-xs">
               {isPausedGlobal 
-                ? t('game.paused.desc', 'The creative flow has been temporarily suspended.')
-                : t('game.paused.manual', 'Prepare your creativity. The void waits for no one.')}
+                ? t('game.paused.desc')
+                : t('game.paused.manual')}
             </p>
             {!isPausedGlobal && (
               <button
                 onClick={() => { pausedRef.current = false; playSound('start'); }}
                 className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-brand-accent/80 transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
               >
-                RESUME MISSION
+                {t('game.invaders.resume_mission')}
               </button>
             )}
           </motion.div>
@@ -1350,8 +1563,24 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
             if (gameState === "playing" || gameState === "asteroids") fire();
           }}
           onTouchStart={(e) => {
-            if (gameState === "playing" || gameState === "asteroids") {
-              fire();
+            if ((gameState === "playing" || gameState === "asteroids") && canvasRef.current) {
+              const canvas = canvasRef.current;
+              const rect = canvas.getBoundingClientRect();
+              const touch = e.touches[0];
+              
+              const canvasX = ((touch.clientX - rect.left) / rect.width) * canvas.width;
+              const canvasY = ((touch.clientY - rect.top) / rect.height) * canvas.height;
+              
+              if (gameState === "asteroids" && canvasX < canvas.width / 2) {
+                // Start joystick on left half
+                state.current.joystick.active = true;
+                state.current.joystick.startX = canvasX;
+                state.current.joystick.startY = canvasY;
+                state.current.joystick.currentX = canvasX;
+                state.current.joystick.currentY = canvasY;
+              } else {
+                fire();
+              }
             }
           }}
           onTouchMove={(e) => {
@@ -1359,6 +1588,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
               e.preventDefault();
               const canvas = canvasRef.current;
               const rect = canvas.getBoundingClientRect();
+              const touch = e.touches[0];
               
               const scaleX = canvas.width / canvas.height;
               const scaleY = rect.width / rect.height;
@@ -1375,23 +1605,41 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
               const offsetX = (rect.width - displayedWidth) / 2;
               const offsetY = (rect.height - displayedHeight) / 2;
               
-              let x = ((e.touches[0].clientX - rect.left - offsetX) / displayedWidth) * canvas.width;
-              let y = ((e.touches[0].clientY - rect.top - offsetY) / displayedHeight) * canvas.height;
+              let x = ((touch.clientX - rect.left - offsetX) / displayedWidth) * canvas.width;
+              let y = ((touch.clientY - rect.top - offsetY) / displayedHeight) * canvas.height;
               
               if (gameState === "asteroids") {
-                  const dx = x - (state.current.player.x + state.current.player.width / 2);
-                  const dy = y - (state.current.player.y + state.current.player.height / 2);
-                  
-                  if (Math.sqrt(dx*dx + dy*dy) > 10) {
-                      state.current.player.angle = Math.atan2(dy, dx);
+                  if (state.current.joystick.active) {
+                      const dx = x - state.current.joystick.startX;
+                      const dy = y - state.current.joystick.startY;
+                      const dist = Math.sqrt(dx*dx + dy*dy);
+                      state.current.joystick.currentX = x;
+                      state.current.joystick.currentY = y;
+                      state.current.joystick.distance = dist;
+                      if (dist > 5) {
+                          state.current.joystick.angle = Math.atan2(dy, dx);
+                      }
+                  } else {
+                      // Fallback for right-side touch movement or simple follow
+                      const dx = x - (state.current.player.x + state.current.player.width / 2);
+                      const dy = y - (state.current.player.y + state.current.player.height / 2);
+                      
+                      if (Math.sqrt(dx*dx + dy*dy) > 10) {
+                          state.current.player.angle = Math.atan2(dy, dx);
+                      }
+                      
+                      const moveSpeed = 0.2; // Smooth follow
+                      state.current.player.x += dx * moveSpeed;
+                      state.current.player.y += dy * moveSpeed;
                   }
-                  
-                  state.current.player.x = x - state.current.player.width / 2;
-                  state.current.player.y = y - state.current.player.height / 2;
               } else {
                   state.current.player.x = x - state.current.player.width / 2;
               }
             }
+          }}
+          onTouchEnd={() => {
+            state.current.joystick.active = false;
+            state.current.joystick.distance = 0;
           }}
         />
 
@@ -1435,7 +1683,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                 </div>
                 
                 <div className="mt-6 flex flex-col gap-2 w-full max-w-[200px]">
-                  <p className="text-[8px] font-mono text-white/40 uppercase tracking-[0.2em]">{t('game.invaders.difficulty', 'DIFFICULTY')}</p>
+                  <p className="text-[8px] font-mono text-white/40 uppercase tracking-[0.2em]">{t('game.invaders.difficulty')}</p>
                   <div className="flex gap-1 p-1 bg-white/5 rounded-lg border border-white/10">
                     {(['easy', 'normal', 'hard'] as const).map((d) => (
                       <button
@@ -1483,6 +1731,22 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                     {t('game.invaders.mejoras')}
                   </button>
                 </div>
+
+                <form onSubmit={handleSecretSubmit} className="mt-6 flex gap-2 w-full max-w-[200px]">
+                  <input 
+                    type="text" 
+                    value={secretCode}
+                    onChange={(e) => setSecretCode(e.target.value)}
+                    placeholder={t('game.invaders.secret_code', 'SECRET CODE')}
+                    className="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-[8px] font-mono uppercase tracking-widest focus:border-brand-accent focus:outline-none transition-colors"
+                  />
+                  <button 
+                    type="submit"
+                    className="bg-brand-accent/20 border border-brand-accent/50 text-brand-accent px-2 py-1 rounded text-[8px] font-mono uppercase hover:bg-brand-accent hover:text-white transition-all"
+                  >
+                    OK
+                  </button>
+                </form>
               </div>
               
               <div className="flex-1 w-full bg-white/5 border border-white/10 rounded-xl p-6 relative">
@@ -1554,7 +1818,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                        { id: 'shield', icon: Shield, name: t('game.invaders.upgrade.shield'), price: 1000 * (upgrades.shield + 1) },
                        { id: 'power', icon: Zap, name: t('game.invaders.upgrade.power'), price: 2000 * (upgrades.power + 1) },
                        { id: 'speed', icon: Star, name: t('game.invaders.upgrade.speed'), price: 1500 * (upgrades.speed + 1) },
-                      { id: 'rear_turret', icon: RefreshCw, name: t('game.invaders.upgrade.rear_turret'), price: 3000 * (upgrades.rear_turret + 1) }
+                      ...(hasDiscoveredSecret ? [{ id: 'rear_turret', icon: RefreshCw, name: t('game.invaders.upgrade.rear_turret'), price: 3000 * (upgrades.rear_turret + 1) }] : [])
                      ].map(upg => (
                        <div key={upg.id} className="flex items-center justify-between bg-black/30 p-3 border border-white/5 rounded-lg">
                          <div className="flex items-center gap-3">

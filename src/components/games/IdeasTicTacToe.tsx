@@ -30,9 +30,27 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [log, setLog] = useState<string>(t('game.ttt.log.start'));
+  const [focusedCell, setFocusedCell] = useState(4); // Center by default
 
   const winner = calculateWinner(board);
   const isDraw = !winner && board.every((square) => square !== null);
+
+  // Cabinet Button Support
+  useEffect(() => {
+    if (isPausedGlobal || winner || isDraw || !xIsNext) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowUp') setFocusedCell(prev => (prev - 3 + 9) % 9);
+      if (e.key === 'ArrowDown') setFocusedCell(prev => (prev + 3) % 9);
+      if (e.key === 'ArrowLeft') setFocusedCell(prev => (prev % 3 === 0 ? prev + 2 : prev - 1));
+      if (e.key === 'ArrowRight') setFocusedCell(prev => (prev % 3 === 2 ? prev - 2 : prev + 1));
+      if (e.key === ' ' || e.key === 'Enter') {
+          handleClick(focusedCell);
+      }
+      if (e.key.startsWith('Arrow')) playSound('hover');
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedCell, board, winner, isDraw, xIsNext, isPausedGlobal]);
 
   useEffect(() => {
     if (!winner && !isDraw) {
@@ -212,6 +230,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
             className={cn(
               "w-16 h-16 sm:w-20 sm:h-20 bg-zinc-950/80 backdrop-blur-sm text-2xl sm:text-3xl flex items-center justify-center transition-all hover:bg-zinc-900 border-2 border-white/5 rounded-xl relative group",
               !square && !winner && xIsNext && "hover:border-brand-accent/50 cursor-pointer active:scale-95",
+              i === focusedCell && !winner && !isDraw && xIsNext && "border-brand-accent ring-2 ring-brand-accent/20 scale-105",
               square === 'X' && "text-brand-accent",
               square === 'O' && "text-blue-400"
             )}

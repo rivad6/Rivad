@@ -15,7 +15,8 @@ import {
   XCircle,
   Megaphone,
   Fingerprint,
-  Star
+  Star,
+  Paintbrush
 } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
 
@@ -40,6 +41,29 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   const [turn, setTurn] = useState<'player' | 'cpu'>('player');
   const [message, setMessage] = useState(t('game.uno.msg.start'));
   const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
+  const [focusedCardIndex, setFocusedCardIndex] = useState(0);
+  const [isChoosingColor, setIsChoosingColor] = useState(false);
+
+  // Cabinet Button Support
+  useEffect(() => {
+    if (isPausedGlobal || winner || isChoosingColor || turn !== 'player') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const cardCount = playerHand.length;
+      if (cardCount === 0) return;
+
+      if (e.key === 'ArrowLeft') {
+        setFocusedCardIndex(prev => (prev - 1 + cardCount) % cardCount);
+        playSound('hover');
+      } else if (e.key === 'ArrowRight') {
+        setFocusedCardIndex(prev => (prev + 1) % cardCount);
+        playSound('hover');
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        playCard(focusedCardIndex);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedCardIndex, playerHand, winner, isChoosingColor, turn, isPausedGlobal]);
 
   useEffect(() => {
     if (!winner) {
@@ -57,7 +81,6 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
     }
   }, [message]);
 
-  const [isChoosingColor, setIsChoosingColor] = useState(false);
   const [direction, setDirection] = useState(1); // 1 for clockwise, -1 for reverse
 
   const colors: Color[] = ['rojo', 'azul', 'guinda', 'naranja'];

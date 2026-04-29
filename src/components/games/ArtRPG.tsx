@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Paintbrush } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
@@ -173,6 +174,32 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
     return () => playMusic('none');
   }, [currentNode, playMusic, isPausedGlobal]);
 
+  // Handle Joystick and Button navigation for Arcade Cabinet
+  useEffect(() => {
+    if (isPausedGlobal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const node = storyMap[currentNode];
+      if (!node || node.isEnding) return;
+      
+      const choiceCount = node.choices.length;
+      if (choiceCount === 0) return;
+
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        setSelectedIndex(prev => (prev - 1 + choiceCount) % choiceCount);
+        playSound('hover');
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        setSelectedIndex(prev => (prev + 1) % choiceCount);
+        playSound('hover');
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        if (node.choices[selectedIndex]) {
+          handleChoice(node.choices[selectedIndex].next, selectedIndex);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentNode, selectedIndex, isPausedGlobal]);
+
   const node = storyMap[currentNode];
 
   const [activeEvent, setActiveEvent] = useState<{text: string} | null>(null);
@@ -340,9 +367,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
             className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
           >
             <div className="flex flex-col items-center gap-2">
-              <div className={cn("w-12 h-12 rounded-full animate-pulse", mood.accent.replace('text-', 'bg-'))} />
+              <Paintbrush className="w-12 h-12 text-brand-accent animate-pulse" />
               <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
-                {t('game.paused.system', 'SIMULATION HALTED')}
+                {t('game.paused.system', 'ART SUSPENDED')}
               </h2>
             </div>
             <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">

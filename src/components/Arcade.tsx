@@ -8,7 +8,6 @@ import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
 import { CreativeInvaders } from './games/CreativeInvaders';
 import { MeetingRace } from './games/MeetingRace';
-import { FestJump } from './games/FestJump';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';

@@ -80,6 +80,37 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
     setInventory({});
   };
 
+  // Cabinet Button Support
+  useEffect(() => {
+    if (isPausedGlobal || gameState !== 'playing') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        // Simulate a click at a random central position
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (rect) {
+          const x = rect.width / 2 + (Math.random() - 0.5) * 100;
+          const y = rect.height / 3 + (Math.random() - 0.5) * 100;
+          
+          playSound('hover');
+          setHype(prev => prev + totalHypePerClick);
+          setAudience(prev => prev + 1);
+          setRelevance(prev => Math.min(100, prev + (viralTimer > 0 ? 2 : 1.2)));
+
+          const clickId = Date.now() + Math.random();
+          setClicks(prev => [...prev, { id: clickId, x, y, val: totalHypePerClick }]);
+          
+          if (Math.random() > 0.5) {
+             const fanId = Math.random();
+             setFans(prev => [...prev, { id: fanId, x, y }]);
+             setTimeout(() => setFans(prev => prev.filter(f => f.id !== fanId)), 1000);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [totalHypePerClick, viralTimer, gameState, isPausedGlobal, playSound]);
+
   useEffect(() => {
     if (gameState !== 'playing' || isPausedGlobal) return;
 
