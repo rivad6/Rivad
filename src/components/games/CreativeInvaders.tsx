@@ -541,16 +541,19 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         }
       }
 
-      // Rear turret firing - Auto-enabled in Asteroid Mode
-      if ((gameState === 'asteroids' || s.isAsteroidMode) && (upgrades.rear_turret > 0 || s.isAsteroidMode)) {
-        const turretPower = s.isAsteroidMode ? Math.max(3, upgrades.rear_turret + 1) : upgrades.rear_turret;
+      // Rear turret firing - Auto-enabled in Deep Space / Asteroid Mode
+      const isDeepSpace = gameState === 'asteroids' || s.isAsteroidMode;
+      if (isDeepSpace || upgrades.rear_turret > 0) {
+        const turretPower = isDeepSpace ? Math.max(1, upgrades.rear_turret) : upgrades.rear_turret;
         const spread = turretPower > 1 ? 0.3 : 0;
-        fireBullet(Math.PI - spread, "#ef4444");
+        const bulletColor = isDeepSpace ? "#f472b6" : "#ef4444";
+        
+        fireBullet(Math.PI - spread, bulletColor);
         if (turretPower > 1) {
-          fireBullet(Math.PI + spread, "#ef4444");
+          fireBullet(Math.PI + spread, bulletColor);
         }
         if (turretPower >= 3) {
-            fireBullet(Math.PI, s.isAsteroidMode ? "#f472b6" : "#facc15");
+          fireBullet(Math.PI, isDeepSpace ? "#f472b6" : "#facc15");
         }
       }
 
@@ -1438,10 +1441,11 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       ctx.rotate(s.player.angle + Math.PI / 2); // Sprite faces up normally, so adjust
       drawSprite(ctx, sprites.player, -s.player.width / 2, -s.player.height / 2, s.player.width, s.player.height, playerPalette);
       
-      // Draw rear turret if upgraded or in secret mode
-      const effectiveTurret = s.isAsteroidMode ? Math.max(3, upgrades.rear_turret + 1) : upgrades.rear_turret;
+      // Draw rear turret if upgraded or in deep space
+      const isDeepSpace = gameState === "asteroids" || s.isAsteroidMode;
+      const effectiveTurret = isDeepSpace ? Math.max(1, upgrades.rear_turret) : upgrades.rear_turret;
       if (effectiveTurret > 0) {
-        ctx.fillStyle = s.isAsteroidMode ? "#f472b6" : "#ef4444";
+        ctx.fillStyle = isDeepSpace ? "#f472b6" : "#ef4444";
         ctx.fillRect(-5, s.player.height / 2 - 5, 10, 10);
         if (effectiveTurret > 1) {
             ctx.fillRect(-12, s.player.height / 2 - 2, 6, 6);
