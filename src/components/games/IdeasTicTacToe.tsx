@@ -23,7 +23,7 @@ const calculateWinner = (squares: Player[]) => {
   return null;
 };
 
-export function IdeasTicTacToe({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
+export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const [personality, setPersonality] = useState<'rationalist' | 'traditionalist' | 'postmodernist'>('rationalist');
@@ -143,7 +143,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false }: { isPausedGlobal?: bo
 
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center font-[var(--font-pixel)] w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-hidden [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:max-w-none">
-      <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
       
       {/* Universal Pause Overlay */}
       <AnimatePresence>

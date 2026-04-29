@@ -41,7 +41,7 @@ interface Particle {
   size: number;
 }
 
-export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
+export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1146,7 +1146,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
 
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
-      <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50 transition-opacity opacity-20 hover:opacity-100" />
+      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50 transition-opacity opacity-20 hover:opacity-100" />}
       
       {/* Universal/Manual Pause Overlay */}
       <AnimatePresence>

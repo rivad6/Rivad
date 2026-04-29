@@ -29,7 +29,7 @@ type Card = {
   partyNameKey?: string;
 };
 
-export function PoliticalUno({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
+export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -383,7 +383,7 @@ export function PoliticalUno({ isPausedGlobal = false }: { isPausedGlobal?: bool
 
   return (
     <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-16 relative overflow-hidden bg-[#0a0a0A] [&.is-fullscreen]:bg-black">
-      <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
 
       {/* Universal Pause Overlay */}
       <AnimatePresence>

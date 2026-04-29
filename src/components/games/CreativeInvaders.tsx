@@ -18,7 +18,7 @@ import { FullscreenButton } from '../ui/FullscreenButton';
 
 type Difficulty = "easy" | "normal" | "hard";
 
-export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
+export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
   const { playSound, playMusic } = useAudio();
@@ -1239,7 +1239,7 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
 
   return (
     <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[500px] font-mono text-white p-2 md:p-4 relative bg-[#050505] rounded-xl flex-grow overflow-hidden border-2 border-zinc-900 shadow-2xl [&.is-fullscreen]:bg-black [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none">
-      <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-[70] transition-opacity opacity-20 hover:opacity-100" />
+      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-[70] transition-opacity opacity-20 hover:opacity-100" />}
       
       {/* Universal/Manual Pause Overlay */}
       <AnimatePresence>
@@ -1651,75 +1651,66 @@ export function CreativeInvaders({ isPausedGlobal = false }: { isPausedGlobal?: 
 
         {showMobileControls && (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") && (
           <div className="absolute inset-0 z-20 pointer-events-none">
-            {/* Movement Controls (Left) */}
-            <div className="absolute bottom-6 left-6 flex flex-col gap-2">
-              <div className="flex gap-2">
-                <div className="w-16 h-16" /> {/* Spacer */}
+            {/* Movement Controls (Left) - Compact Joystick Area */}
+            <div className="absolute bottom-6 left-6 flex flex-col gap-1 opacity-40 hover:opacity-100 transition-opacity">
+              <div className="flex gap-1 justify-center">
                 <button 
-                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; }}
                   onMouseUp={() => state.current.player.isMovingUp = false}
                   onMouseLeave={() => state.current.player.isMovingUp = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; playSound('click'); }}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingUp = true; }}
                   onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingUp = false; }}
-                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                  className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center active:bg-white/30 transition-all pointer-events-auto"
                 >
-                  <ChevronUp className="text-white w-6 h-6 opacity-40 group-active:opacity-100" />
+                  <ChevronUp className="text-white w-5 h-5" />
                 </button>
-                <div className="w-16 h-16" />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <button 
-                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; }}
                   onMouseUp={() => state.current.player.isMovingLeft = false}
                   onMouseLeave={() => state.current.player.isMovingLeft = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; playSound('click'); }}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingLeft = true; }}
                   onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingLeft = false; }}
-                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                  className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center active:bg-white/30 transition-all pointer-events-auto"
                 >
-                  <ChevronLeft className="text-white w-6 h-6 opacity-40" />
+                  <ChevronLeft className="text-white w-5 h-5" />
                 </button>
-                <div className="w-16 h-16 flex items-center justify-center">
-                  <div className="w-4 h-4 rounded-full bg-brand-accent/20 border border-brand-accent/40" />
-                </div>
+                <div className="w-12 h-12" /> {/* Center hole */}
                 <button 
-                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; }}
                   onMouseUp={() => state.current.player.isMovingRight = false}
                   onMouseLeave={() => state.current.player.isMovingRight = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; playSound('click'); }}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingRight = true; }}
                   onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingRight = false; }}
-                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                  className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center active:bg-white/30 transition-all pointer-events-auto"
                 >
-                  <ChevronRight className="text-white w-6 h-6 opacity-40" />
+                  <ChevronRight className="text-white w-5 h-5" />
                 </button>
               </div>
-              <div className="flex gap-2">
-                <div className="w-16 h-16" />
+              <div className="flex gap-1 justify-center">
                 <button 
-                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
+                  onMouseDown={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; }}
                   onMouseUp={() => state.current.player.isMovingDown = false}
                   onMouseLeave={() => state.current.player.isMovingDown = false}
-                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; playSound('click'); }}
+                  onTouchStart={(e) => { e.preventDefault(); state.current.player.isMovingDown = true; }}
                   onTouchEnd={(e) => { e.preventDefault(); state.current.player.isMovingDown = false; }}
-                  className="w-16 h-16 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                  className="w-12 h-12 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center active:bg-white/30 transition-all pointer-events-auto"
                 >
-                  <ChevronDown className="text-white w-6 h-6 opacity-40" />
+                  <ChevronDown className="text-white w-5 h-5" />
                 </button>
-                <div className="w-16 h-16" />
               </div>
             </div>
 
-            {/* Fire Button (Right) */}
-            <div className="absolute bottom-10 right-10 flex flex-col items-center gap-4">
+            {/* Fire Button (Right) - More Minimal */}
+            <div className="absolute bottom-10 right-10 flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
               <button 
                 onMouseDown={(e) => { e.preventDefault(); fire(); }}
                 onTouchStart={(e) => { e.preventDefault(); fire(); }}
-                className="w-28 h-28 bg-brand-accent/10 backdrop-blur-lg border-4 border-brand-accent/30 rounded-full flex items-center justify-center active:bg-brand-accent/40 active:border-brand-accent/60 transition-all pointer-events-auto shadow-[0_0_30px_rgba(242,74,41,0.2)]"
+                className="w-20 h-20 bg-brand-accent/20 backdrop-blur-sm border-2 border-brand-accent/40 rounded-full flex items-center justify-center active:bg-brand-accent/50 transition-all pointer-events-auto"
               >
-                <div className="w-14 h-14 bg-brand-accent/80 rounded-full flex items-center justify-center shadow-inner">
-                  <Crosshair className="w-8 h-8 text-white" />
-                </div>
+                <Zap className="w-8 h-8 text-white" />
               </button>
-              <div className="text-[8px] font-black uppercase text-brand-accent tracking-widest opacity-50">{t('game.invaders.action.fire')}</div>
             </div>
           </div>
         )}

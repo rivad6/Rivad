@@ -36,7 +36,7 @@ const UPGRADES: Upgrade[] = [
   { id: 'nft', nameKey: 'game.sell.action.nft', baseCost: 10000, hypeBoost: 500, icon: <DollarSign />, unlockedAt: 80 },
 ];
 
-export const SellOutGame: React.FC<{ isPausedGlobal?: boolean }> = ({ isPausedGlobal = false }) => {
+export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }> = ({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }) => {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -167,8 +167,10 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean }> = ({ isPausedGl
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center w-full h-full max-w-5xl mx-auto p-4 md:p-8 font-[var(--font-mono)] select-none relative bg-[#050505] min-h-[350px] overflow-y-auto custom-scrollbar [&.is-fullscreen]:bg-black">
-      <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+    <div ref={containerRef} className={cn("flex flex-col items-center w-full h-full p-4 md:p-8 font-[var(--font-mono)] select-none relative bg-[#050505] min-h-[350px] overflow-y-auto custom-scrollbar [&.is-fullscreen]:bg-black", !isFullscreen && "max-w-5xl mx-auto")}>
+      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
+
+
       
       {/* Universal Pause Overlay */}
       <AnimatePresence>

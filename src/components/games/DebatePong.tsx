@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function DebatePong({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
+export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -372,7 +372,7 @@ export function DebatePong({ isPausedGlobal = false }: { isPausedGlobal?: boolea
       </div>
       
       <div ref={containerRef} className="relative border-4 border-gray-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden touch-none w-full h-full min-h-[400px] flex justify-center items-center mx-auto shadow-2xl flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
-        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+        {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
         
         {/* Universal Pause Overlay */}
         <AnimatePresence>

@@ -39,6 +39,9 @@ export function Arcade() {
     // Unlock first blood achievement when entering the arcade
     unlockAchievement('first_blood');
     
+    // Auto-power on
+    handlePower();
+    
     // 60 seconds popup
     const popupInterval = setInterval(() => {
       if (!document.fullscreenElement && !showPopup && powerState === 'playing') {
@@ -370,13 +373,13 @@ export function Arcade() {
                     transition={{ duration: 0.3 }}
                     className="w-full h-full flex justify-center p-0 md:p-4 bg-black"
                   >
-                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} />}
-                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} />}
-                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} />}
-                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} />}
-                    {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} />}
-                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} />}
-                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} />}
+                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
+                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                   </motion.div>
                 )}
               </AnimatePresence>
