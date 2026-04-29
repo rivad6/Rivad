@@ -8,6 +8,7 @@ import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
 import { CreativeInvaders } from './games/CreativeInvaders';
 import { MeetingRace } from './games/MeetingRace';
+import { FestJump } from './games/FestJump';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -34,6 +35,7 @@ export function Arcade() {
   ] as const;
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
+  const [pendingGame, setPendingGame] = useState<string | null>(null);
 
   useEffect(() => {
     // Unlock first blood achievement when entering the arcade
@@ -96,11 +98,13 @@ export function Arcade() {
     if (powerState !== 'waiting' && powerState !== 'playing') return;
     playSound('powerup');
     setPowerState('inserting');
+    setPendingGame(id);
     setActiveGame(null);
     setBootLog([t('arc.boot.loading'), t('arc.boot.verify'), t('arc.boot.rom'), t('arc.boot.start')]);
     
     setTimeout(() => {
       setActiveGame(id);
+      setPendingGame(null);
       setPowerState('playing');
     }, 2000);
   };
@@ -330,7 +334,7 @@ export function Arcade() {
                           transition={{ duration: 1.5, repeat: Infinity }}
                           className="absolute inset-0 flex items-center justify-center text-brand-accent font-black text-xl"
                         >
-                          {activeGame === 'pong' ? '🏓' : activeGame === 'tictactoe' ? '👁' : activeGame === 'uno' ? '📢' : activeGame === 'rpg' ? '🎨' : activeGame === 'sellout' ? '⭐' : activeGame === 'invaders' ? '🚀' : '🏎️'}
+                          {pendingGame === 'pong' ? '🏓' : pendingGame === 'tictactoe' ? '👁' : pendingGame === 'uno' ? '📢' : pendingGame === 'rpg' ? '🎨' : pendingGame === 'sellout' ? '⭐' : pendingGame === 'invaders' ? '🚀' : '🏎️'}
                         </motion.div>
                       </div>
                       <div className="flex flex-col items-center gap-1">

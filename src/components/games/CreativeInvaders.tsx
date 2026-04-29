@@ -1238,7 +1238,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
   }, [tick]);
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[500px] font-mono text-white p-2 md:p-4 relative bg-[#050505] rounded-xl flex-grow overflow-hidden border-2 border-zinc-900 shadow-2xl [&.is-fullscreen]:bg-black [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none">
+    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 md:p-4 relative bg-[#050505] rounded-xl flex-grow overflow-y-auto custom-scrollbar border-2 border-zinc-900 shadow-2xl [&.is-fullscreen]:bg-black [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none">
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-[70] transition-opacity opacity-20 hover:opacity-100" />}
       
       {/* Universal/Manual Pause Overlay */}
@@ -1248,15 +1248,15 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-4 text-center p-4"
           >
             <div className="flex flex-col items-center gap-2">
-              <Target className="w-16 h-16 text-brand-accent animate-pulse" />
-              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+              <Target className="w-12 h-12 md:w-16 md:h-16 text-brand-accent animate-pulse" />
+              <h2 className="text-white font-black text-xl md:text-2xl uppercase tracking-[0.3em]">
                 {isPausedGlobal ? t('game.paused.system', 'SYSTEM HALTED') : 'MISSION PAUSED'}
               </h2>
             </div>
-            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+            <p className="text-zinc-500 text-[8px] md:text-[10px] uppercase font-bold text-center px-4 md:px-16 leading-relaxed max-w-xs">
               {isPausedGlobal 
                 ? t('game.paused.desc', 'The creative flow has been temporarily suspended.')
                 : t('game.paused.manual', 'Prepare your creativity. The void waits for no one.')}
@@ -1274,26 +1274,26 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       </AnimatePresence>
       
       {/* Top HUD */}
-      <div className="flex justify-between items-center w-full max-w-4xl mb-2 px-6 py-2 text-[10px] font-bold bg-zinc-900/50 rounded-t-xl border-x-2 border-t-2 border-zinc-800 backdrop-blur-sm shadow-lg shrink-0">
-         <div className="flex items-center gap-6">
+      <div className="flex justify-between items-center w-full max-w-4xl mb-2 px-2 md:px-6 py-1 md:py-2 text-[8px] md:text-[10px] font-bold bg-zinc-900/50 rounded-t-xl border-x-2 border-t-2 border-zinc-800 backdrop-blur-sm shadow-lg shrink-0">
+         <div className="flex items-center gap-3 md:gap-6">
             <button 
               onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
-              className={`flex items-center gap-1 uppercase text-[8px] font-bold border px-1.5 py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-[0_0_10px_rgba(242,74,41,0.2)]' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
+              className={`flex items-center gap-1 uppercase text-[7px] md:text-[8px] font-bold border px-1 md:px-1.5 py-0.5 md:py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-[0_0_10px_rgba(242,74,41,0.2)]' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
             >
-              <Settings className="w-3 h-3" /> {showMobileControls ? t('game.common.controls_on') : t('game.common.controls_off')}
+              <Settings className="w-2.5 h-2.5 md:w-3 md:h-3" /> {showMobileControls ? t('game.common.controls_on') : t('game.common.controls_off')}
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
                <span className="text-zinc-500 tracking-tighter uppercase">{t('game.invaders.score')}</span>
-               <div ref={scoreRefDOM} className="text-brand-accent text-sm italic">{score}</div>
+               <div ref={scoreRefDOM} className="text-brand-accent text-xs md:text-sm italic">{score}</div>
             </div>
-            <div className="flex items-center gap-4 bg-black/40 px-3 py-1 rounded-full border border-white/5">
+            <div className="flex items-center gap-2 md:gap-4 bg-black/40 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/5">
                 <div className="flex items-center gap-1">
-                   <Shield className="w-3 h-3 text-blue-400" />
-                   <span className="text-blue-400">{hudShield}</span>
+                   <Shield className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-400" />
+                   <span className="text-blue-400 text-[8px] md:text-xs">{hudShield}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                   <Zap className="w-3 h-3 text-yellow-400" />
-                   <span className="text-yellow-400">LV.{hudPower}</span>
+                   <Zap className="w-2.5 h-2.5 md:w-3 md:h-3 text-yellow-400" />
+                   <span className="text-yellow-400 text-[8px] md:text-xs">LV.{hudPower}</span>
                 </div>
             </div>
          </div>

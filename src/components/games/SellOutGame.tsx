@@ -260,11 +260,11 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-12 w-full items-start">
         
         {/* Main Interaction Area */}
-        <div className="flex flex-col items-center gap-8">
+        <div className="flex flex-col items-center gap-4 md:gap-8">
           <div 
             onClick={handleMainClick}
             className={cn(
-              "relative w-72 h-72 md:w-96 md:h-96 rounded-full flex items-center justify-center cursor-pointer transition-all active:scale-90 group",
+              "relative w-56 h-56 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full flex items-center justify-center cursor-pointer transition-all active:scale-90 group",
               gameState === 'playing' ? "hover:scale-105" : "grayscale opacity-50"
             )}
           >
@@ -273,14 +273,14 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
             <div className="absolute inset-4 rounded-full border-2 border-white/5 animate-[ping_4s_infinite_1s]" />
             
             <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-accent/30 via-transparent to-white/10 border-4 border-white/10 flex items-center justify-center overflow-hidden">
-               <div className="w-56 h-56 md:w-72 md:h-72 rounded-full bg-[#050505] flex flex-col items-center justify-center border-4 border-zinc-900 group-hover:border-brand-accent transition-all duration-500 shadow-[0_0_100px_rgba(138,99,210,0.2)]">
+               <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 rounded-full bg-[#050505] flex flex-col items-center justify-center border-4 border-zinc-900 group-hover:border-brand-accent transition-all duration-500 shadow-[0_0_100px_rgba(138,99,210,0.2)]">
                  {gameState === 'playing' ? (
                    <>
-                    <Star className="w-32 h-32 md:w-40 md:h-40 text-brand-accent drop-shadow-[0_0_20px_rgba(138,99,210,0.6)]" />
-                    <span className="mt-4 text-[10px] uppercase font-black text-zinc-500 tracking-[0.5em] group-hover:text-white transition-colors">{t('game.sell.label.sell')}</span>
+                    <Star className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 text-brand-accent drop-shadow-[0_0_20px_rgba(138,99,210,0.6)]" />
+                    <span className="mt-2 md:mt-4 text-[8px] md:text-[10px] uppercase font-black text-zinc-500 tracking-[0.5em] group-hover:text-white transition-colors">{t('game.sell.label.sell')}</span>
                    </>
                  ) : (
-                   <RefreshCw className="w-32 h-32 md:w-40 md:h-40 text-zinc-800 rotate-180" />
+                   <RefreshCw className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 text-zinc-800 rotate-180" />
                  )}
                </div>
                

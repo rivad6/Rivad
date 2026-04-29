@@ -382,7 +382,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   );
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-16 relative overflow-hidden bg-[#0a0a0A] [&.is-fullscreen]:bg-black">
+    <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-20 relative overflow-y-auto custom-scrollbar bg-[#0a0a0A] [&.is-fullscreen]:bg-black">
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
 
       {/* Universal Pause Overlay */}
@@ -392,15 +392,15 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6 text-center"
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-4 text-center p-4"
           >
             <div className="flex flex-col items-center gap-2">
-              <Megaphone className="w-12 h-12 text-brand-accent animate-bounce" />
-              <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+              <Megaphone className="w-10 h-10 md:w-12 md:h-12 text-brand-accent animate-bounce" />
+              <h2 className="text-white font-black text-xl md:text-2xl uppercase tracking-[0.3em]">
                 {t('game.paused.system', 'SESSION SUSPENDED')}
               </h2>
             </div>
-            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+            <p className="text-zinc-500 text-[8px] md:text-[10px] uppercase font-bold text-center px-4 md:px-16 leading-relaxed max-w-xs">
               {t('game.paused.desc', 'The legislative chamber is closed for maintenance.')}
             </p>
           </motion.div>
@@ -408,42 +408,41 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
       </AnimatePresence>
       
       {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden [&.is-fullscreen]:hidden">
-        <Fingerprint className="absolute -top-20 -left-20 w-96 h-96 rotate-12" />
-        <Megaphone className="absolute -bottom-20 -right-20 w-80 h-80 -rotate-12" />
+      <div className="absolute inset-0 pointer-events-none opacity-[0.02] overflow-hidden [&.is-fullscreen]:hidden">
+        <Fingerprint className="absolute -top-10 -left-10 w-48 h-48 md:w-96 md:h-96 rotate-12" />
+        <Megaphone className="absolute -bottom-10 -right-10 w-40 h-40 md:w-80 md:h-80 -rotate-12" />
       </div>
 
       {/* HUD Header */}
-      <div className="mb-4 md:mb-8 flex flex-col items-center gap-1 w-full max-w-2xl px-4 relative z-10">
+      <div className="mb-2 md:mb-8 flex flex-col items-center gap-1 w-full max-w-2xl px-4 relative z-10 shrink-0">
          <div className="flex items-center gap-2 mb-1">
-           <div className={cn("w-2 h-2 rounded-full", turn === 'player' ? "bg-brand-accent shadow-[0_0_10px_rgba(138,99,210,0.8)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]")} />
-           <span className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">
+           <div className={cn("w-1.5 h-1.5 md:w-2 md:h-2 rounded-full", turn === 'player' ? "bg-brand-accent shadow-[0_0_10px_rgba(138,99,210,0.8)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]")} />
+           <span className="text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">
              {turn === 'player' ? t('game.uno.label.session_open') : t('game.uno.label.session_closed')}
            </span>
          </div>
-         <h2 className="text-2xl md:text-4xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2 group">
-           <Megaphone className="text-brand-accent h-6 w-6 md:h-10 md:w-10 group-hover:rotate-12 transition-transform" />
+         <h2 className="text-xl md:text-4xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2 group">
+           <Megaphone className="text-brand-accent h-5 w-5 md:h-10 md:w-10 group-hover:rotate-12 transition-transform" />
            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">Political UNO</span>
-           <span className="text-zinc-700 text-sm md:text-xl font-mono not-italic mt-1">2.0</span>
          </h2>
       </div>
 
       {/* The Table Arena */}
-      <div className="flex flex-col gap-6 md:gap-12 items-center w-full relative z-10">
+      <div className="flex flex-col gap-4 md:gap-12 items-center w-full relative z-10 flex-grow">
         
         {/* Opponent Area (Top) */}
         <div className={cn(
-          "flex flex-col items-center gap-3 bg-zinc-950/40 p-4 md:p-6 rounded-[2rem] border transition-all duration-500 w-full max-w-4xl mx-auto [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none",
+          "flex flex-col items-center gap-2 md:gap-3 bg-zinc-950/40 p-2 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border transition-all duration-500 w-full max-w-4xl mx-auto [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none",
           turn === 'cpu' ? "border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]" : "border-white/5"
         )}>
-          <div className="flex items-center gap-4 mb-1">
-            <h3 className="text-[10px] md:text-sm uppercase tracking-widest text-zinc-500 font-bold">{t('game.uno.label.opposition')}</h3>
-            <div className="flex items-center gap-1 bg-zinc-900 px-3 py-1 rounded-full border border-white/5">
-              <UserRound className="w-3 h-3 text-red-500" />
-              <span className="text-xs font-black">{cpuHand.length}</span>
+          <div className="flex items-center gap-4 mb-0.5">
+            <h3 className="text-[8px] md:text-sm uppercase tracking-widest text-zinc-500 font-bold">{t('game.uno.label.opposition')}</h3>
+            <div className="flex items-center gap-1 bg-zinc-900 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/5">
+              <UserRound className="w-2.5 h-2.5 md:w-3 md:h-3 text-red-500" />
+              <span className="text-[10px] md:text-xs font-black">{cpuHand.length}</span>
             </div>
           </div>
-          <div className="flex -space-x-12 md:-space-x-16 hover:-space-x-8 transition-all duration-500 pb-2">
+          <div className="flex -space-x-10 md:-space-x-16 hover:-space-x-4 md:hover:-space-x-8 transition-all duration-500 pb-1 max-w-full overflow-x-auto scrollbar-hide px-8">
             {cpuHand.map((c) => (
                <CardView key={c.id} card={c} hidden={true} />
             ))}
@@ -451,16 +450,16 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
         </div>
 
         {/* Central Arena */}
-        <div className="relative flex flex-col md:flex-row items-center justify-center gap-8 md:gap-20 w-full py-4 min-h-[300px]">
+        <div className="relative flex flex-row items-center justify-center gap-4 sm:gap-8 md:gap-20 w-full py-2 md:py-4 min-h-[150px] md:min-h-[300px]">
            
            {/* Direction Indicator */}
            <motion.div 
              animate={{ rotate: direction === 1 ? 360 : -360 }}
              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-             className="absolute md:inset-0 flex items-center justify-center pointer-events-none opacity-10"
+             className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 md:opacity-10"
            >
-             <div className="w-64 h-64 md:w-96 md:h-96 rounded-full border-2 border-dashed border-white flex items-center justify-center">
-               <ArrowLeftRight className="w-20 h-20" />
+             <div className="w-32 h-32 md:w-96 md:h-96 rounded-full border border-dashed border-white flex items-center justify-center">
+               <ArrowLeftRight className="w-10 h-10 md:w-20 md:h-20" />
              </div>
            </motion.div>
 
@@ -486,7 +485,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
            {/* Discard Pile (Tribuna) */}
            <div className="flex flex-col items-center gap-3 relative">
              <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">{t('game.uno.label.pile')}</p>
-             <div className="relative">
+            <div className="relative">
                 <AnimatePresence mode="wait">
                   {topCard && (
                     <motion.div
@@ -494,15 +493,16 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                       initial={{ scale: 0.8, rotate: direction === 1 ? -15 : 15, opacity: 0 }}
                       animate={{ scale: 1, rotate: 0, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      className="relative z-10"
                     >
                       <CardView card={topCard} />
                     </motion.div>
                   )}
                 </AnimatePresence>
                 {/* Visual shadow for "pile" depth */}
-                <div className="absolute -bottom-2 -right-2 w-full h-full bg-black/40 rounded-xl -z-10 blur-sm" />
+                <div className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-full h-full bg-black/40 rounded-xl -z-10 blur-sm" />
              </div>
-             <p className="text-zinc-400 font-black uppercase tracking-tighter text-[10px]">{t('game.uno.label.actual')}</p>
+             <p className="text-zinc-400 font-black uppercase tracking-tighter text-[8px] md:text-[10px]">{t('game.uno.label.actual')}</p>
            </div>
 
            {/* Special Action Overlay */}
@@ -518,7 +518,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                    animate={{ rotate: 360 }}
                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                  >
-                   <ArrowLeftRight className="w-32 h-32 text-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)]" />
+                   <ArrowLeftRight className="w-16 h-16 md:w-32 md:h-32 text-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)]" />
                  </motion.div>
                </motion.div>
              )}
@@ -528,13 +528,13 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                  animate={{ opacity: 1, scale: 1, y: 0 }}
                  exit={{ opacity: 0, scale: 1.5, filter: 'blur(10px)' }}
                  transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                 className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+                 className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none p-4"
                >
-                 <div className="bg-[#0a0a0A]/90 backdrop-blur-md px-12 py-8 rounded-full border border-brand-accent shadow-[0_0_100px_rgba(138,99,210,0.8)] flex flex-col items-center gap-4 text-center">
+                 <div className="bg-[#0a0a0A]/90 backdrop-blur-md px-6 md:px-12 py-4 md:py-8 rounded-3xl md:rounded-full border border-brand-accent shadow-[0_0_100px_rgba(138,99,210,0.8)] flex flex-col items-center gap-2 md:gap-4 text-center">
                    <div className="text-brand-accent">
                      <CardIcon action={activePopup} />
                    </div>
-                   <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-brand-accent !not-italic">
+                   <h1 className="text-2xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-brand-accent !not-italic">
                      {activePopup.replace('_', ' ')}
                    </h1>
                  </div>
@@ -543,7 +543,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
            </AnimatePresence>
 
            {/* Active Action Message Overlay */}
-           <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 pointer-events-none z-50">
+           <div className="absolute top-[-20px] md:top-[-30px] left-1/2 -translate-x-1/2 pointer-events-none z-50 w-full flex justify-center">
              <AnimatePresence mode="wait">
                {message ? (
                  <motion.div 
@@ -552,12 +552,12 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                    animate={{ opacity: 1, scale: 1, y: 0 }}
                    exit={{ opacity: 0, scale: 0.8 }}
                    className={cn(
-                     "bg-black/90 backdrop-blur-xl px-6 py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-3 min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
+                     "bg-black/90 backdrop-blur-xl px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 md:gap-3 min-w-[150px] md:min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
                      turn === 'player' ? "text-brand-accent ring-1 ring-brand-accent/30" : "text-red-400 ring-1 ring-red-500/30"
                    )}
                  >
-                   {turn === 'player' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4 animate-pulse" />}
-                   <span className="text-[10px] md:text-xs uppercase font-black tracking-widest">{message}</span>
+                   {turn === 'player' ? <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" /> : <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />}
+                   <span className="text-[8px] md:text-xs uppercase font-black tracking-widest text-center">{message}</span>
                  </motion.div>
                ) : null}
              </AnimatePresence>
@@ -566,28 +566,28 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
         {/* Player Area (Bottom) */}
         <div className={cn(
-          "flex flex-col items-center gap-4 bg-white/[0.03] backdrop-blur-xl p-6 md:p-10 rounded-[3rem] border transition-all duration-700 w-full max-w-6xl mx-auto shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:backdrop-blur-none",
+          "flex flex-col items-center gap-2 md:gap-4 bg-white/[0.03] backdrop-blur-xl p-3 md:p-10 rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-700 w-full max-w-6xl mx-auto shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:backdrop-blur-none",
           turn === 'player' && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_50px_rgba(138,99,210,0.15)] ring-1 ring-brand-accent/20" : "border-white/5"
         )}>
           {/* Active Hand Indicator Glow */}
           {turn === 'player' && !isChoosingColor && (
-            <div className="absolute inset-0 bg-brand-accent/5 rounded-[3rem] animate-pulse pointer-events-none" />
+            <div className="absolute inset-0 bg-brand-accent/5 rounded-[1.5rem] md:rounded-[3rem] animate-pulse pointer-events-none" />
           )}
 
-          <div className="flex items-center gap-6 mb-2 w-full justify-between items-end px-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-[0.5em] text-zinc-500 font-bold">{t('game.uno.label.bench')}</span>
-              <h3 className="text-xl md:text-2xl font-black text-white italic tracking-tighter uppercase">{t('game.uno.label.power')}</h3>
+          <div className="flex items-center gap-4 md:gap-6 mb-1 w-full justify-between items-end px-2 md:px-4">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[7px] md:text-[10px] uppercase tracking-[0.5em] text-zinc-500 font-bold">{t('game.uno.label.bench')}</span>
+              <h3 className="text-lg md:text-2xl font-black text-white italic tracking-tighter uppercase">{t('game.uno.label.power')}</h3>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('game.uno.label.influences')}</span>
-              <span className="bg-brand-accent text-white px-4 py-1 rounded-full text-sm font-black shadow-lg shadow-brand-accent/20">
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="text-[8px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('game.uno.label.influences')}</span>
+              <span className="bg-brand-accent text-white px-3 md:px-4 py-0.5 md:py-1 rounded-full text-xs md:text-sm font-black shadow-lg shadow-brand-accent/20">
                 {playerHand.length}
               </span>
             </div>
           </div>
 
-          <div className="flex -space-x-10 md:-space-x-12 hover:-space-x-4 transition-all duration-500 pb-4 w-full overflow-x-auto overflow-y-visible px-10 min-h-[220px] md:min-h-[280px] scrollbar-hide snap-x">
+          <div className="flex -space-x-10 md:-space-x-12 hover:-space-x-2 md:hover:-space-x-4 transition-all duration-500 pb-2 w-full overflow-x-auto overflow-y-visible px-4 md:px-10 min-h-[160px] md:min-h-[280px] scrollbar-hide snap-x">
             <AnimatePresence>
               {playerHand.map((card, i) => (
                 <div key={card.id} className="snap-center">
@@ -610,15 +610,15 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
           >
-            <div className="flex flex-col items-center gap-8 p-12 bg-zinc-950 border border-white/10 rounded-3xl shadow-2xl max-w-lg w-full">
+            <div className="flex flex-col items-center gap-4 md:gap-8 p-6 md:p-12 bg-zinc-950 border border-white/10 rounded-2xl md:rounded-3xl shadow-2xl max-w-lg w-full">
               <div className="text-center">
-                <h3 className="text-2xl font-black italic text-white uppercase mb-2">{t('game.uno.label.wild_title')}</h3>
-                <p className="text-zinc-500 text-xs tracking-widest uppercase">{t('game.uno.label.wild_desc')}</p>
+                <h3 className="text-lg md:text-2xl font-black italic text-white uppercase mb-1 md:mb-2">{t('game.uno.label.wild_title')}</h3>
+                <p className="text-zinc-500 text-[10px] md:text-xs tracking-widest uppercase">{t('game.uno.label.wild_desc')}</p>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 w-full">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 w-full">
                 {colors.map(color => (
                   <motion.button
                     key={color}
@@ -626,12 +626,12 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                     whileTap={{ scale: 0.95 }}
                     onClick={() => handleColorChoice(color)}
                     className={cn(
-                      "group relative h-20 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all overflow-hidden border-2 border-white/5",
+                      "group relative h-16 md:h-20 rounded-xl md:rounded-2xl flex flex-col items-center justify-center gap-1 md:gap-2 transition-all overflow-hidden border-2 border-white/5",
                       `bg-gradient-to-br ${colorStyles[color]}`
                     )}
                   >
                     <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors" />
-                    <span className="text-[10px] font-black uppercase tracking-widest drop-shadow-md">{t(getPartyKey(color))}</span>
+                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest drop-shadow-md text-center px-2">{t(getPartyKey(color))}</span>
                   </motion.button>
                 ))}
               </div>
@@ -651,22 +651,22 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             <motion.div 
               initial={{ scale: 0.5, y: 100, rotate: -10 }}
               animate={{ scale: 1, y: 0, rotate: 0 }}
-              className="flex flex-col items-center gap-10 p-12 text-center relative"
+              className="flex flex-col items-center gap-4 md:gap-10 p-4 md:p-12 text-center relative"
             >
               {/* Retro background flair */}
-              <div className="absolute inset-0 bg-brand-accent/5 blur-[120px] rounded-full animate-pulse" />
+              <div className="absolute inset-0 bg-brand-accent/5 blur-[80px] md:blur-[120px] rounded-full animate-pulse" />
               
               {winner === 'player' ? (
                 <>
                   <div className="relative">
-                    <CheckCircle2 className="w-40 h-40 text-brand-accent animate-[bounce_2s_infinite]" />
-                    <Star className="absolute -top-4 -right-4 w-12 h-12 text-white animate-spin" />
+                    <CheckCircle2 className="w-24 h-24 md:w-40 md:h-40 text-brand-accent animate-[bounce_2s_infinite]" />
+                    <Star className="absolute -top-2 -right-2 md:-top-4 md:-right-4 w-8 h-8 md:w-12 md:h-12 text-white animate-spin" />
                   </div>
-                  <div className="space-y-4 relative">
-                    <h3 className="text-5xl md:text-8xl font-black italic text-white uppercase tracking-tighter leading-none">
+                  <div className="space-y-2 md:space-y-4 relative">
+                    <h3 className="text-3xl md:text-8xl font-black italic text-white uppercase tracking-tighter leading-none">
                       {t('game.uno.label.win_title')}
                     </h3>
-                    <p className="text-zinc-400 max-w-md mx-auto uppercase tracking-[0.3em] font-black italic text-xs leading-relaxed">
+                    <p className="text-zinc-400 max-w-xs md:max-w-md mx-auto uppercase tracking-[0.2em] md:tracking-[0.3em] font-black italic text-[8px] md:text-xs leading-relaxed">
                       {t('game.uno.msg.win')}
                     </p>
                   </div>
@@ -674,14 +674,14 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
               ) : (
                 <>
                   <div className="relative">
-                    <XCircle className="w-40 h-40 text-red-500/30 animate-pulse" />
-                    <AlertTriangle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 text-red-500" />
+                    <XCircle className="w-24 h-24 md:w-40 md:h-40 text-red-500/30 animate-pulse" />
+                    <AlertTriangle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 md:w-16 md:h-16 text-red-500" />
                   </div>
-                  <div className="space-y-4 relative">
-                    <h3 className="text-5xl md:text-8xl font-black italic text-zinc-800 uppercase tracking-tighter leading-none">
+                  <div className="space-y-2 md:space-y-4 relative">
+                    <h3 className="text-3xl md:text-8xl font-black italic text-zinc-800 uppercase tracking-tighter leading-none">
                       {t('game.uno.label.lose_title')}
                     </h3>
-                    <p className="text-red-500/50 max-w-md mx-auto uppercase tracking-[0.3em] font-black italic text-xs leading-relaxed">
+                    <p className="text-red-500/50 max-w-xs md:max-w-md mx-auto uppercase tracking-[0.2em] md:tracking-[0.3em] font-black italic text-[8px] md:text-xs leading-relaxed">
                       {t('game.uno.msg.lose')}
                     </p>
                   </div>
@@ -693,9 +693,9 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                 whileTap={{ scale: 0.9 }}
                 onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
                 onTouchEnd={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
-                className="mt-8 bg-zinc-900 text-white px-16 py-5 font-black uppercase tracking-[0.4em] transition-all rounded-full border border-white/10 flex items-center gap-3 shadow-2xl relative z-50 cursor-pointer pointer-events-auto"
+                className="mt-4 md:mt-8 bg-zinc-900 text-white px-8 md:px-16 py-3 md:py-5 font-black uppercase text-[10px] md:text-base tracking-[0.2em] md:tracking-[0.4em] transition-all rounded-full border border-white/10 flex items-center gap-2 md:gap-3 shadow-2xl relative z-50 cursor-pointer pointer-events-auto"
               >
-                <ArrowLeftRight className="w-5 h-5" />
+                <ArrowLeftRight className="w-4 h-4 md:w-5 md:h-5" />
                 {t('game.uno.label.reset_btn')}
               </motion.button>
               

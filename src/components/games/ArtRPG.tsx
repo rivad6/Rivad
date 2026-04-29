@@ -282,9 +282,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
 
   if (currentNode === 'start') {
     return (
-      <div ref={containerRef} className={cn("w-full h-full flex items-center justify-center p-4 transition-all duration-1000", mood.bg)}>
+      <div ref={containerRef} className={cn("w-full h-full flex items-center justify-center p-4 transition-all duration-1000 overflow-y-auto custom-scrollbar", mood.bg)}>
         {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
-        <div className={cn("w-full max-w-2xl flex flex-col justify-center items-center text-center p-12 rounded-3xl border-2 transition-all duration-1000 relative shadow-2xl overflow-hidden [&.is-fullscreen]:shadow-none [&.is-fullscreen]:border-none shadow-brand-accent/20", mood.border, mood.bg)}>
+        <div className={cn("w-full max-w-2xl flex flex-col justify-center items-center text-center p-6 sm:p-12 rounded-3xl border-2 transition-all duration-1000 relative shadow-2xl overflow-hidden [&.is-fullscreen]:shadow-none [&.is-fullscreen]:border-none shadow-brand-accent/20", mood.border, mood.bg)}>
           <div className="absolute inset-0 bg-[linear-gradient(rgba(138,99,210,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,210,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
           
           <div className="relative z-10 w-full mb-8 flex justify-between items-end border-b pb-2 transition-colors duration-1000 border-white/10">
@@ -316,7 +316,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
   }
 
   return (
-    <div ref={containerRef} className={cn("w-full h-full flex flex-col justify-between p-4 sm:p-10 transition-colors duration-1000 relative overflow-hidden font-mono [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none", mood.bg)}>
+    <div ref={containerRef} className={cn("w-full h-full flex flex-col p-4 sm:p-10 transition-colors duration-1000 relative overflow-y-auto custom-scrollbar font-mono [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none", mood.bg)}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
       
       {activeEvent && (
@@ -394,7 +394,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col md:flex-row gap-12 py-8 overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row gap-6 md:gap-12 py-4 md:py-8">
         {/* Left icon col */}
         <div className="hidden md:flex flex-col items-center justify-center w-48 shrink-0">
            <motion.div
@@ -408,23 +408,23 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
         </div>
 
         {/* Text Area */}
-        <div className="flex-1 flex flex-col justify-center gap-10">
+        <div className="flex-1 flex flex-col justify-center gap-6 md:gap-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentNode}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
+              className="space-y-4 md:space-y-6"
             >
               <div className="flex items-center gap-3">
-                 <div className={cn("w-1 h-6 rounded-full transition-colors duration-1000", mood.accent.replace('text-', 'bg-'))} />
-                 <span className={cn("text-[9px] font-black uppercase tracking-[0.4em]", mood.accent)}>{node.isEnding ? 'FINAL_STATEMENT' : 'LOG_ENTRY_' + currentNode.toUpperCase()}</span>
+                 <div className={cn("w-1 h-4 md:h-6 rounded-full transition-colors duration-1000", mood.accent.replace('text-', 'bg-'))} />
+                 <span className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em]", mood.accent)}>{node.isEnding ? 'FINAL_STATEMENT' : 'LOG_ENTRY_' + currentNode.toUpperCase()}</span>
               </div>
               
-              <div className="relative pl-6">
+              <div className="relative pl-4 md:pl-6">
                 <span className={cn("absolute left-0 top-0 font-black animate-pulse", mood.accent)}>{'>'}</span>
-                <p className="text-xl sm:text-2xl md:text-3xl text-white font-medium leading-[1.1] tracking-tight">
+                <p className="text-lg sm:text-2xl md:text-3xl text-white font-medium leading-[1.1] tracking-tight">
                   {t(node.textKey)}
                 </p>
               </div>
@@ -433,11 +433,11 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex gap-3"
+                  className="flex flex-wrap gap-2 md:gap-3"
                 >
-                  {lastStatDelta.b !== 0 && <span className={cn("px-2 py-1 rounded text-[8px] font-black uppercase", lastStatDelta.b > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>BUGRET: {lastStatDelta.b > 0 ? '+' : ''}{lastStatDelta.b}</span>}
-                  {lastStatDelta.s !== 0 && <span className={cn("px-2 py-1 rounded text-[8px] font-black uppercase", lastStatDelta.s > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>SANITY: {lastStatDelta.s > 0 ? '+' : ''}{lastStatDelta.s}</span>}
-                  {lastStatDelta.r !== 0 && <span className={cn("px-2 py-1 rounded text-[8px] font-black uppercase", lastStatDelta.r > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>REPUTATION: {lastStatDelta.r > 0 ? '+' : ''}{lastStatDelta.r}</span>}
+                  {lastStatDelta.b !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.b > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>BUGRET: {lastStatDelta.b > 0 ? '+' : ''}{lastStatDelta.b}</span>}
+                  {lastStatDelta.s !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.s > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>SANITY: {lastStatDelta.s > 0 ? '+' : ''}{lastStatDelta.s}</span>}
+                  {lastStatDelta.r !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.r > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>REPUTATION: {lastStatDelta.r > 0 ? '+' : ''}{lastStatDelta.r}</span>}
                 </motion.div>
               )}
             </motion.div>
@@ -450,14 +450,14 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
                 key={currentNode + '-choices'}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="grid grid-cols-1 gap-3"
+                className="grid grid-cols-1 gap-2 md:gap-3"
               >
                 {node.isEnding ? (
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleChoice('start')}
-                    className={cn("w-full py-5 text-black bg-white rounded-2xl text-[10px] font-black uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 shadow-white/10")}
+                    className={cn("w-full py-4 md:py-5 text-black bg-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 shadow-white/10")}
                   >
                     {t('game.rpg.restart')}
                   </motion.button>
@@ -469,13 +469,13 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleChoice(choice.next, idx)}
                       className={cn(
-                        "w-full px-6 py-4 text-left flex items-center justify-between rounded-2xl border-2 transition-all group active:scale-95",
+                        "w-full px-4 md:px-6 py-3 md:py-4 text-left flex items-center justify-between rounded-xl md:rounded-2xl border-2 transition-all group active:scale-95",
                         idx === selectedIndex ? "bg-white text-black border-white" : cn("bg-white/5 text-white/60 hover:text-white hover:bg-white/10", mood.border)
                       )}
                     >
-                      <div className="flex items-center gap-4">
-                        <span className={cn("text-[9px] font-black transition-colors px-2 py-1 rounded", idx === selectedIndex ? "bg-black text-white" : "bg-white/10 text-white/30 group-hover:text-white/60")}>0{idx + 1}</span>
-                        <span className="text-xs uppercase font-black tracking-widest">{t(choice.textKey)}</span>
+                      <div className="flex items-center gap-3 md:gap-4">
+                        <span className={cn("text-[8px] md:text-[9px] font-black transition-colors px-1.5 md:px-2 py-0.5 md:py-1 rounded", idx === selectedIndex ? "bg-black text-white" : "bg-white/10 text-white/30 group-hover:text-white/60")}>0{idx + 1}</span>
+                        <span className="text-[10px] md:text-xs uppercase font-black tracking-widest">{t(choice.textKey)}</span>
                       </div>
                       <span className={cn("transition-all", idx === selectedIndex ? "translate-x-0 opacity-100" : "translate-x-[-10px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100 font-black")}>→</span>
                     </motion.button>

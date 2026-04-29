@@ -67,7 +67,7 @@ const CODES: Record<string, () => void> = {
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean }) {
+export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1302,18 +1302,18 @@ export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean 
   }, [isPlaying]);
 
   return (
-    <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)] select-none"}>
-      <div className={isPlaying ? "w-full min-w-[320px] max-w-[500px] h-full max-h-[850px] mx-auto flex flex-col" : "w-full max-w-[400px] mx-auto flex flex-col"}>
-      <div className="flex justify-between items-end w-full px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-2xl border border-white/5 backdrop-blur-sm shrink-0 pt-4">
+    <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden" : "flex flex-col items-center w-full max-w-full overflow-hidden font-[var(--font-pixel)] select-none p-4"}>
+      <div className={isPlaying ? "w-full min-w-[300px] max-w-[500px] h-full max-h-screen mx-auto flex flex-col" : "w-full max-w-[400px] mx-auto flex flex-col"}>
+      <div className="flex justify-between items-end w-full px-4 md:px-6 py-2 md:py-4 mb-2 md:mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-2xl border border-white/5 backdrop-blur-sm shrink-0 pt-4">
         <div>
-          <p className="text-brand-accent flex items-center gap-2 text-[10px] uppercase font-bold tracking-tighter opacity-80">
-            <User className="w-3 h-3" />
-            {t(selectedChar.nameKey)}
+          <p className="text-brand-accent flex items-center gap-2 text-[8px] md:text-[10px] uppercase font-bold tracking-tighter opacity-80">
+            <User className="w-2.5 h-2.5 md:w-3 md:h-3" />
+            <span className="truncate max-w-[80px] md:max-w-none">{t(selectedChar.nameKey)}</span>
           </p>
           <div className="flex items-center gap-2 mt-1">
             <button 
                 onClick={(e) => { e.stopPropagation(); playSound('hover'); setShowMobileControls(prev => !prev); }} 
-                className={`flex items-center gap-1 uppercase text-[7px] font-bold border px-1.5 py-0.5 transition-all ${showMobileControls ? 'bg-[#6EE7B7]/10 border-[#6EE7B7] text-[#6EE7B7]' : 'text-zinc-500 border-zinc-800 hover:border-zinc-500'}`}
+                className={`flex items-center gap-1 uppercase text-[6px] md:text-[7px] font-bold border px-1 md:px-1.5 py-0.5 transition-all ${showMobileControls ? 'bg-[#6EE7B7]/10 border-[#6EE7B7] text-[#6EE7B7]' : 'text-zinc-500 border-zinc-800 hover:border-zinc-500'}`}
               >
                 <Settings className="w-2 h-2" /> {showMobileControls ? 'ON' : 'OFF'}
               </button>
@@ -1321,27 +1321,27 @@ export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean 
                 onClick={() => { pausedRef.current = !pausedRef.current; playSound('click'); }}
                 className="p-1 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white"
               >
-                <Rocket size={14} />
+                <Rocket size={12} />
               </button>
           </div>
         </div>
           <div className="flex items-baseline gap-1">
-            <p ref={scoreRefDOM} className="text-4xl font-black italic tracking-tighter">{score}</p>
-            <span className="text-[10px] text-zinc-500 font-mono">/ {highScore} HI</span>
+            <p ref={scoreRefDOM} className="text-2xl md:text-4xl font-black italic tracking-tighter">{score}</p>
+            <span className="text-[8px] md:text-[10px] text-zinc-500 font-mono">/ {highScore} HI</span>
           </div>
         </div>
-        <div className="text-right flex flex-col items-end justify-end h-full">
-          <div className="flex items-center gap-2 text-yellow-400 px-3 py-1 bg-yellow-400/10 rounded-full border border-yellow-400/20 mb-2">
-            <Zap className="w-3 h-3 fill-yellow-400" />
-            <span ref={coinsRefDOM} className="text-xs font-black italic">{festCoins}</span>
+        <div className="text-right flex flex-col items-end justify-end w-full px-2 mb-2">
+          <div className="flex items-center gap-2 text-yellow-400 px-2 md:px-3 py-0.5 md:py-1 bg-yellow-400/10 rounded-full border border-yellow-400/20 mb-1">
+            <Zap className="w-2.5 h-2.5 md:w-3 md:h-3 fill-yellow-400" />
+            <span ref={coinsRefDOM} className="text-[10px] md:text-xs font-black italic">{festCoins}</span>
           </div>
           <div className="flex flex-wrap justify-end gap-1 max-w-[120px]">
-            {unlockedCodes.map(c => <span key={c} className="text-[7px] text-pink-400 bg-pink-500/10 px-1.5 py-0.5 border border-pink-500/20 rounded uppercase font-mono">{c}</span>)}
+            {unlockedCodes.map(c => <span key={c} className="text-[6px] md:text-[7px] text-pink-400 bg-pink-500/10 px-1 md:px-1.5 py-0.5 border border-pink-500/20 rounded uppercase font-mono">{c}</span>)}
           </div>
         </div>
       </div>
       
-      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
+      <div ref={containerRef} className="relative border-4 border-zinc-800 bg-[#0a0a0a] crt rounded-lg overflow-hidden w-full h-full min-h-[350px] md:min-h-[500px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
         
         <AnimatePresence>
@@ -1350,25 +1350,25 @@ export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-8"
+              className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-4 md:gap-8 p-4 text-center"
             >
               <div className="flex flex-col items-center gap-2">
                 {isPausedGlobal ? (
-                  <Music size={48} className="text-brand-accent animate-pulse" />
+                  <Music className="w-10 h-10 md:w-12 md:h-12 text-brand-accent animate-pulse" />
                 ) : (
-                  <Rocket className="w-16 h-16 text-brand-accent animate-pulse" />
+                  <Rocket className="w-10 h-10 md:w-16 md:h-16 text-brand-accent animate-pulse" />
                 )}
-                <h2 className="text-white font-black text-4xl uppercase tracking-[0.2em]">
+                <h2 className="text-white font-black text-xl md:text-4xl uppercase tracking-[0.2em]">
                   {isPausedGlobal ? t('game.paused.system', 'FESTIVAL SUSPENDED') : 'PAUSED'}
                 </h2>
               </div>
-              <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-sm">
+              <p className="text-zinc-500 text-[8px] md:text-[10px] uppercase font-bold text-center px-8 md:px-16 leading-relaxed max-w-sm">
                 {isPausedGlobal ? t('game.paused.desc', 'The artist is taking a break. The encore will begin shortly.') : t('game.paused.manual', 'Take a breath. The stage will still be there when you return.')}
               </p>
               {!isPausedGlobal && (
                 <button
                   onClick={() => { pausedRef.current = false; playSound('start'); }}
-                  className="bg-brand-accent text-white px-12 py-4 rounded-full font-black uppercase text-sm tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
+                  className="bg-brand-accent text-white px-8 md:px-12 py-3 md:py-4 rounded-full font-black uppercase text-xs md:text-sm tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(242,74,41,0.4)] active:scale-95"
                 >
                   RESUME SHOW
                 </button>
@@ -1607,7 +1607,7 @@ export function FestJump({ isPausedGlobal = false }: { isPausedGlobal?: boolean 
         )}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-8 w-[400px] max-w-full px-4 text-[8px] text-zinc-500 uppercase tracking-widest font-mono">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 w-full max-w-[450px] px-4 text-[8px] text-zinc-500 uppercase tracking-widest font-mono shrink-0">
         <div className="space-y-2">
           <p className="text-white mb-2 underline decoration-brand-accent underline-offset-4">{t('game.fest.guide', 'Guía del Festival')}</p>
           <div className="flex items-center gap-2"><div className="w-2 h-2 bg-yellow-400 rounded-full"></div> {t('game.fest.spring', 'Trampolín: Gran Salto')}</div>
