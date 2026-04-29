@@ -100,7 +100,8 @@ const storyMap: Record<string, StoryNode> = {
       { textKey: 'game.rpg.q1.4', next: 'p4.q2' },
       { textKey: 'game.rpg.q1.5', next: 'p5.q2' },
       { textKey: 'game.rpg.q1.6', next: 'p6.q2' },
-      { textKey: 'game.rpg.q1.7', next: 'p7.q2' }
+      { textKey: 'game.rpg.q1.7', next: 'p7.q2' },
+      { textKey: 'game.rpg.q1.8', next: 'p8.q2' }
     ]
   },
   ...generatePathMapping('p1'),
@@ -110,6 +111,7 @@ const storyMap: Record<string, StoryNode> = {
   ...generatePathMapping('p5'),
   ...generatePathMapping('p6'),
   ...generatePathMapping('p7'),
+  ...generatePathMapping('p8'),
   
   // THE NEW BIZARRE EXTENSION
   'boss.q1': {
@@ -158,6 +160,7 @@ export function ArtRPG({ isPausedGlobal = false }: { isPausedGlobal?: boolean })
   
   // Stats system to make decisions feel coherent and impactful
   const [stats, setStats] = useState({ budget: 50, sanity: 50, reputation: 50 });
+  const [inventory, setInventory] = useState<string[]>([]);
   const [lastStatDelta, setLastStatDelta] = useState<{b: number, s: number, r: number} | null>(null);
 
   useEffect(() => {
@@ -172,12 +175,32 @@ export function ArtRPG({ isPausedGlobal = false }: { isPausedGlobal?: boolean })
 
   const node = storyMap[currentNode];
 
+  const [activeEvent, setActiveEvent] = useState<{text: string} | null>(null);
+
   useEffect(() => {
     if (node.isEnding) {
       playSound('win');
       unlockAchievement('red_pill');
     }
     setSelectedIndex(0);
+
+    // Random life events
+    if (currentNode !== 'start' && !node.isEnding && Math.random() < 0.2) {
+      const events = [
+        { b: -10, s: -5, r: 0, text: '¡Un café caro te ha dejado sin presupuesto!' },
+        { b: 5, s: -10, r: 10, text: '¡Has sido mencionado en una revista de arte!' },
+        { b: 0, s: 10, r: -5, text: '¡Meditar te ha ayudado a recuperar la cordura!' }
+      ];
+      const event = events[Math.floor(Math.random() * events.length)];
+      setLastStatDelta({ b: event.b, s: event.s, r: event.r });
+      setStats(prev => ({
+        budget: Math.min(100, Math.max(0, prev.budget + event.b)),
+        sanity: Math.min(100, Math.max(0, prev.sanity + event.s)),
+        reputation: Math.min(100, Math.max(0, prev.reputation + event.r))
+      }));
+      setActiveEvent({ text: event.text });
+      setTimeout(() => setActiveEvent(null), 3000);
+    }
   }, [currentNode, node.isEnding, playSound, unlockAchievement]);
 
   const handleChoice = (next: NodeId, choiceIndex?: number) => {
@@ -185,29 +208,25 @@ export function ArtRPG({ isPausedGlobal = false }: { isPausedGlobal?: boolean })
     if (next === 'start') {
       playSound('hover');
       setStats({ budget: 50, sanity: 50, reputation: 50 });
+      setInventory([]);
       setLastStatDelta(null);
     } else {
       playSound('click');
       
       // Calculate coherent stat impacts based on choice index (0 = usually artistic/crazy, 1 = practical/destructive)
-      if (choiceIndex !== undefined) {
-        let bDelta = 0;
-        let sDelta = 0;
-        let rDelta = 0;
+      let bDelta = 0;
+      let sDelta = 0;
+      let rDelta = 0;
         
+      if (choiceIndex !== undefined) {
         if (choiceIndex === 0) {
-          bDelta = Math.floor(Math.random() * -10) - 5; // Artistic choices cost money
-          sDelta = Math.floor(Math.random() * -15) - 5; // and sanity
-          rDelta = Math.floor(Math.random() * 20) + 10; // but gain reputation
+          bDelta = Math.floor(Math.random() * -10) - 5;
+          sDelta = Math.floor(Math.random() * -15) - 5;
+          rDelta = Math.floor(Math.random() * 20) + 10;
         } else if (choiceIndex === 1) {
-          bDelta = Math.floor(Math.random() * 15) + 5; // Practical/Destructive might save money or get attention
-          sDelta = Math.floor(Math.random() * -20) - 10; // but lose more sanity
-          rDelta = Math.floor(Math.random() * -15) - 5; // and lose reputation
-        } else {
-          // If there are more than 2 choices (e.g. at the beginning)
-          bDelta = Math.floor(Math.random() * 20) - 10;
-          sDelta = Math.floor(Math.random() * 20) - 10;
-          rDelta = Math.floor(Math.random() * 20) - 10;
+          bDelta = Math.floor(Math.random() * 15) + 5;
+          sDelta = Math.floor(Math.random() * -20) - 10;
+          rDelta = Math.floor(Math.random() * -15) - 5;
         }
         
         setLastStatDelta({ b: bDelta, s: sDelta, r: rDelta });
@@ -299,6 +318,17 @@ export function ArtRPG({ isPausedGlobal = false }: { isPausedGlobal?: boolean })
   return (
     <div ref={containerRef} className={cn("w-full h-full flex flex-col justify-between p-4 sm:p-10 transition-colors duration-1000 relative overflow-hidden font-mono [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none", mood.bg)}>
       <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+      
+      {activeEvent && (
+         <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           exit={{ opacity: 0, y: -20 }}
+           className="absolute top-20 right-4 z-50 bg-brand-accent/90 text-white p-4 rounded-xl border border-white/20 shadow-2xl"
+         >
+           {activeEvent.text}
+         </motion.div>
+       )}
       
       {/* Universal Pause Overlay */}
       <AnimatePresence>
@@ -414,7 +444,7 @@ export function ArtRPG({ isPausedGlobal = false }: { isPausedGlobal?: boolean })
           </AnimatePresence>
 
           {/* Prompt / Actions */}
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentNode + '-choices'}
