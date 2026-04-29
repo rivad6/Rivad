@@ -11,6 +11,7 @@ import { MeetingRace } from './games/MeetingRace';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';
+import { cn } from '../lib/utils';
 
 export function Arcade() {
   const { t } = useLanguage();
@@ -255,7 +256,10 @@ export function Arcade() {
           )}
 
           {/* Arcade Machine Component */}
-          <div className={`relative bg-[#222222] p-4 md:p-8 border-x-[16px] border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl w-full max-w-4xl ${isFullscreen ? 'flex flex-col flex-grow min-h-[500px] max-h-screen' : ''}`}>
+          <div className={cn(
+            "relative bg-[#222222] p-4 md:p-8 border-x-[8px] md:border-x-[16px] border-y-[12px] md:border-y-[24px] border-[#18181b] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl w-full transition-all duration-500",
+            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4" : "max-w-4xl"
+          )}>
 
           
           {/* Wood panel texture effect */}
@@ -299,7 +303,10 @@ export function Arcade() {
           </div>
 
           {/* CRT Screen Frame */}
-          <div className={`bg-[#05040a] border-[8px] md:border-[12px] border-[#111] min-h-[400px] md:min-h-[500px] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-3xl overflow-hidden p-0 md:p-4 ${isFullscreen ? 'flex-grow' : ''}`}>
+          <div className={cn(
+            "bg-[#05040a] border-[8px] md:border-[12px] border-[#111] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-3xl overflow-hidden p-0 md:p-4 transition-all duration-500",
+            isFullscreen ? "flex-grow h-full border-none rounded-none p-0" : "min-h-[400px] md:min-h-[500px]"
+          )}>
             
             {/* CRT Screen Effect overlay */}
             <div className="absolute inset-0 pointer-events-none z-20 mix-blend-overlay opacity-[0.35]">

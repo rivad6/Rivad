@@ -403,8 +403,11 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
         </div>
 
         {/* Upgrades Area */}
-        <div className="flex flex-col gap-4 w-full bg-zinc-950/40 p-6 rounded-[2.5rem] border border-white/5 relative h-[600px] overflow-hidden">
-          <div className="flex items-center justify-between mb-4 sticky top-0 bg-transparent z-10">
+        <div className={cn(
+          "flex flex-col gap-4 w-full bg-zinc-950/40 p-4 md:p-6 rounded-[2.5rem] border border-white/5 relative min-h-0",
+          isFullscreen ? "flex-grow h-full" : "h-[600px]"
+        )}>
+          <div className="flex items-center justify-between mb-4 sticky top-0 bg-transparent z-10 shrink-0">
             <h3 className="text-xs font-black text-zinc-500 uppercase tracking-[0.3em]">
                {t('game.sell.label.investments')}
             </h3>

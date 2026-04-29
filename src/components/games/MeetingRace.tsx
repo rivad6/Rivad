@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
+import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, Car, Heart, TerminalSquare, Zap, Banknote, Coffee, FileText } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
@@ -48,7 +49,14 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedCarId, setSelectedCarId] = useState('taxi');
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const lastKeyTime = useRef(0);
+
+  useEffect(() => {
+    const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFs);
+    return () => document.removeEventListener('fullscreenchange', handleFs);
+  }, []);
 
   const cars: CarConfig[] = [
     { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 440, handling: 10, maxHp: 3, color: '#facc15' },
@@ -1144,7 +1152,10 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   }, [isPlaying, playSound, isPausedGlobal]);
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[350px] md:min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-y-auto custom-scrollbar border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
+    <div ref={containerRef} className={cn(
+      "flex flex-col items-center justify-center w-full h-full min-h-[350px] md:min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-hidden font-bold border-2 border-zinc-800 transition-all duration-500",
+      isFullscreen && "bg-black border-none rounded-none p-0"
+    )}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50 transition-opacity opacity-20 hover:opacity-100" />}
       
       {/* Universal/Manual Pause Overlay */}
@@ -1209,7 +1220,10 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
          <span className="flex items-center gap-1 opacity-50 text-[8px] md:text-xs"><TerminalSquare size={12} /> {t('arc.game7')}</span>
       </div>
 
-      <div className="relative border-4 border-brand-accent/50 rounded-b-xl shadow-2xl bg-[#27272a] overflow-hidden w-full max-w-lg flex-grow h-full max-h-[800px] touch-none">
+      <div className={cn(
+        "relative border-4 border-brand-accent/50 rounded-b-xl shadow-2xl bg-[#27272a] overflow-hidden w-full max-w-lg flex-grow h-full touch-none",
+        isFullscreen ? "max-w-none border-none rounded-none" : "max-h-[800px]"
+      )}>
         
         {/* STORY COMIC OVERLAY */}
         <AnimatePresence>

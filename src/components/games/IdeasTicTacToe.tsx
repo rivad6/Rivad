@@ -28,6 +28,13 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
   const { playSound, playMusic } = useAudio();
   const [personality, setPersonality] = useState<'rationalist' | 'traditionalist' | 'postmodernist'>('rationalist');
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFs);
+    return () => document.removeEventListener('fullscreenchange', handleFs);
+  }, []);
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [log, setLog] = useState<string>(t('game.ttt.log.start'));
   const [focusedCell, setFocusedCell] = useState(4); // Center by default
@@ -160,7 +167,10 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center font-[var(--font-pixel)] w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-y-auto custom-scrollbar [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:max-w-none">
+    <div ref={containerRef} className={cn(
+      "flex flex-col items-center justify-center font-[var(--font-pixel)] w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-y-auto custom-scrollbar transition-all duration-500",
+      isFullscreen && "bg-black border-none rounded-none max-w-none"
+    )}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
       
       {/* Universal Pause Overlay */}

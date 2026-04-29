@@ -42,13 +42,22 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   const { unlockAchievement } = useAchievements();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [hands, setHands] = useState<Card[][]>([]);
+  const [topCard, setTopCard] = useState<Card | null>(null);
   const [playerCount, setPlayerCount] = useState(4);
   const [turn, setTurn] = useState(0); // Index of the current player (0 is the human)
   const [message, setMessage] = useState(t('game.uno.msg.start'));
   const [winner, setWinner] = useState<number | null>(null);
   const [focusedCardIndex, setFocusedCardIndex] = useState(0);
+  const [isChoosingColor, setIsChoosingColor] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handleFs);
+    return () => document.removeEventListener('fullscreenchange', handleFs);
+  }, []);
 
   const cardGuide = [
     {
@@ -226,15 +235,28 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   };
 
   useEffect(() => {
-    // We'll wait for user to start or just auto-init with 4
-    initGame(4);
+    // Game will start via start screen
   }, []);
 
   const isValidPlay = (card: Card) => {
     if (!topCard) return true;
-    const isWild = ['dedazo', 'fake_news', 'guerra_sucia', 'voto_por_voto'].includes(card.action);
-    if (isWild) return true;
-    return card.color === topCard.color || card.value === topCard.value || topCard.color === 'black';
+    
+    // Wild cards (black) can always be played
+    if (card.color === 'black') return true;
+    
+    // If top card is black, any card can be played (usually selection happens first, but as a safety)
+    if (topCard.color === 'black') return true;
+
+    // Match by color
+    if (card.color === topCard.color) return true;
+    
+    // Match by special action (symbol/figure) - only if not normal cards
+    if (card.action !== 'normal' && card.action === topCard.action) return true;
+    
+    // Match by value (for normal cards)
+    if (card.action === 'normal' && topCard.action === 'normal' && card.value === topCard.value) return true;
+
+    return false;
   };
 
   const [activePopup, setActivePopup] = useState<SpecialAction | null>(null);
@@ -355,7 +377,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   };
 
   const playCard = (index: number) => {
-    if (turn !== 0 || winner !== null || isChoosingColor || isPausedGlobal) return;
+    if (!isGameStarted || turn !== 0 || winner !== null || isChoosingColor || isPausedGlobal) return;
     const card = hands[0][index];
     
     if (isValidPlay(card)) {
@@ -405,7 +427,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
   const drawCard = () => {
     playSound('hover');
-    if (turn !== 0 || winner !== null || isChoosingColor || isPausedGlobal) return;
+    if (!isGameStarted || turn !== 0 || winner !== null || isChoosingColor || isPausedGlobal) return;
     const newCard = generateCard();
     setHands(prev => {
       const next = [...prev];
@@ -417,7 +439,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   };
 
   useEffect(() => {
-    if (turn !== 0 && winner === null && !isPausedGlobal && isGameStarted) {
+    if (turn !== 0 && winner === null && !isPausedGlobal && isGameStarted && !isChoosingColor) {
       const cpuTurnTimer = setTimeout(() => {
         const currentCpuHand = hands[turn];
         if (!currentCpuHand) return;
@@ -540,8 +562,43 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   );
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center h-full min-h-[400px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-20 relative overflow-y-auto custom-scrollbar bg-[#0a0a0A] [&.is-fullscreen]:bg-black">
+    <div ref={containerRef} className={cn(
+      "flex flex-col items-center h-full w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-8 relative overflow-hidden bg-[#0a0a0A]",
+      isFullscreen && "bg-black pb-4"
+    )}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
+
+      {/* Start Screen */}
+      <AnimatePresence>
+        {!isGameStarted && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[80] flex flex-col items-center justify-center bg-black/90 backdrop-blur-3xl p-6"
+          >
+            <div className="mb-8 text-center">
+              <Megaphone className="w-16 h-16 text-brand-accent mx-auto mb-4" />
+              <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">POLITICAL UNO</h1>
+              <p className="text-zinc-500 text-xs md:text-sm tracking-widest uppercase mt-2">Selecciona el número de legisladores</p>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+              {[2, 3, 4].map(count => (
+                <button
+                  key={count}
+                  onClick={() => initGame(count)}
+                  className="bg-zinc-900 hover:bg-brand-accent transition-all p-4 rounded-xl border border-white/5 flex flex-col items-center gap-2 group"
+                >
+                  <Users className="w-6 h-6 text-zinc-500 group-hover:text-white" />
+                  <span className="text-xl font-black">{count}</span>
+                  <span className="text-[8px] uppercase tracking-widest text-zinc-600 group-hover:text-white/50">Players</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Universal Pause Overlay */}
       <AnimatePresence>
@@ -629,28 +686,29 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
       </AnimatePresence>
 
       {/* The Table Arena */}
-      <div className="flex flex-col gap-2 md:gap-4 items-center w-full relative z-10 flex-grow py-4 px-4 overflow-hidden">
-        
-        {/* TOP Player (CPU 2) */}
-        <div className="w-full flex justify-center mb-4">
-           {hands[2] && (
-             <div className={cn(
-               "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
-               turn === 2 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
-             )}>
-                <span className="text-[8px] uppercase font-bold text-zinc-400">{playerNames[2]}</span>
-                <div className="flex -space-x-4">
-                   {hands[2].slice(0, 5).map(c => <div key={c.id} className="w-6 h-9 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
-                   {hands[2].length > 5 && <div className="w-6 h-9 flex items-center justify-center text-[8px] font-black">+ {hands[2].length - 5}</div>}
-                </div>
-             </div>
-           )}
-        </div>
+      {isGameStarted && (
+        <div className="flex flex-col items-center w-full relative z-10 flex-grow py-2 px-4 overflow-hidden justify-center min-h-0">
+          
+          {/* TOP Player */}
+          <div className="w-full flex justify-center mb-4">
+             {playerCount >= 2 && hands[playerCount === 2 ? 1 : 2] && (
+               <div className={cn(
+                 "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
+                 turn === (playerCount === 2 ? 1 : 2) ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
+               )}>
+                  <span className="text-[8px] uppercase font-bold text-zinc-400">{playerNames[playerCount === 2 ? 1 : 2]}</span>
+                  <div className="flex -space-x-4">
+                     {hands[playerCount === 2 ? 1 : 2].slice(0, 5).map(c => <div key={c.id} className="w-6 h-9 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
+                     {hands[playerCount === 2 ? 1 : 2].length > 5 && <div className="w-6 h-9 flex items-center justify-center text-[8px] font-black">+ {hands[playerCount === 2 ? 1 : 2].length - 5}</div>}
+                  </div>
+               </div>
+             )}
+          </div>
 
         <div className="flex items-center justify-between w-full max-w-5xl gap-4">
-            {/* LEFT Player (CPU 1) */}
+            {/* LEFT Player */}
             <div className="w-24">
-              {hands[1] && (
+              {playerCount >= 3 && hands[1] && (
                 <div className={cn(
                   "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
                   turn === 1 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
@@ -763,9 +821,9 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                </div>
             </div>
 
-            {/* RIGHT Player (CPU 3) */}
+            {/* RIGHT Player */}
             <div className="w-24">
-              {hands[3] && (
+              {playerCount >= 4 && hands[3] && (
                 <div className={cn(
                   "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
                   turn === 3 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
@@ -782,14 +840,19 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
         {/* Player Hand (Bottom) */}
         <div className={cn(
-          "flex flex-col items-center gap-2 bg-white/[0.03] p-4 rounded-3xl border transition-all w-full max-w-5xl mx-auto mt-4",
-          turn === 0 && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_30px_rgba(138,99,210,0.1)]" : "border-white/5"
+          "flex flex-col items-center gap-1 bg-white/[0.03] p-2 md:p-4 rounded-2xl md:rounded-3xl border transition-all w-full max-w-5xl mx-auto mt-auto mb-2 shrink-0 h-fit",
+          turn === 0 && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_30px_rgba(138,99,210,0.1)] mb-4" : "border-white/5 opacity-80"
         )}>
-          <div className="flex items-center justify-between w-full px-2">
-             <span className="text-[10px] font-black uppercase text-brand-accent">{playerNames[0]}</span>
-             <span className="bg-zinc-800 text-white px-3 py-1 rounded-full text-[10px] font-black">{hands[0]?.length || 0} CARDS</span>
+          <div className="flex items-center justify-between w-full px-4 mb-1">
+             <span className="text-[10px] font-black uppercase text-brand-accent flex items-center gap-2">
+               <UserRound size={12} />
+               {playerNames[0]}
+             </span>
+             <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-[8px] font-bold">
+               {hands[0]?.length || 0} {t('game.uno.label.cards')}
+             </span>
           </div>
-          <div className="flex -space-x-8 md:-space-x-10 hover:-space-x-4 transition-all duration-300 w-full overflow-x-auto scrollbar-hide py-4 px-4 min-h-[140px]">
+          <div className="flex -space-x-8 md:-space-x-12 hover:-space-x-4 transition-all duration-300 w-full overflow-x-auto scrollbar-hide py-2 px-2 min-h-[100px] md:min-h-[140px] items-center justify-center">
             <AnimatePresence>
               {hands[0]?.map((card, i) => (
                 <CardView 
@@ -803,6 +866,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
           </div>
         </div>
       </div>
+    )}
 
       {/* Wild Card Color Choice Overlay */}
       <AnimatePresence>
@@ -843,7 +907,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
       {/* Win/Loss Overlay */}
       <AnimatePresence>
-        {winner && (
+        {winner !== null && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
