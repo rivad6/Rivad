@@ -102,8 +102,22 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const THEMES = [
+      { score: 0, bgSolid: '#0f0c29', bgTop: 'rgba(236, 72, 153, 0.2)', bgBottom: 'rgba(56, 189, 248, 0.0)', gridColor: 'rgba(236, 72, 153, 0.15)', platNorm: '#10b981', platNormDk: '#065f46', platMov: '#3b82f6', platMovDk: '#1e3a8a', star: 'rgba(255,255,255,0.4)', name: 'Neon City' },
+      { score: 1000, bgSolid: '#051205', bgTop: 'rgba(163, 230, 53, 0.15)', bgBottom: 'rgba(16, 185, 129, 0.0)', gridColor: 'rgba(163, 230, 53, 0.15)', platNorm: '#eab308', platNormDk: '#713f12', platMov: '#f97316', platMovDk: '#7c2d12', star: 'rgba(163, 230, 53, 0.4)', name: 'Cyber Slums' },
+      { score: 3000, bgSolid: '#1a0505', bgTop: 'rgba(220, 38, 38, 0.2)', bgBottom: 'rgba(249, 115, 22, 0.0)', gridColor: 'rgba(220, 38, 38, 0.2)', platNorm: '#a8a29e', platNormDk: '#44403c', platMov: '#dc2626', platMovDk: '#7f1d1d', star: 'rgba(248, 113, 113, 0.4)', name: 'Crimson Zone' },
+      { score: 6000, bgSolid: '#000000', bgTop: 'rgba(168, 85, 247, 0.3)', bgBottom: 'rgba(0, 0, 0, 0.0)', gridColor: 'rgba(168, 85, 247, 0.3)', platNorm: '#d8b4fe', platNormDk: '#6b21a8', platMov: '#fcd34d', platMovDk: '#b45309', star: 'rgba(192, 132, 252, 0.6)', name: 'Void Core' }
+    ];
+
+    const getTheme = (score: number) => {
+      let t = THEMES[0];
+      for(const theme of THEMES) if (score >= theme.score) t = theme;
+      return t;
+    };
+
     let animationFrameId: number;
-    let particles: {x: number, y: number, life: number, color: string}[] = [];
+    let particles: {x: number, y: number, vx: number, vy: number, life: number, color: string, size: number}[] = [];
+    let trails: {x: number, y: number, life: number, color: string}[] = [];
     let powerups: {x: number, y: number, type: 'vip' | 'merch' | 'glowstick' | 'beer' | 'magnet'}[] = [];
     let enemies: {x: number, y: number, speed: number, width: number, isBouncer?: boolean, minX?: number, maxX?: number}[] = [];
     let floatingTexts: {x: number, y: number, text: string, alpha: number, color: string, color2: string}[] = [];
@@ -137,10 +151,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     const MAGNET_RANGE = 150 + upgrades.magnet * 50;
 
     let platforms = Array.from({ length: 12 }, (_, i) => {
-      const height = canvas.height - (i * 80 + 20);
+      const height = canvas.height - (i * 90 + 20);
       return {
-        x: (canvas.width / 2 - PLATFORM_WIDTH / 2) + Math.sin(height * 0.005) * 120,
-        y: Math.max(height, 50),
+        x: Math.random() * (canvas.width - PLATFORM_WIDTH - 20) + 10,
+        y: height,
         hasSpring: false,
         type: 'normal',
         vx: 0,
@@ -152,6 +166,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       };
     });
     platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width, isStepped: false, crackValue: 0, opacity: 1 };
+
 
     let cameraY = 0;
     let touchTargetX: number | null = null;
@@ -205,7 +220,13 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       const pCount = color === '#ffffff' ? 12 : 8;
       for(let i=0; i<pCount; i++) {
         particles.push({
-          x: x + (Math.random() - 0.5)*30, y: y + (Math.random() - 0.5)*15, life: 1.0 + Math.random()*0.5, color
+          x: x + (Math.random() - 0.5)*30, 
+          y: y + (Math.random() - 0.5)*15, 
+          vx: (Math.random() - 0.5)*4,
+          vy: (Math.random() - 0.5)*4 - 2,
+          life: 1.0 + Math.random()*0.5, 
+          color,
+          size: 2 + Math.random()*3
         });
       }
     };
@@ -222,9 +243,20 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           return;
        }
 
-       if (maxScore > 3000 && Math.random() > 0.9) {
+       if (maxScore > 6000 && Math.random() > 0.85) {
+          // Void Core Enemy (Fast and unpredictable)
+          enemies.push({
+             x: platform.x, y: platform.y - 32, speed: 2.5 * (Math.random() > 0.5 ? 1 : -1), width: 28, isBouncer: false
+          });
+       } else if (maxScore > 3000 && Math.random() > 0.9) {
+          // Crimson Zone Enemy (Bouncer)
           enemies.push({
              x: platform.x, y: platform.y - 32, speed: 1.5 * (Math.random() > 0.5 ? 1 : -1), width: 32, isBouncer: true, minX: platform.x, maxX: platform.x + platform.width - 32
+          });
+       } else if (maxScore > 1000 && Math.random() > 0.93) {
+          // Cyber Slums Enemy (Basic)
+          enemies.push({
+             x: platform.x, y: platform.y - 32, speed: 1.0 * (Math.random() > 0.5 ? 1 : -1), width: 32, isBouncer: false
           });
        } else {
           const rand = Math.random();
@@ -253,49 +285,85 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       const charX = x + (player.width - pWidth) / 2;
       const charY = y + (player.height - pHeight);
 
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(charX + 4, charY + 4, pWidth, pHeight);
-
       // Add a slight gradient to the player
       const gradient = ctx.createLinearGradient(charX, charY, charX, charY + pHeight);
       gradient.addColorStop(0, selectedChar.color);
       gradient.addColorStop(1, '#0f172a');
-
-      ctx.fillStyle = '#000'; // outline
-      ctx.fillRect(charX - 1, charY - 1, pWidth + 2, pHeight + 2);
-      ctx.fillStyle = gradient;
-      ctx.fillRect(charX, charY, pWidth, pHeight);
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fillRect(charX, charY, pWidth, 2);
-      ctx.fillRect(charX, charY, 2, pHeight); // highlight edge
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.fillRect(charX, charY + pHeight - 4, pWidth, 4);
-
-      // Details
-      ctx.fillStyle = 'rgba(255,255,255,0.1)';
-      ctx.fillRect(charX + 2, charY + 2, 4, 4);
       
-      // Visor
-      ctx.fillStyle = selectedChar.accent;
-      ctx.fillRect(charX, charY + 6, pWidth, 8);
-      ctx.fillStyle = '#fff';
-      if (selectedChar.id === 'cyber') ctx.fillRect(charX + 4, charY + 8, pWidth - 16, 2); 
-      else {
-         ctx.fillRect(charX + 4, charY + 8, 4, 3);
-         ctx.fillRect(charX + pWidth - 8, charY + 8, 4, 3);
+      // Glow effect for character
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = selectedChar.color;
+
+      // Thruster effect
+      if (player.vy < -2) {
+         ctx.save();
+         const thrustLength = Math.min(20, -player.vy * 2);
+         ctx.shadowBlur = 20;
+         ctx.shadowColor = selectedChar.accent;
+         
+         ctx.fillStyle = selectedChar.accent;
+         ctx.beginPath();
+         // draw thruster flames
+         ctx.moveTo(charX + pWidth * 0.2, charY + pHeight);
+         ctx.lineTo(charX + pWidth * 0.5, charY + pHeight + thrustLength + Math.random()*10);
+         ctx.lineTo(charX + pWidth * 0.8, charY + pHeight);
+         ctx.fill();
+         
+         // Inner bright thruster flame
+         ctx.fillStyle = '#ffffff';
+         ctx.beginPath();
+         ctx.moveTo(charX + pWidth * 0.35, charY + pHeight);
+         ctx.lineTo(charX + pWidth * 0.5, charY + pHeight + thrustLength*0.6 + Math.random()*5);
+         ctx.lineTo(charX + pWidth * 0.65, charY + pHeight);
+         ctx.fill();
+         ctx.restore();
+      }
+
+      // Main body (cyberpunk capsule / block shape)
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      if (selectedChar.id === 'ghost') {
+         ctx.moveTo(charX + pWidth/2, charY);
+         ctx.lineTo(charX + pWidth, charY + pHeight/2);
+         ctx.lineTo(charX + pWidth/2, charY + pHeight);
+         ctx.lineTo(charX, charY + pHeight/2);
+      } else {
+         ctx.roundRect(charX, charY, pWidth, pHeight, 8);
+      }
+      ctx.fill();
+      
+      // Outline glow removed, add inner geometric details
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      if (selectedChar.id === 'ghost') {
+         ctx.beginPath();
+         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 2, 4, 0, Math.PI*2);
+         ctx.fill();
+      } else {
+         ctx.fillRect(charX + Math.max(4, pWidth*0.2), charY + pHeight*0.2, pWidth*0.6, pHeight*0.25);
+         ctx.fillStyle = selectedChar.accent;
+         ctx.fillRect(charX + pWidth*0.3, charY + pHeight*0.55, pWidth*0.4, 2);
       }
 
       if (player.shield > 0) {
         ctx.beginPath();
         ctx.strokeStyle = '#3b82f6';
         ctx.lineWidth = 2;
-        ctx.arc(x + player.width/2, y + player.height/2, 20 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#3b82f6';
+        ctx.arc(x + player.width/2, y + player.height/2, 22 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
         ctx.stroke();
+        ctx.shadowBlur = 0;
       }
 
       if (player.jetpack > 0) {
         createParticles(x + player.width/2, y + player.height, '#f59e0b');
+        ctx.fillStyle = '#f59e0b';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#f59e0b';
+        ctx.fillRect(charX - 4, charY + pHeight/2, 6, pHeight/2 + 5);
+        ctx.fillRect(charX + pWidth - 2, charY + pHeight/2, 6, pHeight/2 + 5);
+        ctx.shadowBlur = 0;
       }
 
       ctx.restore();
@@ -318,7 +386,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          if (Math.random() < 0.1) {
             setFestCoins(prev => prev + 1);
             bonusScore += 100;
-            addFloatingText(player.x + (Math.random()-0.5)*200, player.y - Math.random()*200, 'SPONSOR REWARD!', '#10b981');
+            addFloatingText(player.x + (Math.random()-0.5)*200, player.y - Math.random()*200, t('game.fest.text.sponsor_reward'), '#10b981');
          }
       }
 
@@ -438,7 +506,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              const isPerfect = distCenter < 10;
 
              if (p.type === 'billboard' && comboTimer <= 0) {
-                 addFloatingText(player.x, player.y - 30, 'SPONSOR ENGAGED!', '#0ea5e9');
+                 addFloatingText(player.x, player.y - 30, t('game.fest.text.sponsor_engaged'), '#0ea5e9');
                  setFestCoins(prev => prev + 5);
                  playSound('powerup');
                  comboTimer = 120;
@@ -447,7 +515,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                  playSound('powerup');
                  cameraShake = 20;
                  screenFlash = 0.6;
-                 addFloatingText(player.x, player.y, 'MEGA BOOST!', '#facc15');
+                 addFloatingText(player.x, player.y, t('game.fest.text.mega_boost'), '#facc15');
                  comboMultiplier += 2;
                  comboTimer = 180 + upgrades.luck * 60;
                  return;
@@ -465,7 +533,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                cameraShake = 10;
                comboMultiplier++;
                comboTimer = 180 + upgrades.luck * 60;
-               addFloatingText(player.x, player.y - 20, `PERFECT! X${comboMultiplier}`, '#ec4899');
+               addFloatingText(player.x, player.y - 20, `${t('game.fest.text.perfect')} X${comboMultiplier}`, '#ec4899');
                playSound('powerup');
              }
 
@@ -500,14 +568,14 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              setFestCoins(prev => prev + 50);
              bonusScore += 500;
              playSound('win');
-             addFloatingText(pw.x, pw.y, 'VIP +50!', '#f59e0b', '#78350f');
+             addFloatingText(pw.x, pw.y, t('game.fest.text.vip'), '#f59e0b', '#78350f');
              adBreakTimer = 400; 
              cameraShake = 20;
              screenFlash = 0.8;
            } else if (pw.type === 'merch') {
              player.shield = 1;
              playSound('powerup');
-             addFloatingText(pw.x, pw.y, 'SHIELD ON', '#3b82f6');
+             addFloatingText(pw.x, pw.y, t('game.fest.powerup.shield'), '#3b82f6');
            } else if (pw.type === 'glowstick') {
              setFestCoins(prev => prev + 5);
              playSound('score');
@@ -518,7 +586,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
            } else if (pw.type === 'magnet') {
              player.magnet = 600;
              playSound('powerup');
-             addFloatingText(pw.x, pw.y, 'MAGNET ON!', '#a855f7');
+             addFloatingText(pw.x, pw.y, t('game.fest.text.magnet'), '#a855f7');
            }
            powerups.splice(idx, 1);
         }
@@ -572,8 +640,22 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
       floatingTexts.forEach(ft => { ft.y -= 1.2 * normalDt; ft.alpha -= 0.02 * normalDt; });
       floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
-      particles.forEach(p => { p.life -= 0.04 * normalDt; p.y += 1.5 * normalDt; p.x += (Math.random() - 0.5) * normalDt; });
+      particles.forEach(p => { 
+          p.life -= 0.04 * normalDt; 
+          p.vy += GRAVITY * 0.2 * normalDt; 
+          p.x += p.vx * normalDt; 
+          p.y += p.vy * normalDt; 
+      });
       particles = particles.filter(p => p.life > 0);
+      
+      trails.forEach(t => { t.life -= 0.1 * normalDt; });
+      trails = trails.filter(t => t.life > 0);
+      
+      if (Math.abs(player.vx) > 3 || Math.abs(player.vy) > 8 || player.jetpack > 0) {
+         if (Math.random() > 0.5) {
+             trails.push({ x: player.x, y: player.y, life: 0.5, color: selectedChar.accent });
+         }
+      }
 
       if (player.y > canvas.height) {
         playSound('lose');
@@ -584,29 +666,38 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     const draw = (dt: number) => {
-      ctx.fillStyle = '#0f0c29'; // Deep dark blue for synth grid
+      const theme = getTheme(maxScore);
+      
+      ctx.fillStyle = theme.bgSolid; // Deep dark blue for synth grid
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Starfield parallax
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
       for(let i=1; i<40; i++) {
          let sy = (canvas.height - ((cameraY * (i%3 + 1) * 0.1) % canvas.height) + (i*17)) % canvas.height;
          let sx = (i * 23) % canvas.width;
-         ctx.fillRect(sx, sy, i%3 === 0 ? 2 : 1, i%3 === 0 ? 2 : 1);
+         ctx.shadowBlur = i % 3 === 0 ? 5 : 0;
+         ctx.shadowColor = theme.star;
+         ctx.fillStyle = theme.star;
+         ctx.fillRect(sx, sy, i%3 === 0 ? 3 : 1.5, i%3 === 0 ? 3 : 1.5);
       }
+      ctx.shadowBlur = 0;
       
       // Synthwave / Retro grid background
       const gradientBg = ctx.createLinearGradient(0, canvas.height, 0, 0);
-      gradientBg.addColorStop(0, 'rgba(236, 72, 153, 0.2)'); // Pink
-      gradientBg.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+      gradientBg.addColorStop(0, theme.bgTop); 
+      gradientBg.addColorStop(1, theme.bgBottom);
 
       ctx.fillStyle = gradientBg;
-      ctx.fillRect(0, Math.max(0, canvas.height - 200), canvas.width, 200);
+      ctx.fillRect(0, Math.max(0, canvas.height - 300), canvas.width, 300);
 
-      ctx.strokeStyle = 'rgba(236, 72, 153, 0.15)'; // Pink grid lines
+      ctx.strokeStyle = theme.gridColor; 
       ctx.lineWidth = 1;
-      const gridSize = 40;
+      const gridSize = 50;
       const yOffset = (cameraY * 0.3) % gridSize;
+      
+      // Add glowing grid effect at bottom
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = theme.gridColor;
       ctx.beginPath();
       for(let y = yOffset; y < canvas.height; y += gridSize) {
          ctx.moveTo(0, y);
@@ -617,6 +708,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          ctx.lineTo(x, canvas.height);
       }
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
       if (adBreakTimer > 0) {
          ctx.fillStyle = `rgba(16, 185, 129, ${adBreakTimer / 400})`;
@@ -624,15 +716,15 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          ctx.fillStyle = `rgba(255, 255, 255, ${(adBreakTimer / 400)*0.5})`;
          ctx.font = '900 30px monospace';
          ctx.textAlign = 'center';
-         ctx.fillText('SPONSOR RAIN!', canvas.width/2, 100);
+         ctx.fillText(t('game.fest.text.sponsor_rain'), canvas.width/2, 100);
          ctx.textAlign = 'left';
       }
 
       platforms.forEach(p => {
         if (p.broken) return;
         
-        ctx.fillStyle = '#020617'; // hard drop shadow instead of alpha for retro style
-        ctx.fillRect(p.x + 6, p.y + 6, p.width, PLATFORM_HEIGHT);
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = p.type === 'breaking' ? '#ef4444' : p.type === 'boost' ? '#eab308' : (p.type === 'moving' ? theme.platMov : theme.platNorm);
 
         if (p.type === 'billboard') {
              ctx.fillStyle = '#0f172a'; 
@@ -642,6 +734,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              ctx.strokeStyle = '#ec4899';
              ctx.lineWidth = 2;
              ctx.stroke();
+             ctx.shadowBlur = 0;
              ctx.fillStyle = '#ec4899';
              ctx.font = 'bold 12px monospace';
              const brands = ['CYBER-COLA', 'SNEAKER CORP', 'SISYPHUS TECH', 'NEON GEAR', 'BY RIVAD'];
@@ -654,38 +747,34 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              
              ctx.fillStyle = '#1e293b';
              ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
-             ctx.fillStyle = '#020617';
-             ctx.fillRect(p.x, p.y, p.width, 3);
         } else {
-            let pColor = '#10b981'; // Emerald
-            let darkColor = '#065f46';
-            if (p.type === 'moving') { pColor = '#3b82f6'; darkColor = '#1e3a8a'; } // Blue
-            else if (p.type === 'breaking') { pColor = '#ef4444'; darkColor = '#7f1d1d'; } // Red
-            else if (p.type === 'boost') { pColor = '#eab308'; darkColor = '#713f12'; } // Yellow
+            let pColor = theme.platNorm; 
+            if (p.type === 'moving') { pColor = theme.platMov; }
+            else if (p.type === 'breaking') { pColor = '#ef4444'; } // Red
+            else if (p.type === 'boost') { pColor = '#eab308'; } // Yellow
             
             // Base rectangle
             ctx.fillStyle = pColor;
-            ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
+            ctx.beginPath();
+            ctx.roundRect(p.x, p.y, p.width, PLATFORM_HEIGHT, 4);
+            ctx.fill();
             
-            // Highlight top lip
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillRect(p.x, p.y, p.width, 2);
-            
-            // Dark bottom shadow
-            ctx.fillStyle = darkColor;
-            ctx.fillRect(p.x, p.y + PLATFORM_HEIGHT - 3, p.width, 3);
+            ctx.shadowBlur = 0;
+            // Highlight inner pattern
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillRect(p.x + 4, p.y + 2, p.width - 8, 2);
             
             // Danger stripes for breaking or boost
             if (p.type === 'breaking' || p.type === 'boost') {
                 ctx.save();
                 ctx.beginPath();
-                ctx.rect(p.x, p.y, p.width, PLATFORM_HEIGHT);
+                ctx.roundRect(p.x, p.y + 4, p.width, PLATFORM_HEIGHT - 4, 4);
                 ctx.clip();
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
                 for(let i=-20; i<p.width; i+=10) {
                     ctx.beginPath();
-                    ctx.moveTo(p.x + i, p.y);
-                    ctx.lineTo(p.x + i + 5, p.y);
+                    ctx.moveTo(p.x + i, p.y + 4);
+                    ctx.lineTo(p.x + i + 5, p.y + 4);
                     ctx.lineTo(p.x + i - 5, p.y + PLATFORM_HEIGHT);
                     ctx.lineTo(p.x + i - 10, p.y + PLATFORM_HEIGHT);
                     ctx.fill();
@@ -706,9 +795,12 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             
             if (p.hasSpring) {
                ctx.fillStyle = '#64748b';
-               ctx.fillRect(p.x + p.width/2 - 6, p.y - 8, 12, 8);
+               ctx.fillRect(p.x + p.width/2 - 8, p.y - 10, 16, 10);
                ctx.fillStyle = '#f43f5e';
-               ctx.fillRect(p.x + p.width/2 - 8, p.y - 12, 16, 4);
+               ctx.shadowBlur = 10;
+               ctx.shadowColor = '#f43f5e';
+               ctx.fillRect(p.x + p.width/2 - 10, p.y - 14, 20, 6);
+               ctx.shadowBlur = 0;
             }
         }
       });
@@ -827,14 +919,21 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           ctx.restore();
       });
 
-      particles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = Math.max(0, p.life);
-        ctx.fillRect(p.x, p.y, 4, 4);
+      trails.forEach(t => {
+         ctx.globalAlpha = Math.max(0, t.life);
+         ctx.fillStyle = t.color;
+         ctx.fillRect(t.x + 2, t.y + 2, player.width - 4, player.height - 4);
       });
       ctx.globalAlpha = 1;
 
       drawPlayer(player.x, player.y);
+
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+      ctx.globalAlpha = 1;
 
       bullets.forEach(b => {
           ctx.beginPath();
@@ -857,7 +956,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          ctx.fillStyle = `rgba(236, 72, 153, ${comboTimer / 180})`;
          ctx.font = 'bold 24px monospace';
          ctx.textAlign = 'right';
-         ctx.fillText(`${comboMultiplier}x COMBO!`, canvas.width - 20, 60);
+         ctx.fillText(`${comboMultiplier}x ${t('game.fest.text.combo')}`, canvas.width - 20, 60);
          ctx.textAlign = 'left';
       }
 
@@ -901,144 +1000,150 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
   ];
 
   return (
-    <div className={isPlaying ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-0 overflow-hidden" : "flex flex-col items-center w-full max-w-full overflow-hidden font-mono select-none p-4"}>
-      <div className={isPlaying ? "w-full min-w-[300px] max-w-[500px] h-full max-h-screen mx-auto flex flex-col" : "w-full max-w-[400px] mx-auto flex flex-col"}>
+    <div className={isPlaying ? "fixed inset-0 z-[100] flex flex-col items-center justify-center p-0 overflow-hidden bg-[#050510]" : "flex flex-col items-center w-full h-full max-w-full overflow-hidden font-mono select-none p-4"}>
+      <div className={isPlaying ? "w-full max-w-2xl h-full max-h-screen mx-auto flex flex-col" : "w-full h-full max-w-2xl mx-auto flex flex-col"}>
       
       {/* Top HUD */}
-      <div className="flex justify-between items-end w-full px-4 py-2 mb-2 text-[#0f172a] bg-[#ced0c8] rounded-t-lg border-b-4 border-[#9a9b95] shrink-0 pt-4">
-        <div>
-          <p className="text-zinc-700 flex items-center gap-2 text-[10px] uppercase font-bold tracking-tighter">
+      <div className="flex justify-between items-center w-full px-4 py-3 mb-2 bg-black/60 backdrop-blur-md rounded-t-xl border border-pink-500/20 shrink-0 z-10 shadow-[0_4px_20px_rgba(236,72,153,0.1)]">
+        <div className="flex flex-col gap-1">
+          <p className="text-pink-400 flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
             <User className="w-3 h-3" /> <span>{t(selectedChar.nameKey)}</span>
           </p>
-          <div className="flex items-center gap-2 mt-1">
-              <button 
-                onClick={() => { pausedRef.current = !pausedRef.current; playSound('click'); }}
-                className="p-1 bg-zinc-400 rounded transition-colors text-zinc-800 border-b-2 border-zinc-500 shadow-sm active:translate-y-px active:border-b-0"
-              >
-                <Rocket size={12} />
-              </button>
+          <div className="flex items-center gap-2 text-yellow-400 text-[10px] font-black italic tracking-widest">
+            <Zap className="w-3 h-3 fill-yellow-400" />
+            <span ref={coinsRefDOM} className="drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">{festCoins} KARMAS</span>
           </div>
         </div>
-          <div className="flex items-baseline gap-1 bg-[#b0b3ab] px-3 py-1 rounded shadow-inner border-2 border-[#82847e]">
-            <p ref={scoreRefDOM} className="text-2xl font-black italic tracking-tighter text-zinc-800">{score}</p>
-            <span className="text-[10px] text-zinc-600 font-mono font-bold">/ {highScore} HI</span>
+        
+        <div className="flex flex-col items-end">
+          <div className="flex items-baseline gap-2 bg-blue-500/10 px-4 py-1.5 rounded border border-blue-400/30 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)]">
+            <p ref={scoreRefDOM} className="text-2xl font-black italic tracking-tighter text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">{score}</p>
+            <span className="text-[10px] text-blue-300/60 font-mono font-bold tracking-widest uppercase">/ {highScore} PEAK</span>
           </div>
         </div>
-        <div className="text-right flex flex-col items-end justify-end w-full px-2 mb-2">
-          <div className="flex items-center gap-2 text-yellow-500 px-3 py-1 bg-zinc-900 rounded-sm border-2 border-yellow-600/50 mb-1">
-            <Zap className="w-3 h-3 fill-yellow-500" />
-            <span ref={coinsRefDOM} className="text-xs font-black italic">{festCoins}</span>
-          </div>
-        </div>
+      </div>
       
-      <div ref={containerRef} className="relative border-x-[16px] border-y-[24px] border-[#b0b3ab] bg-[#05040a] rounded-lg overflow-hidden w-full h-full min-h-[400px] flex justify-center items-center flex-col shadow-2xl mx-auto flex-grow [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
+      <div ref={containerRef} className="relative bg-[#020205] rounded-xl overflow-hidden w-full h-full min-h-[400px] flex justify-center items-center flex-col mx-auto flex-grow [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
         
-        {/* Phosphor CRT Scanlines overlay */}
-        <div className="absolute inset-0 pointer-events-none z-20 mix-blend-overlay opacity-30">
-           <div className="w-full h-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]" />
+        {/* Holographic overlay */}
+        <div className="absolute inset-0 pointer-events-none z-20 mix-blend-screen opacity-10">
+           <div className="w-full h-full bg-[linear-gradient(rgba(59,130,246,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(236,72,153,0.1)_1px,transparent_1px)] bg-[length:4px_4px]" />
         </div>
         
-        <FullscreenButton targetRef={containerRef} className="top-2 right-2" />
+        {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 text-white/50 hover:text-pink-400" />}
         
         <AnimatePresence>
           {message && (
             <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 20, opacity: 1 }} exit={{ y: -20, opacity: 0 }} className="absolute text-center top-0 inset-x-0 z-[60] flex justify-center pointer-events-none">
-              <div className={`px-4 py-2 border-2 text-[10px] uppercase font-bold ${message.type === 'success' ? 'bg-green-900 border-green-500 text-green-400' : 'bg-red-900 border-red-500 text-red-400'}`}>{message.text}</div>
+              <div className={`px-6 py-2 border border-blue-500/50 backdrop-blur-md rounded text-[10px] uppercase tracking-widest font-bold shadow-[0_0_20px_rgba(0,0,0,0.5)] ${message.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{message.text}</div>
             </motion.div>
           )}
 
           {!isPlaying && (
             <motion.div 
-               initial={{ opacity: 0, scale: 1.1 }} 
+               initial={{ opacity: 0, scale: 1.05 }} 
                animate={{ opacity: 1, scale: 1 }} 
-               exit={{ opacity: 0, scale: 0.9 }} 
-               transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
-               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#0f172a]/95 backdrop-blur-md p-4 text-center overflow-y-auto"
+               exit={{ opacity: 0, scale: 0.95 }} 
+               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#050510]/80 backdrop-blur-xl p-4 text-center overflow-y-auto"
             >
               {!showCodeInput ? (
-                <div className="w-full flex flex-col items-center flex-1 py-4 justify-start h-full">
-                  <h3 className="text-brand-accent text-3xl mb-4 italic font-black uppercase drop-shadow-[4px_4px_0_#b91c1c] relative inline-block">
-                     JUMPER OS
-                     <span className="absolute -top-3 -right-6 rotate-12 text-[8px] bg-red-600 text-white font-bold px-1 py-0.5 border border-red-500 shadow-md">BY RIVAD</span>
+                <div className="w-full max-w-md flex flex-col items-center flex-1 py-6 justify-start h-full">
+                  <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-blue-500 text-4xl mb-6 italic font-black uppercase drop-shadow-[0_0_15px_rgba(236,72,153,0.5)] relative inline-block tracking-widest">
+                     JUMP.EXE
+                     <span className="absolute -top-4 -right-12 rotate-12 text-[9px] bg-red-500/20 text-red-400 font-bold px-2 py-1 border border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] backdrop-blur-sm">EXPERIMENTAL</span>
                   </h3>
                   
-                  <div className="flex w-full px-2 gap-2 mb-4 shrink-0">
-                    <button onClick={() => setShopTab('chars')} className={`flex-1 py-2 text-[10px] font-black uppercase border-b-4 transition-all ${shopTab === 'chars' ? 'border-brand-accent text-white' : 'border-zinc-700 text-zinc-500'}`}>Char</button>
-                    <button onClick={() => setShopTab('upgrades')} className={`flex-1 py-2 text-[10px] font-black uppercase border-b-4 transition-all ${shopTab === 'upgrades' ? 'border-brand-accent text-white' : 'border-zinc-700 text-zinc-500'}`}>Upgrades</button>
-                    <button onClick={() => setShopTab('rewards')} className={`flex-1 py-2 text-[10px] font-black uppercase border-b-4 transition-all ${shopTab === 'rewards' ? 'border-brand-accent text-white' : 'border-zinc-700 text-zinc-500'}`}>Rewards</button>
+                  <div className="flex w-full px-2 gap-2 mb-6 shrink-0">
+                    <button onClick={() => setShopTab('chars')} className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase transition-all border-b-2 ${shopTab === 'chars' ? 'border-pink-500 text-pink-400 bg-pink-500/10 shadow-[inset_0_0_10px_rgba(236,72,153,0.2)]' : 'border-white/10 text-white/40 hover:bg-white/5 hover:text-white/70'}`}>Models</button>
+                    <button onClick={() => setShopTab('upgrades')} className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase transition-all border-b-2 ${shopTab === 'upgrades' ? 'border-blue-500 text-blue-400 bg-blue-500/10 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)]' : 'border-white/10 text-white/40 hover:bg-white/5 hover:text-white/70'}`}>Mods</button>
+                    <button onClick={() => setShopTab('rewards')} className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase transition-all border-b-2 ${shopTab === 'rewards' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10 shadow-[inset_0_0_10px_rgba(234,179,8,0.2)]' : 'border-white/10 text-white/40 hover:bg-white/5 hover:text-white/70'}`}>Rewards</button>
                   </div>
 
-                  <div className="flex-1 w-full overflow-y-auto px-2 custom-scrollbar flex flex-col gap-2">
+                  <div className="flex-1 w-full overflow-y-auto px-2 custom-scrollbar flex flex-col gap-3">
                     {shopTab === 'rewards' ? MARKETING_REWARDS.map(reward => (
-                      <div key={reward.id} className="bg-zinc-800 p-3 border-2 border-pink-500/50 rounded flex justify-between items-center text-left">
+                      <div key={reward.id} className="bg-black/50 p-4 border border-yellow-500/30 rounded-xl flex justify-between items-center text-left hover:border-yellow-500/60 transition-colors">
                          <div>
-                            <p className="text-pink-400 font-bold text-xs">{reward.name}</p>
-                            <p className="text-zinc-400 text-[8px]">{reward.desc}</p>
+                            <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase">{reward.name}</p>
+                            <p className="text-white/40 text-[9px] uppercase tracking-wider">{reward.desc}</p>
                          </div>
                          {ownedRewards.includes(reward.id) ? (
-                            <span className="bg-green-900 border-2 border-green-500 text-green-400 px-2 py-1 text-[8px] font-bold">OWNED:\\n{reward.code}</span>
+                            <span className="bg-green-500/20 border border-green-500 text-green-400 px-3 py-2 text-[10px] font-bold rounded">OWNED:<br/>{reward.code}</span>
                          ) : (
                             <button onClick={() => {
                                if (festCoins >= reward.cost) {
                                   setFestCoins(prev => prev - reward.cost);
                                   setOwnedRewards(prev => [...prev, reward.id]);
                                   showMsg('REDEEMED', 'success');
-                               } else showMsg('NOT ENOUGH CREDITS', 'error');
-                            }} className="bg-zinc-700 border-2 border-zinc-500 px-2 py-1 text-[8px] font-bold text-white hover:bg-brand-accent hover:border-red-400 flex items-center gap-1"><Zap className="w-3 h-3"/> {reward.cost}</button>
+                               } else showMsg('INSUFFICIENT KOINS', 'error');
+                            }} className="bg-yellow-500/10 border border-yellow-500/50 px-3 py-2 rounded text-[10px] font-bold text-yellow-400 flex items-center gap-2 hover:bg-yellow-500/30 transition-colors"><Zap className="w-4 h-4"/> {reward.cost}</button>
                          )}
                       </div>
                     )) : shopTab === 'chars' ? CHARACTERS.map(char => (
-                      <div key={char.id} className={`bg-zinc-800 p-3 border-2 rounded flex justify-between items-center text-left ${selectedCharId === char.id ? 'border-brand-accent' : 'border-zinc-700'}`}>
+                      <div key={char.id} className={`bg-black/50 p-4 border rounded-xl flex justify-between items-center text-left transition-colors ${selectedCharId === char.id ? 'border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : 'border-white/10 hover:border-white/30'}`}>
                          <div>
-                            <p className="text-white font-bold text-xs" style={{ color: char.color }}>{t(char.nameKey)}</p>
-                            <p className="text-zinc-400 text-[8px]">{t(char.descKey)}</p>
+                            <p className="font-bold text-sm tracking-widest uppercase" style={{ color: char.color }}>{t(char.nameKey)}</p>
+                            <p className="text-white/40 text-[9px] uppercase tracking-wider">{t(char.descKey)}</p>
                          </div>
                          {unlockedChars.includes(char.id) ? (
-                            <button onClick={() => setSelectedCharId(char.id)} className={`px-3 py-1 text-[8px] font-bold ${selectedCharId === char.id ? 'bg-brand-accent text-white border-2 border-red-400' : 'bg-zinc-700 text-zinc-300 border-2 border-zinc-500'}`}>{selectedCharId === char.id ? 'SELECTED' : 'SELECT'}</button>
+                            <button onClick={() => setSelectedCharId(char.id)} className={`px-4 py-2 rounded text-[10px] font-bold tracking-widest transition-colors ${selectedCharId === char.id ? 'bg-pink-500/20 text-pink-400 border border-pink-500/50' : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white'}`}>{selectedCharId === char.id ? 'ACTIVE' : 'SELECT'}</button>
                          ) : (
                             <button onClick={() => {
                                if (festCoins >= char.price) {
                                   setFestCoins(prev => prev - char.price);
                                   setUnlockedChars(prev => [...prev, char.id]);
                                   showMsg('UNLOCKED', 'success');
-                               } else showMsg('NOT ENOUGH CREDITS', 'error');
-                            }} className="bg-zinc-700 border-2 border-zinc-500 px-2 py-1 text-[8px] font-bold text-white hover:bg-brand-accent hover:border-red-400 flex items-center gap-1"><Zap className="w-3 h-3"/> {char.price}</button>
+                               } else showMsg('INSUFFICIENT KOINS', 'error');
+                            }} className="bg-pink-500/10 border border-pink-500/50 px-3 py-2 rounded text-[10px] font-bold text-pink-400 flex items-center gap-2 hover:bg-pink-500/30 transition-colors"><Zap className="w-4 h-4"/> {char.price}</button>
                          )}
                       </div>
                     )) : (
                       ['magnet', 'jump', 'shield', 'luck'].map(type => (
-                         <div key={type} className="bg-zinc-800 p-3 border-2 border-zinc-700 rounded flex justify-between items-center text-left">
+                         <div key={type} className="bg-black/50 p-4 border border-blue-500/20 rounded-xl flex justify-between items-center text-left hover:border-blue-500/40 transition-colors">
                             <div>
-                               <p className="text-white font-bold text-xs uppercase">{type} <span className="text-yellow-500 font-mono">LV.{upgrades[type as keyof typeof upgrades]}</span></p>
+                               <p className="text-blue-400 font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                                  {type} 
+                                  <span className="text-blue-300/50 text-[10px] bg-blue-900/30 px-2 py-0.5 rounded border border-blue-500/30">LV.{upgrades[type as keyof typeof upgrades]}</span>
+                               </p>
                             </div>
                             <button onClick={() => {
                                const cost = (upgrades[type as keyof typeof upgrades] + 1) * 300;
-                               if (upgrades[type as keyof typeof upgrades] >= 5) showMsg('MAX LEVEL', 'info');
+                               if (upgrades[type as keyof typeof upgrades] >= 5) showMsg('MAXIMUM LEVEL', 'info');
                                else if (festCoins >= cost) {
                                   setFestCoins(prev => prev - cost);
                                   setUpgrades(prev => ({ ...prev, [type]: prev[type as keyof typeof upgrades] + 1 }));
-                                  showMsg('UPGRADED', 'success');
-                               } else showMsg('NOT ENOUGH CREDITS', 'error');
-                            }} className="bg-zinc-700 border-2 border-zinc-500 px-2 py-1 text-[8px] font-bold text-white hover:bg-brand-accent hover:border-red-400 flex items-center gap-1">{upgrades[type as keyof typeof upgrades] >= 5 ? 'MAX' : <><Zap className="w-3 h-3"/> {(upgrades[type as keyof typeof upgrades] + 1) * 300}</>}</button>
+                                  showMsg('SYSTEM UPGRADED', 'success');
+                               } else showMsg('INSUFFICIENT KOINS', 'error');
+                            }} className="bg-blue-500/10 border border-blue-500/50 px-3 py-2 rounded text-[10px] font-bold text-blue-400 flex items-center gap-2 hover:bg-blue-500/30 transition-colors">{upgrades[type as keyof typeof upgrades] >= 5 ? 'MAX_LVL' : <><Zap className="w-4 h-4"/> {(upgrades[type as keyof typeof upgrades] + 1) * 300}</>}</button>
                          </div>
                       ))
                     )}
                   </div>
 
-                  <div className="w-full mt-4 flex gap-2">
-                     <button onClick={() => setShowCodeInput(true)} className="bg-zinc-800 border-2 border-zinc-600 text-zinc-300 py-3 px-4 text-xs font-bold font-mono hover:bg-zinc-700">CODE</button>
-                     <button onClick={() => { setScore(0); setIsPlaying(true); }} className="flex-1 bg-brand-accent border-b-4 border-red-900 hover:border-b-0 hover:translate-y-1 text-white py-3 text-sm font-black uppercase tracking-widest transition-all">START _</button>
+                  <div className="w-full mt-6 pb-4">
+                    <button 
+                      onClick={() => { setScore(0); setIsPlaying(true); }}
+                      className="w-full py-4 bg-pink-600 hover:bg-pink-500 text-white font-black text-xl italic uppercase tracking-[0.3em] rounded-xl shadow-[0_0_30px_rgba(236,72,153,0.5),inset_0_2px_10px_rgba(255,255,255,0.4)] transition-all active:scale-95 border border-pink-400 group relative overflow-hidden"
+                    >
+                      <span className="relative z-10 flex flex-col items-center justify-center">
+                        INITIALIZE LAUNCH
+                        <span className="text-[9px] text-pink-200/50 font-sans tracking-[0.5em] mt-1 -ml-1">PRESS SPACE</span>
+                      </span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out" />
+                    </button>
+                    
+                    <button onClick={() => setShowCodeInput(true)} className="mt-4 text-[10px] text-white/30 hover:text-white/70 uppercase tracking-widest transition-colors font-bold flex items-center justify-center w-full gap-2 opacity-50"><Key size={12}/> {t('game.fest.promo.enter')}</button>
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-4 w-full px-6">
-                  <h3 className="text-white font-black text-xl uppercase tracking-widest">{t('game.fest.enter_code')}</h3>
-                  <input type="text" value={codeInput} onChange={e => setCodeInput(e.target.value)} className="w-full bg-black border-2 border-zinc-700 text-brand-accent font-mono text-center py-3 text-xl uppercase placeholder:text-zinc-800 focus:outline-none focus:border-brand-accent" placeholder="..." autoFocus />
-                  <div className="flex gap-2 w-full">
-                    <button onClick={() => setShowCodeInput(false)} className="flex-1 bg-zinc-800 text-zinc-400 py-3 font-bold uppercase transition-colors hover:text-white border-b-4 border-zinc-900">CANCEL</button>
-                    <button onClick={handleApplyCode} className="flex-1 bg-brand-accent text-white py-3 font-bold uppercase transition-transform hover:scale-105 border-b-4 border-red-900">APPLY</button>
-                  </div>
-                </div>
+                 <div className="flex flex-col items-center max-w-sm w-full bg-black/60 p-8 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+                    <h3 className="text-white text-sm font-bold uppercase tracking-widest mb-6 flex items-center gap-2"><Key className="text-pink-500" size={16}/> SYSTEM_OVERRIDE</h3>
+                    <input autoFocus value={codeInput} onChange={e=>setCodeInput(e.target.value.toUpperCase())} className="w-full bg-black/50 border border-pink-500/30 text-pink-400 text-center text-xl tracking-[0.3em] p-4 rounded-xl uppercase placeholder:text-white/10 focus:outline-none focus:border-pink-500 shadow-[inset_0_0_20px_rgba(236,72,153,0.1)] transition-colors font-mono mb-6" placeholder="******" />
+                    <div className="flex w-full gap-3">
+                       <button onClick={() => setShowCodeInput(false)} className="flex-1 p-3 bg-white/5 border border-white/10 text-white/50 text-[10px] rounded-lg tracking-widest font-bold uppercase hover:bg-white/10 transition-colors">{t('game.fest.promo.abort')}</button>
+                       <button onClick={handleApplyCode} className="flex-[2] p-3 bg-pink-500/20 border border-pink-500 text-pink-400 text-[10px] rounded-lg tracking-widest font-bold uppercase hover:bg-pink-500 hover:text-white transition-all shadow-[0_0_15px_rgba(236,72,153,0.3)]">{t('game.fest.promo.execute')}</button>
+                    </div>
+                 </div>
               )}
             </motion.div>
           )}

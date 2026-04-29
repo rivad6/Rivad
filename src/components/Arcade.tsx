@@ -8,7 +8,6 @@ import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
 import { CreativeInvaders } from './games/CreativeInvaders';
 import { MeetingRace } from './games/MeetingRace';
-import { FestJump } from './games/FestJump';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -33,7 +32,6 @@ export function Arcade() {
     { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-brand-accent', label: t('arc.game5.lbl') },
     { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-brand-accent', label: t('arc.game6.lbl') },
     { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-brand-accent', label: t('arc.game7.lbl') },
-    { id: 'jump', title: t('arc.game8', 'FEST JUMP'), icon: <Zap size={24} />, color: 'bg-brand-accent', label: t('arc.game8.lbl', 'JUMP') },
   ] as const;
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -252,20 +250,20 @@ export function Arcade() {
 
           {/* Arcade Machine Component */}
           <div className={cn(
-            "relative bg-[#252526] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#1a1a1a] mx-auto overflow-hidden shadow-[30px_30px_0px_0px_rgba(0,0,0,0.9)] rounded-2xl w-full transition-all duration-500 ring-1 ring-white/10",
-            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0 ring-0" : "max-w-[1000px]"
+            "relative bg-[#d8d9d3] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#c0c2bb] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_2px_10px_rgba(255,255,255,0.8)] rounded-2xl w-full transition-all duration-500",
+            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-black/20"
           )}>
 
           {/* Cabinet texture effect */}
-          <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #000 2px, transparent 2px)', backgroundSize: '10px 10px' }}></div>
-          <div className="absolute inset-0 opacity-10 pointer-events-none bg-gradient-to-b from-transparent to-black" ></div>
-          <div className="absolute inset-0 z-20 pointer-events-none shadow-[inset_0_20px_50px_rgba(0,0,0,0.8)]"></div>
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
+          <div className="absolute inset-x-0 top-0 h-32 opacity-20 pointer-events-none bg-gradient-to-b from-white to-transparent" ></div>
+          <div className="absolute inset-0 z-20 pointer-events-none shadow-[inset_0_20px_50px_rgba(0,0,0,0.1)]"></div>
 
           {/* Hardware Vents */}
           {!isFullscreen && (
-             <div className="absolute top-3 md:top-6 left-1/2 -translate-x-1/2 flex gap-3 md:gap-5 opacity-40 pointer-events-none z-10">
-                {Array(6).fill(0).map((_, i) => (
-                   <div key={i} className="w-1.5 md:w-3 h-6 md:h-12 bg-black rounded-full shadow-[inset_2px_2px_4px_rgba(0,0,0,1)] border border-white/10"></div>
+             <div className="absolute top-3 md:top-6 left-1/2 -translate-x-1/2 flex gap-3 md:gap-5 opacity-60 pointer-events-none z-10">
+                {Array(8).fill(0).map((_, i) => (
+                   <div key={i} className="w-1.5 md:w-3 h-6 md:h-12 bg-[#222] rounded-full shadow-[inset_2px_2px_4px_rgba(0,0,0,0.8),1px_1px_0_rgba(255,255,255,0.4)] border border-black/80"></div>
                 ))}
              </div>
           )}
@@ -273,18 +271,18 @@ export function Arcade() {
           {/* Console Screws */}
           {!isFullscreen && (
             <>
-              <div className="absolute top-4 left-4 md:top-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-45"></div></div>
-              <div className="absolute top-4 right-4 md:top-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-12"></div></div>
-              <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-90"></div></div>
-              <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform -rotate-45"></div></div>
+              <div className="absolute top-4 left-4 md:top-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-45"></div></div>
+              <div className="absolute top-4 right-4 md:top-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-12"></div></div>
+              <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-90"></div></div>
+              <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform -rotate-45"></div></div>
             </>
           )}
           
           <div className="flex justify-between items-center mb-6 relative z-10 block">
             
-            <div className="flex flex-col">
-              <h2 className="text-white/40 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1">RIVAD CORP ENTERTAINMENT SYSTEM</h2>
-              <h2 className="text-brand-accent/80 font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.6)] uppercase">SISYPHUS_OS_v3.1</h2>
+            <div className="flex flex-col bg-[#1e201b]/10 p-2 md:p-3 rounded-lg border-b border-white/50 border-t border-black/10">
+              <h2 className="text-[#555] font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1">RIVAD CORP ENTERTAINMENT SYSTEM</h2>
+              <h2 className="text-[#207c4b] font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[1px_1px_0_rgba(255,255,255,0.5)] uppercase">SISYPHUS_OS_v3.1</h2>
             </div>
             
             <div className="flex gap-2 md:gap-4 items-center">
@@ -444,7 +442,6 @@ export function Arcade() {
                     {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
                     {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} />}
-                    {activeGame === 'jump' && <FestJump isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
                   </motion.div>
                 )}
               </AnimatePresence>
