@@ -632,6 +632,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              enemies.splice(idx, 1);
              playSound('score');
           } else {
+             createParticles(player.x + player.width/2, player.y + player.height/2, '#f43f5e');
+             createParticles(player.x + player.width/2, player.y + player.height/2, '#ffffff');
              playSound('lose');
              setIsPlaying(false);
           }
@@ -682,6 +684,32 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
       ctx.shadowBlur = 0;
       
+      // Synthwave Sun
+      ctx.save();
+      const sunY = (canvas.height * 0.8) + (cameraY * 0.05) % 80;
+      ctx.translate(canvas.width / 2, sunY);
+      
+      const sunGradient = ctx.createLinearGradient(0, -100, 0, 100);
+      sunGradient.addColorStop(0, '#f97316'); // Orange
+      sunGradient.addColorStop(0.4, '#e11d48'); // Pink-red
+      sunGradient.addColorStop(0.8, '#7e22ce'); // Purple
+      
+      ctx.beginPath();
+      ctx.arc(0, 0, 100, 0, Math.PI * 2);
+      ctx.fillStyle = sunGradient;
+      ctx.shadowBlur = 40;
+      ctx.shadowColor = '#e11d48';
+      ctx.fill();
+
+      // Sun stripes (outrun style)
+      ctx.globalCompositeOperation = 'destination-out';
+      for(let i = 0; i < 7; i++) {
+         const stripeY = i * 18 - 20;
+         const stripeH = 3 + i * 2;
+         ctx.fillRect(-120, stripeY, 240, stripeH);
+      }
+      ctx.restore();
+
       // Synthwave / Retro grid background
       const gradientBg = ctx.createLinearGradient(0, canvas.height, 0, 0);
       gradientBg.addColorStop(0, theme.bgTop); 
@@ -937,18 +965,26 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
       bullets.forEach(b => {
           ctx.beginPath();
-          ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
-          ctx.fillStyle = '#facc15';
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = '#facc15';
+          ctx.fillStyle = '#fef08a';
+          ctx.roundRect(b.x - 2, b.y - 6, 4, 12, 4);
           ctx.fill();
+          ctx.shadowBlur = 0;
       });
 
       floatingTexts.forEach(ft => {
          ctx.globalAlpha = ft.alpha;
          ctx.fillStyle = ft.color2;
-         ctx.font = 'bold 12px monospace';
+         ctx.font = '900 14px monospace';
+         ctx.textAlign = 'center';
          ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
          ctx.fillStyle = ft.color;
+         ctx.shadowBlur = 5;
+         ctx.shadowColor = ft.color;
          ctx.fillText(ft.text, ft.x, ft.y);
+         ctx.shadowBlur = 0;
+         ctx.textAlign = 'left';
       });
       ctx.globalAlpha = 1;
 
@@ -1061,8 +1097,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                   </div>
 
                   <div className="flex-1 w-full overflow-y-auto px-2 custom-scrollbar flex flex-col gap-3">
-                    {shopTab === 'rewards' ? MARKETING_REWARDS.map(reward => (
-                      <div key={reward.id} className="bg-black/50 p-4 border border-yellow-500/30 rounded-xl flex justify-between items-center text-left hover:border-yellow-500/60 transition-colors">
+                    {shopTab === 'rewards' ? MARKETING_REWARDS.map((reward, i) => (
+                      <div key={'reward_' + reward.id + '_' + i} className="bg-black/50 p-4 border border-yellow-500/30 rounded-xl flex justify-between items-center text-left hover:border-yellow-500/60 transition-colors">
                          <div>
                             <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase">{reward.name}</p>
                             <p className="text-white/40 text-[9px] uppercase tracking-wider">{reward.desc}</p>
@@ -1079,8 +1115,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                             }} className="bg-yellow-500/10 border border-yellow-500/50 px-3 py-2 rounded text-[10px] font-bold text-yellow-400 flex items-center gap-2 hover:bg-yellow-500/30 transition-colors"><Zap className="w-4 h-4"/> {reward.cost}</button>
                          )}
                       </div>
-                    )) : shopTab === 'chars' ? CHARACTERS.map(char => (
-                      <div key={char.id} className={`bg-black/50 p-4 border rounded-xl flex justify-between items-center text-left transition-colors ${selectedCharId === char.id ? 'border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : 'border-white/10 hover:border-white/30'}`}>
+                    )) : shopTab === 'chars' ? CHARACTERS.map((char, i) => (
+                      <div key={'char_' + char.id + '_' + i} className={`bg-black/50 p-4 border rounded-xl flex justify-between items-center text-left transition-colors ${selectedCharId === char.id ? 'border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : 'border-white/10 hover:border-white/30'}`}>
                          <div>
                             <p className="font-bold text-sm tracking-widest uppercase" style={{ color: char.color }}>{t(char.nameKey)}</p>
                             <p className="text-white/40 text-[9px] uppercase tracking-wider">{t(char.descKey)}</p>
@@ -1098,8 +1134,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                          )}
                       </div>
                     )) : (
-                      ['magnet', 'jump', 'shield', 'luck'].map(type => (
-                         <div key={type} className="bg-black/50 p-4 border border-blue-500/20 rounded-xl flex justify-between items-center text-left hover:border-blue-500/40 transition-colors">
+                      ['magnet', 'jump', 'shield', 'luck'].map((type, i) => (
+                         <div key={'upgrade_' + type + '_' + i} className="bg-black/50 p-4 border border-blue-500/20 rounded-xl flex justify-between items-center text-left hover:border-blue-500/40 transition-colors">
                             <div>
                                <p className="text-blue-400 font-bold text-sm uppercase tracking-widest flex items-center gap-2">
                                   {type} 

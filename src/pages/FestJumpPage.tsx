@@ -1,7 +1,7 @@
 import { FestJump } from '../components/games/FestJump';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Rocket, Star, Ticket, Zap, ChevronRight, Music, Mail, ExternalLink, Trophy, X } from 'lucide-react';
+import { ArrowLeft, Rocket, Star, Ticket, Zap, ChevronRight, Music, Mail, ExternalLink, Trophy, X, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useState } from 'react';
 
@@ -160,7 +160,7 @@ export function FestJumpPage() {
               <div className="space-y-2">
                  {PLAYERS.map((player, i) => (
                    <motion.div 
-                     key={player.name} 
+                     key={`player_${player.name}_${i}`} 
                      whileHover={{ scale: 1.02, x: 5 }}
                      className="flex items-center p-3 rounded-xl bg-black/40 border border-white/5 hover:border-pink-500/30 hover:bg-black/60 transition-all cursor-pointer group relative overflow-hidden"
                      onClick={() => setActiveModal(`player_${player.name}`)}
