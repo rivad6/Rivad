@@ -19,10 +19,10 @@ interface Character {
 }
 
 const CHARACTERS: Character[] = [
-  { id: 'default', nameKey: 'CYBER-RUNNER', descKey: 'Standard model', price: 0, jumpForce: -12, speed: 8, color: '#6EE7B7', accent: '#f43f5e' },
-  { id: 'punk', nameKey: 'NEON-PUNK', descKey: 'Faster movement', price: 200, jumpForce: -13.5, speed: 10, color: '#f43f5e', accent: '#6EE7B7' },
-  { id: 'ghost', nameKey: 'GLITCH-GHOST', descKey: 'Spectral float', price: 500, jumpForce: -11, speed: 12, color: '#ffffff', accent: '#3b82f6' },
-  { id: 'cyber', nameKey: 'MECHA-SYS', descKey: 'Double jump active', price: 1000, jumpForce: -15, speed: 9, color: '#a855f7', accent: '#eab308', doubleJump: true },
+  { id: 'default', nameKey: 'CYBER-RUNNER', descKey: 'Standard model', price: 0, jumpForce: -12, speed: 11, color: '#6EE7B7', accent: '#f43f5e' },
+  { id: 'punk', nameKey: 'NEON-PUNK', descKey: 'Faster movement', price: 200, jumpForce: -13.5, speed: 14, color: '#f43f5e', accent: '#6EE7B7' },
+  { id: 'ghost', nameKey: 'GLITCH-GHOST', descKey: 'Spectral float', price: 500, jumpForce: -11, speed: 16, color: '#ffffff', accent: '#3b82f6' },
+  { id: 'cyber', nameKey: 'MECHA-SYS', descKey: 'Double jump active', price: 1000, jumpForce: -15, speed: 12.5, color: '#a855f7', accent: '#eab308', doubleJump: true },
 ];
 
 export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }) {
@@ -154,6 +154,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     platforms[0] = { x: 0, y: canvas.height - 20, hasSpring: false, type: 'normal', vx: 0, broken: false, width: canvas.width, isStepped: false, crackValue: 0, opacity: 1 };
 
     let cameraY = 0;
+    let touchTargetX: number | null = null;
     let maxScore = 0;
     let bonusScore = 0;
 
@@ -184,13 +185,11 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     const handlePointerMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const targetX = ((clientX - rect.left) / rect.width) * canvas.width - player.width / 2;
-      player.x = targetX;
-      player.vx = 0;
+      touchTargetX = ((clientX - rect.left) / rect.width) * canvas.width - player.width / 2;
     };
 
     const handlePointerDown = () => isShooting = true;
-    const handlePointerUp = () => isShooting = false;
+    const handlePointerUp = () => { isShooting = false; touchTargetX = null; };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -200,9 +199,11 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     canvas.addEventListener('mouseup', handlePointerUp);
     canvas.addEventListener('touchstart', handlePointerDown, { passive: true });
     canvas.addEventListener('touchend', handlePointerUp);
+    canvas.addEventListener('mouseleave', handlePointerUp);
 
     const createParticles = (x: number, y: number, color = '#ffffff') => {
-      for(let i=0; i<8; i++) {
+      const pCount = color === '#ffffff' ? 12 : 8;
+      for(let i=0; i<pCount; i++) {
         particles.push({
           x: x + (Math.random() - 0.5)*30, y: y + (Math.random() - 0.5)*15, life: 1.0 + Math.random()*0.5, color
         });
@@ -256,10 +257,14 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillRect(charX + 4, charY + 4, pWidth, pHeight);
 
+      ctx.fillStyle = '#000'; // outline
+      ctx.fillRect(charX - 1, charY - 1, pWidth + 2, pHeight + 2);
       ctx.fillStyle = selectedChar.color;
-      ctx.beginPath();
-      ctx.roundRect(charX, charY, pWidth, pHeight, 4);
-      ctx.fill();
+      ctx.fillRect(charX, charY, pWidth, pHeight);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.fillRect(charX, charY, pWidth, 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(charX, charY + pHeight - 4, pWidth, 4);
       
       // Visor
       ctx.fillStyle = selectedChar.accent;
@@ -316,11 +321,17 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       bullets.forEach(b => b.y += b.vy * normalDt);
       bullets = bullets.filter(b => b.y > -50);
 
-      if (keys.left) player.vx -= 1 * normalDt;
-      else if (keys.right) player.vx += 1 * normalDt;
-      else player.vx *= Math.pow(0.8, normalDt);
+      if (touchTargetX !== null) {
+         const diff = touchTargetX - player.x;
+         player.vx = diff * 0.15; // Smooth tracking
+         player.vx = Math.max(-selectedChar.speed * 1.5, Math.min(selectedChar.speed * 1.5, player.vx));
+      } else {
+         if (keys.left) player.vx -= 1.5 * normalDt;
+         else if (keys.right) player.vx += 1.5 * normalDt;
+         else player.vx *= Math.pow(0.8, normalDt);
+         player.vx = Math.max(-selectedChar.speed, Math.min(selectedChar.speed, player.vx));
+      }
 
-      player.vx = Math.max(-selectedChar.speed, Math.min(selectedChar.speed, player.vx));
       player.x += player.vx * normalDt;
       
       if (player.jetpack > 0) {
@@ -419,7 +430,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              if (isPerfect) {
                bonusScore += 50 * comboMultiplier;
                setFestCoins(prev => prev + 2);
-               createParticles(p.x + p.width/2, p.y, '#fff');
+               createParticles(p.x + p.width/2, p.y, '#ffffff'); // Base particles
+               createParticles(p.x + p.width/2, p.y, selectedChar.accent); // Accent particles
                cameraShake = 10;
                comboMultiplier++;
                comboTimer = 180 + upgrades.luck * 60;
@@ -542,8 +554,24 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     const draw = (dt: number) => {
-      ctx.fillStyle = '#0f172a'; // Classic dark slate background for DOS game feel
+      ctx.fillStyle = '#050510'; // Deep dark blue for synth grid
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Synthwave / Retro grid background
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      const yOffset = (cameraY * 0.3) % gridSize;
+      ctx.beginPath();
+      for(let y = yOffset; y < canvas.height; y += gridSize) {
+         ctx.moveTo(0, y);
+         ctx.lineTo(canvas.width, y);
+      }
+      for(let x = 0; x < canvas.width; x += gridSize) {
+         ctx.moveTo(x, 0);
+         ctx.lineTo(x, canvas.height);
+      }
+      ctx.stroke();
 
       if (adBreakTimer > 0) {
          ctx.fillStyle = `rgba(16, 185, 129, ${adBreakTimer / 400})`;
@@ -558,7 +586,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       platforms.forEach(p => {
         if (p.broken) return;
         
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillStyle = '#020617'; // hard drop shadow instead of alpha for retro style
         ctx.fillRect(p.x + 4, p.y + 4, p.width, PLATFORM_HEIGHT);
 
         if (p.type === 'billboard') {
@@ -590,10 +618,14 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             else if (p.type === 'boost') pColor = '#facc15';
             if (p.hasSpring) pColor = '#fde047';
 
-            ctx.fillStyle = '#334155';
+            ctx.fillStyle = '#000';
+            ctx.fillRect(p.x - 1, p.y - 1, p.width + 2, PLATFORM_HEIGHT + 2);
+            ctx.fillStyle = '#1e1b4b'; // dark retro base
             ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
             ctx.fillStyle = pColor;
-            ctx.fillRect(p.x, p.y, p.width, 3);
+            ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT - 4);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fillRect(p.x, p.y, p.width, 2);
 
             if (p.type === 'breaking') {
                 ctx.beginPath();
@@ -843,7 +875,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           )}
         </AnimatePresence>
 
-        <canvas ref={canvasRef} width={360} height={640} className="w-full h-full object-contain pointer-events-auto" style={{ filter: 'contrast(1.1) brightness(1.1)' }} />
+        <canvas ref={canvasRef} width={360} height={640} className="w-full h-full object-contain pointer-events-auto" style={{ filter: 'contrast(1.1) brightness(1.1)', imageRendering: 'pixelated' }} />
       </div>
 
       {isPlaying && showMobileControls && (
