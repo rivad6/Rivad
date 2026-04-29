@@ -16,7 +16,13 @@ import {
   Megaphone,
   Fingerprint,
   Star,
-  Paintbrush
+  Paintbrush,
+  HelpCircle,
+  BookOpen,
+  PlusCircle,
+  ShieldAlert,
+  RefreshCw,
+  Users
 } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
 
@@ -35,20 +41,86 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const [playerHand, setPlayerHand] = useState<Card[]>([]);
-  const [cpuHand, setCpuHand] = useState<Card[]>([]);
-  const [topCard, setTopCard] = useState<Card | null>(null);
-  const [turn, setTurn] = useState<'player' | 'cpu'>('player');
+  const [hands, setHands] = useState<Card[][]>([]);
+  const [playerCount, setPlayerCount] = useState(4);
+  const [turn, setTurn] = useState(0); // Index of the current player (0 is the human)
   const [message, setMessage] = useState(t('game.uno.msg.start'));
-  const [winner, setWinner] = useState<'player' | 'cpu' | null>(null);
+  const [winner, setWinner] = useState<number | null>(null);
   const [focusedCardIndex, setFocusedCardIndex] = useState(0);
-  const [isChoosingColor, setIsChoosingColor] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isGameStarted, setIsGameStarted] = useState(false);
+
+  const cardGuide = [
+    {
+      action: 'moche',
+      icon: PlusCircle,
+      es: 'Moche: +2 al siguiente.',
+      en: 'Bribe: +2 to next.',
+      pt: 'Suborno: +2 ao próximo.'
+    },
+    {
+      action: 'fuero',
+      icon: ShieldAlert,
+      es: 'Fuero: Salta turno.',
+      en: 'Immunity: Skip turn.',
+      pt: 'Imunidade: Pula o turno.'
+    },
+    {
+      action: 'alianza',
+      icon: RefreshCw,
+      es: 'Alianza: Cambia dirección.',
+      en: 'Alliance: Reverse dir.',
+      pt: 'Aliança: Inverte direção.'
+    },
+    {
+      action: 'fake_news',
+      icon: AlertTriangle,
+      es: 'Fake News: +4 y color.',
+      en: 'Fake News: +4 & color.',
+      pt: 'Fake News: +4 e cor.'
+    },
+    {
+      action: 'consulta',
+      icon: Users,
+      es: 'Consulta: Todos +1 carta.',
+      en: 'Referendum: All +1 card.',
+      pt: 'Consulta: Todos +1 carta.'
+    },
+    {
+      action: 'dedazo',
+      icon: CheckCircle2,
+      es: 'Dedazo: Cambia el color.',
+      en: 'Handpick: Change color.',
+      pt: 'Indicação: Muda a cor.'
+    },
+    {
+      action: 'guerra_sucia',
+      icon: ArrowLeftRight,
+      es: 'Guerra Sucia: Cambia manos.',
+      en: 'Dirty War: Swap hands.',
+      pt: 'Guerra Suja: Troca mãos.'
+    },
+    {
+      action: 'voto_por_voto',
+      icon: Megaphone,
+      es: 'Voto x Voto: Reinicia a 7.',
+      en: 'Vote x Vote: Reset to 7.',
+      pt: 'Voto x Voto: Reinicia a 7.'
+    }
+  ];
+
+  const playerNames = useMemo(() => [
+    t('game.uno.label.power'), // Player 0
+    t('game.uno.label.opposition') + ' A', 
+    t('game.uno.label.opposition') + ' B', 
+    t('game.uno.label.opposition') + ' C'
+  ], [t]);
 
   // Cabinet Button Support
   useEffect(() => {
-    if (isPausedGlobal || winner || isChoosingColor || turn !== 'player') return;
+    if (isPausedGlobal || winner !== null || isChoosingColor || turn !== 0 || !isGameStarted) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      const cardCount = playerHand.length;
+      const cardCount = hands[0]?.length || 0;
       if (cardCount === 0) return;
 
       if (e.key === 'ArrowLeft') {
@@ -63,7 +135,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedCardIndex, playerHand, winner, isChoosingColor, turn, isPausedGlobal]);
+  }, [focusedCardIndex, hands, winner, isChoosingColor, turn, isPausedGlobal, isGameStarted]);
 
   useEffect(() => {
     if (!winner) {
@@ -133,29 +205,36 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
     };
   }, []);
 
-  const initGame = () => {
-    setPlayerHand(Array(7).fill(null).map(() => generateCard()));
-    setCpuHand(Array(7).fill(null).map(() => generateCard()));
+  const initGame = (count: number = 4) => {
+    setPlayerCount(count);
+    const initialHands = Array.from({ length: count }, () => 
+      Array(7).fill(null).map(() => generateCard())
+    );
+    setHands(initialHands);
+    
     let initialTop = generateCard();
     while (initialTop.action !== 'normal') {
       initialTop = generateCard();
     }
     setTopCard(initialTop);
-    setTurn('player');
+    setTurn(0);
     setWinner(null);
     setDirection(1);
     setIsChoosingColor(false);
+    setIsGameStarted(true);
     setMessage(t('game.uno.msg.turn'));
   };
 
   useEffect(() => {
-    initGame();
+    // We'll wait for user to start or just auto-init with 4
+    initGame(4);
   }, []);
 
   const isValidPlay = (card: Card) => {
     if (!topCard) return true;
-    if (card.action === 'dedazo' || card.action === 'fake_news') return true;
-    return card.color === topCard.color || card.value === topCard.value;
+    const isWild = ['dedazo', 'fake_news', 'guerra_sucia', 'voto_por_voto'].includes(card.action);
+    if (isWild) return true;
+    return card.color === topCard.color || card.value === topCard.value || topCard.color === 'black';
   };
 
   const [activePopup, setActivePopup] = useState<SpecialAction | null>(null);
@@ -170,100 +249,137 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
   const [isSwapping, setIsSwapping] = useState(false);
   
-  const processAction = (card: Card, currentPlayer: 'player' | 'cpu') => {
-    const otherPlayer = currentPlayer === 'player' ? 'cpu' : 'player';
-    
+  const getNextTurn = (current: number, skip: number = 1) => {
+    return (current + (direction * skip) + playerCount) % playerCount;
+  };
+
+  const processAction = (card: Card, currentPlayerIndex: number) => {
     if (card.action !== 'normal') {
       setActivePopup(card.action);
     }
     
+    let nextIndex = getNextTurn(currentPlayerIndex);
+    const setHand = (idx: number, updater: (h: Card[]) => Card[]) => {
+      setHands(prev => {
+        const next = [...prev];
+        next[idx] = updater(next[idx]);
+        return next;
+      });
+    };
+
     switch (card.action) {
       case 'moche':
-        setMessage(currentPlayer === 'player' ? t('game.uno.msg.moche.win') : t('game.uno.msg.moche.lose'));
-        if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard()]);
-        else setPlayerHand(prev => [...prev, generateCard(), generateCard()]);
-        return currentPlayer; // +2 skips the opponent
+        setMessage(t('game.uno.msg.moche.win'));
+        setHand(nextIndex, prev => [...prev, generateCard(), generateCard()]);
+        return getNextTurn(nextIndex); // Skip next player
       case 'fuero':
-        setMessage(currentPlayer === 'player' ? t('game.uno.msg.fuero.win') : t('game.uno.msg.fuero.lose'));
-        return currentPlayer; // Skip skips opponent
+        setMessage(t('game.uno.msg.fuero.win'));
+        return getNextTurn(nextIndex); // Skip next player
       case 'alianza':
         setMessage(t('game.uno.msg.alliance'));
         setDirection(prev => prev * -1);
-        return currentPlayer; // In a 2-player game, reverse acts as a skip
+        // In 4p, reverse just changes direction, doesn't skip immediately
+        return (currentPlayerIndex + (-direction) + playerCount) % playerCount; 
       case 'fake_news':
         setMessage(t('game.uno.msg.fake_news'));
-        if (currentPlayer === 'player') setCpuHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
-        else setPlayerHand(prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
-        
-        if (currentPlayer === 'player') {
+        setHand(nextIndex, prev => [...prev, generateCard(), generateCard(), generateCard(), generateCard()]);
+        if (currentPlayerIndex === 0) {
           setIsChoosingColor(true);
-          return 'player'; // Wait for color choice
         } else {
-          // CPU chooses random color
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
-          return currentPlayer; // Play again since +4 skips player
         }
+        return getNextTurn(nextIndex); // Skip next player
       case 'consulta':
         setMessage(t('game.uno.msg.consulta'));
-        setPlayerHand(prev => [...prev, generateCard()]);
-        setCpuHand(prev => [...prev, generateCard()]);
-        return otherPlayer;
+        for (let i = 0; i < playerCount; i++) {
+          if (i !== currentPlayerIndex) {
+            setHand(i, prev => [...prev, generateCard()]);
+          }
+        }
+        return nextIndex;
       case 'dedazo':
         setMessage(t('game.uno.msg.dedazo'));
-        if (currentPlayer === 'player') {
+        if (currentPlayerIndex === 0) {
           setIsChoosingColor(true);
-          return 'player'; // Wait for color choice
         } else {
-          // CPU chooses random color
           const randomColor = colors[Math.floor(Math.random() * colors.length)];
           setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
-          return 'player';
         }
+        return nextIndex;
       case 'guerra_sucia':
         setMessage(t('game.uno.msg.guerra_sucia'));
         setIsSwapping(true);
         setTimeout(() => {
-          setPlayerHand(prevPlayer => {
-            const currentCpu = [...cpuHand];
-            setCpuHand([...prevPlayer]);
-            return currentCpu;
+          setHands(prevHands => {
+            const nextHands = [...prevHands];
+            // Find player with least cards (excluding self)
+            let targetIdx = -1;
+            let minCards = 999;
+            for (let i = 0; i < playerCount; i++) {
+              if (i !== currentPlayerIndex && nextHands[i].length < minCards) {
+                minCards = nextHands[i].length;
+                targetIdx = i;
+              }
+            }
+            if (targetIdx !== -1) {
+              const temp = [...nextHands[currentPlayerIndex]];
+              nextHands[currentPlayerIndex] = [...nextHands[targetIdx]];
+              nextHands[targetIdx] = temp;
+            }
+            return nextHands;
           });
           setIsSwapping(false);
-          setTurn(otherPlayer); // Change turn AFTER swap
+          if (currentPlayerIndex === 0) setIsChoosingColor(true);
+          else {
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
+            setTurn(getNextTurn(currentPlayerIndex));
+          }
         }, 1000);
-        return currentPlayer; // Keep current turn state until finished
+        return currentPlayerIndex; // Human turn state waits for color choice; CPU waits for timeout
       case 'voto_por_voto':
         setMessage(t('game.uno.msg.voto_por_voto'));
-        setPlayerHand(Array(7).fill(null).map(() => generateCard()));
-        setCpuHand(Array(7).fill(null).map(() => generateCard()));
-        return otherPlayer;
+        setHands(prev => prev.map(() => Array(7).fill(null).map(() => generateCard())));
+        if (currentPlayerIndex === 0) {
+          setIsChoosingColor(true);
+          return currentPlayerIndex;
+        } else {
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+          setTopCard(prev => prev ? { ...prev, color: randomColor } : null);
+          return getNextTurn(nextIndex); // Skip next player
+        }
       default:
-        return otherPlayer;
+        return nextIndex;
     }
   };
 
   const playCard = (index: number) => {
-    if (turn !== 'player' || winner || isChoosingColor || isPausedGlobal) return;
-    const card = playerHand[index];
+    if (turn !== 0 || winner !== null || isChoosingColor || isPausedGlobal) return;
+    const card = hands[0][index];
     
     if (isValidPlay(card)) {
       playSound('click');
       setTopCard(card);
-      const newHand = [...playerHand];
+      const newHand = [...hands[0]];
       newHand.splice(index, 1);
-      setPlayerHand(newHand);
+      setHands(prev => {
+        const next = [...prev];
+        next[0] = newHand;
+        return next;
+      });
       
       if (newHand.length === 0) {
-        setWinner('player');
+        setWinner(0);
         playSound('win');
         unlockAchievement('dictator');
         setMessage(t('game.uno.msg.win'));
         return;
       }
       
-      const nextTurn = processAction(card, 'player');
-      if (card.action !== 'dedazo' && card.action !== 'fake_news') {
+      const nextTurn = processAction(card, 0);
+      const isBlack = ['dedazo', 'fake_news', 'guerra_sucia', 'voto_por_voto'].includes(card.action);
+      if (!isBlack) {
         setTurn(nextTurn);
       }
     } else {
@@ -277,70 +393,89 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
     if (!topCard) return;
     setTopCard({ ...topCard, color });
     setIsChoosingColor(false);
-    // Dedazo gives turn to CPU. Fake News (+4) skips CPU, so player goes again!
-    if (topCard.action === 'fake_news') {
-      setTurn('player');
+    
+    // Most wild cards skip the next turn or lead to a specific turn state
+    const nextIdx = getNextTurn(0);
+    if (topCard.action === 'fake_news' || topCard.action === 'voto_por_voto') {
+      setTurn(getNextTurn(nextIdx)); // Skip next player
     } else {
-      setTurn('cpu');
+      setTurn(nextIdx);
     }
   };
 
   const drawCard = () => {
     playSound('hover');
-    if (turn !== 'player' || winner || isChoosingColor || isPausedGlobal) return;
+    if (turn !== 0 || winner !== null || isChoosingColor || isPausedGlobal) return;
     const newCard = generateCard();
-    setPlayerHand([...playerHand, newCard]);
+    setHands(prev => {
+      const next = [...prev];
+      next[0] = [...next[0], newCard];
+      return next;
+    });
     setMessage(t('game.uno.msg.draw'));
-    setTurn('cpu');
+    setTurn(getNextTurn(0));
   };
 
   useEffect(() => {
-    if (turn === 'cpu' && !winner && !isPausedGlobal) {
-      const cpuTurn = setTimeout(() => {
-        // Advanced CPU Logic: 
-        // 1. If player has few cards (<=3), prioritize aggressive cards (moche, fake_news)
-        // 2. Otherwise play normal cards to save specials
-        
-        let validIndices = cpuHand.map((c, i) => isValidPlay(c) ? i : -1).filter(i => i !== -1);
+    if (turn !== 0 && winner === null && !isPausedGlobal && isGameStarted) {
+      const cpuTurnTimer = setTimeout(() => {
+        const currentCpuHand = hands[turn];
+        if (!currentCpuHand) return;
+
+        let validIndices = currentCpuHand.map((c, i) => isValidPlay(c) ? i : -1).filter(i => i !== -1);
         
         if (validIndices.length > 0) {
+          // Priority: Specials if player 0 is low on cards, or if current bot is low
           let targetIndex = validIndices[0];
+          const humanHandSize = hands[0].length;
           
-          if (playerHand.length <= 3) {
-            // Aggressive mode
-            const aggro = validIndices.find(i => cpuHand[i].action === 'moche' || cpuHand[i].action === 'fake_news');
+          if (humanHandSize <= 3) {
+            const aggro = validIndices.find(i => hands[turn][i].action === 'moche' || hands[turn][i].action === 'fake_news');
             if (aggro !== undefined) targetIndex = aggro;
           } else {
-            // Conservative mode: save specials
-            const normal = validIndices.find(i => cpuHand[i].action === 'normal');
+            const normal = validIndices.find(i => hands[turn][i].action === 'normal');
             if (normal !== undefined) targetIndex = normal;
           }
 
-          const cardToPlay = cpuHand[targetIndex];
+          const cardToPlay = hands[turn][targetIndex];
           setTopCard(cardToPlay);
-          const newHand = [...cpuHand];
-          newHand.splice(targetIndex, 1);
-          setCpuHand(newHand);
           
-          if (newHand.length === 0) {
-            setWinner('cpu');
+          setHands(prev => {
+            const next = [...prev];
+            const nextHand = [...next[turn]];
+            nextHand.splice(targetIndex, 1);
+            next[turn] = nextHand;
+            return next;
+          });
+          
+          if (hands[turn].length === 1) { // checking length before splice technically, but state updates later
+             // They win!
+          }
+
+          const nextHandLength = hands[turn].length - 1;
+          if (nextHandLength === 0) {
+            setWinner(turn);
             playSound('lose');
             setMessage(t('game.uno.msg.lose'));
           } else {
             playSound('click');
-            const nextTurn = processAction(cardToPlay, 'cpu');
+            const nextTurn = processAction(cardToPlay, turn);
             setTurn(nextTurn);
           }
         } else {
           playSound('hover');
-          setCpuHand([...cpuHand, generateCard()]);
-          setMessage(t('game.uno.msg.cpu_draw'));
-          setTurn('player');
+          setHands(prev => {
+            const next = [...prev];
+            next[turn] = [...next[turn], generateCard()];
+            return next;
+          });
+          setMessage(playerNames[turn] + " " + t('game.uno.msg.draw'));
+          setTurn(getNextTurn(turn));
         }
       }, 1500);
-      return () => clearTimeout(cpuTurn);
+      return () => clearTimeout(cpuTurnTimer);
     }
-  }, [turn, cpuHand, winner, topCard, playerHand.length]);
+  }, [turn, hands, winner, topCard, isPausedGlobal, isGameStarted]);
 
   const CardIcon = ({ action }: { action: SpecialAction }) => {
     switch (action) {
@@ -437,193 +572,236 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
       </div>
 
       {/* HUD Header */}
-      <div className="mb-2 md:mb-8 flex flex-col items-center gap-1 w-full max-w-2xl px-4 relative z-10 shrink-0">
-         <div className="flex items-center gap-2 mb-1">
-           <div className={cn("w-1.5 h-1.5 md:w-2 md:h-2 rounded-full", turn === 'player' ? "bg-brand-accent shadow-[0_0_10px_rgba(138,99,210,0.8)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]")} />
-           <span className="text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">
-             {turn === 'player' ? t('game.uno.label.session_open') : t('game.uno.label.session_closed')}
-           </span>
-         </div>
-         <h2 className="text-xl md:text-4xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2 group">
-           <Megaphone className="text-brand-accent h-5 w-5 md:h-10 md:w-10 group-hover:rotate-12 transition-transform" />
-           <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">Political UNO</span>
-         </h2>
+      <div className="mb-2 md:mb-4 flex flex-col items-center gap-1 w-full max-w-2xl px-4 relative z-10 shrink-0">
+          <h2 className="text-xl md:text-3xl font-black italic tracking-tighter text-white uppercase flex items-center gap-2 group">
+            <Megaphone className="text-brand-accent h-5 w-5 md:h-8 md:w-8 group-hover:rotate-12 transition-transform" />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500">Legislative UNO</span>
+          </h2>
       </div>
 
-      {/* The Table Arena */}
-      <div className="flex flex-col gap-4 md:gap-12 items-center w-full relative z-10 flex-grow">
-        
-        {/* Opponent Area (Top) */}
-        <div className={cn(
-          "flex flex-col items-center gap-2 md:gap-3 bg-zinc-950/40 p-2 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border transition-all duration-500 w-full max-w-4xl mx-auto [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none",
-          turn === 'cpu' ? "border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]" : "border-white/5"
-        )}>
-          <div className="flex items-center gap-4 mb-0.5">
-            <h3 className="text-[8px] md:text-sm uppercase tracking-widest text-zinc-500 font-bold">{t('game.uno.label.opposition')}</h3>
-            <div className="flex items-center gap-1 bg-zinc-900 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/5">
-              <UserRound className="w-2.5 h-2.5 md:w-3 md:h-3 text-red-500" />
-              <span className="text-[10px] md:text-xs font-black">{cpuHand.length}</span>
+      {/* Card Guide Toggle Button */}
+      <div className="absolute top-4 right-4 z-[70]">
+        <button
+          onClick={() => setIsGuideOpen(!isGuideOpen)}
+          className="bg-zinc-900/80 p-2 rounded-full border border-white/10 hover:border-brand-accent transition-colors shadow-xl"
+          title="Card Guide / Guía de Cartas"
+        >
+          <HelpCircle className={cn("w-5 h-5", isGuideOpen ? "text-brand-accent" : "text-zinc-500")} />
+        </button>
+      </div>
+
+      {/* Trilingual Card Guide Side-over */}
+      <AnimatePresence>
+        {isGuideOpen && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            className="fixed right-4 top-16 bottom-20 w-64 bg-zinc-950/95 backdrop-blur-2xl border border-white/10 rounded-2xl z-[65] shadow-2xl p-4 overflow-y-auto scrollbar-hide"
+          >
+            <div className="flex items-center gap-2 mb-4 border-b border-white/5 pb-2">
+              <BookOpen className="w-4 h-4 text-brand-accent" />
+              <h3 className="text-xs font-black uppercase tracking-tighter text-white">Manual Legislativo</h3>
             </div>
-          </div>
-          <div className="flex -space-x-10 md:-space-x-16 hover:-space-x-4 md:hover:-space-x-8 transition-all duration-500 pb-1 max-w-full overflow-x-auto scrollbar-hide px-8">
-            {cpuHand.map((c) => (
-               <CardView key={c.id} card={c} hidden={true} />
-            ))}
-          </div>
-        </div>
-
-        {/* Central Arena */}
-        <div className="relative flex flex-row items-center justify-center gap-4 sm:gap-8 md:gap-20 w-full py-2 md:py-4 min-h-[150px] md:min-h-[300px]">
-           
-           {/* Direction Indicator */}
-           <motion.div 
-             animate={{ rotate: direction === 1 ? 360 : -360 }}
-             transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-             className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 md:opacity-10"
-           >
-             <div className="w-32 h-32 md:w-96 md:h-96 rounded-full border border-dashed border-white flex items-center justify-center">
-               <ArrowLeftRight className="w-10 h-10 md:w-20 md:h-20" />
-             </div>
-           </motion.div>
-
-           {/* Deck (Erario) */}
-           <div className="flex flex-col items-center gap-3 group relative">
-             <div className="absolute -inset-4 bg-brand-accent/5 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-             <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">{t('game.uno.label.deck')}</p>
-             <button 
-               onClick={drawCard}
-               disabled={turn !== 'player' || !!winner || isChoosingColor}
-               className={cn(
-                 "w-20 h-28 md:w-32 md:h-48 bg-zinc-900 border-2 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] group-hover:translate-y-[-5px]",
-                 turn === 'player' ? "border-brand-accent/50 cursor-pointer" : "border-zinc-800 opacity-50 grayscale"
-               )}
-             >
-               <div className="absolute inset-0 bg-gradient-to-tr from-black via-transparent to-white/10" />
-               <Coins className={cn("w-10 h-10 transition-transform duration-300", turn === 'player' && "group-hover:scale-110 text-brand-accent")} />
-               <span className="text-[10px] font-black uppercase text-zinc-500">{t('game.uno.label.draw')}</span>
-               <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand-accent/20" />
-             </button>
-           </div>
-
-           {/* Discard Pile (Tribuna) */}
-           <div className="flex flex-col items-center gap-3 relative">
-             <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">{t('game.uno.label.pile')}</p>
-            <div className="relative">
-                <AnimatePresence mode="wait">
-                  {topCard && (
-                    <motion.div
-                      key={topCard.id}
-                      initial={{ scale: 0.8, rotate: direction === 1 ? -15 : 15, opacity: 0 }}
-                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      className="relative z-10"
-                    >
-                      <CardView card={topCard} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                {/* Visual shadow for "pile" depth */}
-                <div className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-full h-full bg-black/40 rounded-xl -z-10 blur-sm" />
-             </div>
-             <p className="text-zinc-400 font-black uppercase tracking-tighter text-[8px] md:text-[10px]">{t('game.uno.label.actual')}</p>
-           </div>
-
-           {/* Special Action Overlay */}
-           <AnimatePresence>
-             {isSwapping && (
-               <motion.div
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 exit={{ opacity: 0 }}
-                 className="absolute inset-0 z-[60] flex items-center justify-center bg-red-950/40 backdrop-blur-sm pointer-events-none"
-               >
-                 <motion.div 
-                   animate={{ rotate: 360 }}
-                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                 >
-                   <ArrowLeftRight className="w-16 h-16 md:w-32 md:h-32 text-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)]" />
-                 </motion.div>
-               </motion.div>
-             )}
-             {activePopup && (
-               <motion.div
-                 initial={{ opacity: 0, scale: 0.5, y: 50 }}
-                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                 exit={{ opacity: 0, scale: 1.5, filter: 'blur(10px)' }}
-                 transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                 className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none p-4"
-               >
-                 <div className="bg-[#0a0a0A]/90 backdrop-blur-md px-6 md:px-12 py-4 md:py-8 rounded-3xl md:rounded-full border border-brand-accent shadow-[0_0_100px_rgba(138,99,210,0.8)] flex flex-col items-center gap-2 md:gap-4 text-center">
-                   <div className="text-brand-accent">
-                     <CardIcon action={activePopup} />
-                   </div>
-                   <h1 className="text-2xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-brand-accent !not-italic">
-                     {activePopup.replace('_', ' ')}
-                   </h1>
-                 </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-
-           {/* Active Action Message Overlay */}
-           <div className="absolute top-[-20px] md:top-[-30px] left-1/2 -translate-x-1/2 pointer-events-none z-50 w-full flex justify-center">
-             <AnimatePresence mode="wait">
-               {message ? (
-                 <motion.div 
-                   key={message}
-                   initial={{ opacity: 0, scale: 1.2, y: 20 }}
-                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                   exit={{ opacity: 0, scale: 0.8 }}
-                   className={cn(
-                     "bg-black/90 backdrop-blur-xl px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 md:gap-3 min-w-[150px] md:min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
-                     turn === 'player' ? "text-brand-accent ring-1 ring-brand-accent/30" : "text-red-400 ring-1 ring-red-500/30"
-                   )}
-                 >
-                   {turn === 'player' ? <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" /> : <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />}
-                   <span className="text-[8px] md:text-xs uppercase font-black tracking-widest text-center">{message}</span>
-                 </motion.div>
-               ) : null}
-             </AnimatePresence>
-           </div>
-        </div>
-
-        {/* Player Area (Bottom) */}
-        <div className={cn(
-          "flex flex-col items-center gap-2 md:gap-4 bg-white/[0.03] backdrop-blur-xl p-3 md:p-10 rounded-[1.5rem] md:rounded-[3rem] border transition-all duration-700 w-full max-w-6xl mx-auto shadow-[0_30px_100px_rgba(0,0,0,0.8)] relative [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:backdrop-blur-none",
-          turn === 'player' && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_50px_rgba(138,99,210,0.15)] ring-1 ring-brand-accent/20" : "border-white/5"
-        )}>
-          {/* Active Hand Indicator Glow */}
-          {turn === 'player' && !isChoosingColor && (
-            <div className="absolute inset-0 bg-brand-accent/5 rounded-[1.5rem] md:rounded-[3rem] animate-pulse pointer-events-none" />
-          )}
-
-          <div className="flex items-center gap-4 md:gap-6 mb-1 w-full justify-between items-end px-2 md:px-4">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[7px] md:text-[10px] uppercase tracking-[0.5em] text-zinc-500 font-bold">{t('game.uno.label.bench')}</span>
-              <h3 className="text-lg md:text-2xl font-black text-white italic tracking-tighter uppercase">{t('game.uno.label.power')}</h3>
-            </div>
-            <div className="flex items-center gap-2 md:gap-3">
-              <span className="text-[8px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('game.uno.label.influences')}</span>
-              <span className="bg-brand-accent text-white px-3 md:px-4 py-0.5 md:py-1 rounded-full text-xs md:text-sm font-black shadow-lg shadow-brand-accent/20">
-                {playerHand.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex -space-x-10 md:-space-x-12 hover:-space-x-2 md:hover:-space-x-4 transition-all duration-500 pb-2 w-full overflow-x-auto overflow-y-visible px-4 md:px-10 min-h-[160px] md:min-h-[280px] scrollbar-hide snap-x">
-            <AnimatePresence>
-              {playerHand.map((card, i) => (
-                <div key={card.id} className="snap-center">
-                  <CardView 
-                    card={card} 
-                    onClick={() => playCard(i)} 
-                  />
+            <div className="space-y-4">
+              {cardGuide.map((item) => (
+                <div key={item.action} className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <item.icon className="w-3 h-3 text-brand-accent" />
+                    <span className="text-[10px] font-bold text-brand-accent uppercase">{item.action.replace('_', ' ')}</span>
+                  </div>
+                  <div className="pl-5 flex flex-col gap-0.5">
+                    <p className="text-[9px] text-white/90 leading-tight">{item.es}</p>
+                    <p className="text-[8px] text-zinc-400 italic leading-tight">{item.en}</p>
+                    <p className="text-[8px] text-zinc-500 leading-tight">{item.pt}</p>
+                  </div>
                 </div>
+              ))}
+            </div>
+            <button 
+              onClick={() => setIsGuideOpen(false)}
+              className="mt-6 w-full py-2 bg-zinc-900 rounded-lg text-[9px] font-black uppercase text-zinc-500 hover:text-white transition-colors border border-white/5"
+            >
+              Cerrar / Close
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* The Table Arena */}
+      <div className="flex flex-col gap-2 md:gap-4 items-center w-full relative z-10 flex-grow py-4 px-4 overflow-hidden">
+        
+        {/* TOP Player (CPU 2) */}
+        <div className="w-full flex justify-center mb-4">
+           {hands[2] && (
+             <div className={cn(
+               "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
+               turn === 2 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
+             )}>
+                <span className="text-[8px] uppercase font-bold text-zinc-400">{playerNames[2]}</span>
+                <div className="flex -space-x-4">
+                   {hands[2].slice(0, 5).map(c => <div key={c.id} className="w-6 h-9 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
+                   {hands[2].length > 5 && <div className="w-6 h-9 flex items-center justify-center text-[8px] font-black">+ {hands[2].length - 5}</div>}
+                </div>
+             </div>
+           )}
+        </div>
+
+        <div className="flex items-center justify-between w-full max-w-5xl gap-4">
+            {/* LEFT Player (CPU 1) */}
+            <div className="w-24">
+              {hands[1] && (
+                <div className={cn(
+                  "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
+                  turn === 1 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
+                )}>
+                    <span className="text-[8px] uppercase font-bold text-zinc-400 rotate-90 mb-4">{playerNames[1]}</span>
+                    <div className="flex flex-col -space-y-6">
+                      {hands[1].slice(0, 4).map(c => <div key={c.id} className="w-8 h-12 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
+                      {hands[1].length > 4 && <div className="text-[8px] font-black text-center">+ {hands[1].length - 4}</div>}
+                    </div>
+                </div>
+              )}
+            </div>
+
+            {/* Central Arena */}
+            <div className="relative flex flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full max-w-md py-4 min-h-[140px] md:min-h-[200px]">
+               {/* Direction Indicator */}
+               <motion.div 
+                 animate={{ rotate: direction === 1 ? 360 : -360 }}
+                 transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                 className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5"
+               >
+                 <ArrowLeftRight className="w-20 h-20 md:w-32 md:h-32" />
+               </motion.div>
+
+               {/* Deck */}
+               <button 
+                 onClick={drawCard}
+                 disabled={turn !== 0 || winner !== null || isChoosingColor}
+                 className={cn(
+                   "w-16 h-24 md:w-20 md:h-30 bg-zinc-900 border shadow-2xl rounded-lg flex flex-col items-center justify-center transition-all",
+                   turn === 0 ? "border-brand-accent/50 cursor-pointer hover:-translate-y-1" : "border-zinc-800 opacity-50"
+                 )}
+               >
+                 <Coins className={cn("w-6 h-6", turn === 0 && "text-brand-accent")} />
+                 <span className="text-[7px] font-black uppercase text-zinc-500 mt-2">{t('game.uno.label.draw')}</span>
+               </button>
+
+               {/* Discard Pile */}
+               <div className="relative">
+                  <AnimatePresence mode="wait">
+                    {topCard && (
+                      <motion.div
+                        key={topCard.id}
+                        initial={{ scale: 0.5, rotate: direction === 1 ? -15 : 15, opacity: 0 }}
+                        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                        className="relative z-10"
+                      >
+                        <CardView card={topCard} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+               </div>
+
+               {/* Special Action Overlay */}
+               <AnimatePresence>
+                 {isSwapping && (
+                   <motion.div
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     exit={{ opacity: 0 }}
+                     className="absolute inset-0 z-[60] flex items-center justify-center bg-red-950/40 backdrop-blur-sm pointer-events-none"
+                   >
+                     <motion.div 
+                       animate={{ rotate: 360 }}
+                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                     >
+                       <ArrowLeftRight className="w-16 h-16 md:w-32 md:h-32 text-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)]" />
+                     </motion.div>
+                   </motion.div>
+                 )}
+                 {activePopup && (
+                   <motion.div
+                     initial={{ opacity: 0, scale: 0.5, y: 50 }}
+                     animate={{ opacity: 1, scale: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 1.5, filter: 'blur(10px)' }}
+                     transition={{ type: "spring", damping: 12, stiffness: 200 }}
+                     className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none p-4"
+                   >
+                     <div className="bg-[#0a0a0A]/90 backdrop-blur-md px-6 md:px-12 py-4 md:py-8 rounded-3xl md:rounded-full border border-brand-accent shadow-[0_0_100px_rgba(138,99,210,0.8)] flex flex-col items-center gap-2 md:gap-4 text-center">
+                       <div className="text-brand-accent">
+                         <CardIcon action={activePopup} />
+                       </div>
+                       <h1 className="text-2xl md:text-5xl font-black uppercase tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-brand-accent !not-italic">
+                         {activePopup.replace('_', ' ')}
+                       </h1>
+                     </div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
+
+               {/* Active Action Message Overlay */}
+               <div className="absolute top-[-30px] left-1/2 -translate-x-1/2 pointer-events-none z-50 w-full flex justify-center">
+                    <AnimatePresence mode="wait">
+                      {message ? (
+                        <motion.div 
+                          key={message}
+                          initial={{ opacity: 0, scale: 1.2, y: 20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          className={cn(
+                            "bg-black/90 backdrop-blur-xl px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 md:gap-3 min-w-[150px] md:min-w-[200px] justify-center transition-colors shadow-[0_0_30px_rgba(0,0,0,0.8)]",
+                            turn === 0 ? "text-brand-accent ring-1 ring-brand-accent/30" : "text-red-400 ring-1 ring-red-500/30"
+                          )}
+                        >
+                          {turn === 0 ? <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4" /> : <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />}
+                          <span className="text-[8px] md:text-xs uppercase font-black tracking-widest text-center">{message}</span>
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
+               </div>
+            </div>
+
+            {/* RIGHT Player (CPU 3) */}
+            <div className="w-24">
+              {hands[3] && (
+                <div className={cn(
+                  "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
+                  turn === 3 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
+                )}>
+                    <span className="text-[8px] uppercase font-bold text-zinc-400 -rotate-90 mb-4">{playerNames[3]}</span>
+                    <div className="flex flex-col -space-y-6">
+                      {hands[3].slice(0, 4).map(c => <div key={c.id} className="w-8 h-12 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
+                      {hands[3].length > 4 && <div className="text-[8px] font-black text-center">+ {hands[3].length - 4}</div>}
+                    </div>
+                </div>
+              )}
+            </div>
+        </div>
+
+        {/* Player Hand (Bottom) */}
+        <div className={cn(
+          "flex flex-col items-center gap-2 bg-white/[0.03] p-4 rounded-3xl border transition-all w-full max-w-5xl mx-auto mt-4",
+          turn === 0 && !isChoosingColor ? "border-brand-accent/30 shadow-[0_0_30px_rgba(138,99,210,0.1)]" : "border-white/5"
+        )}>
+          <div className="flex items-center justify-between w-full px-2">
+             <span className="text-[10px] font-black uppercase text-brand-accent">{playerNames[0]}</span>
+             <span className="bg-zinc-800 text-white px-3 py-1 rounded-full text-[10px] font-black">{hands[0]?.length || 0} CARDS</span>
+          </div>
+          <div className="flex -space-x-8 md:-space-x-10 hover:-space-x-4 transition-all duration-300 w-full overflow-x-auto scrollbar-hide py-4 px-4 min-h-[140px]">
+            <AnimatePresence>
+              {hands[0]?.map((card, i) => (
+                <CardView 
+                  key={card.id}
+                  card={card} 
+                  onClick={() => playCard(i)} 
+                  isSelected={turn === 0 && focusedCardIndex === i}
+                />
               ))}
             </AnimatePresence>
           </div>
         </div>
-
       </div>
 
       {/* Wild Card Color Choice Overlay */}
@@ -679,7 +857,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
               {/* Retro background flair */}
               <div className="absolute inset-0 bg-brand-accent/5 blur-[80px] md:blur-[120px] rounded-full animate-pulse" />
               
-              {winner === 'player' ? (
+              {winner === 0 ? (
                 <>
                   <div className="relative">
                     <CheckCircle2 className="w-24 h-24 md:w-40 md:h-40 text-brand-accent animate-[bounce_2s_infinite]" />
@@ -701,6 +879,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                     <AlertTriangle className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 md:w-16 md:h-16 text-red-500" />
                   </div>
                   <div className="space-y-2 md:space-y-4 relative">
+                    <h1 className="text-[12px] font-black text-brand-accent mb-2">{playerNames[winner]} WON!</h1>
                     <h3 className="text-3xl md:text-8xl font-black italic text-zinc-800 uppercase tracking-tighter leading-none">
                       {t('game.uno.label.lose_title')}
                     </h3>
