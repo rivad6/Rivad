@@ -116,7 +116,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
     const GOAL_DISTANCE = 5000;
     let currentGas = 100;
     const MAX_GAS = 100;
-    const GAS_DEPLETION_RATE = (currentCar.speed / 200) + (currentCar.maxHp * 0.5); // Gas drained per second based on stats
+    const GAS_DEPLETION_RATE = ((currentCar.speed / 200) + (currentCar.maxHp * 0.5)) / 2; // Gas drained per second based on stats
     let speedMultiplier = 1;
     let baseRoadSpeed = currentCar.speed; // pixels per second
     let roadOffset = 0;
@@ -155,7 +155,6 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       targetX: GAME_W / 2 - (selectedCarId === 'moto' ? 10 : 18), 
       laneIndex: 2, // Start middle-ish
       tilt: 0,
-      speed: 400,
       vx: 0
     };
     
@@ -252,7 +251,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       
       // Progression-based probabilities
       // Items become rarer, enemies and hazards become more frequent over time
-      const itemChance = 0.10 + (1 - progress) * 0.20; // 30% to 10%
+      const itemChance = 0.20 + (1 - progress) * 0.30; // 50% to 20%
       const enemyChance = 0.1 + progress * 0.4; // 10% to 50%
       
       if (typeRand < itemChance) {
@@ -850,7 +849,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
               obs.markedForDeletion = true;
            } else if (obs.type === 'gas') {
               playSound('powerup');
-              currentGas = Math.min(MAX_GAS, currentGas + 25);
+              currentGas = Math.min(MAX_GAS, currentGas + 45);
               currentScore += 100;
               spawnParticles(obs.x + obs.width/2, obs.y + obs.height/2, 10, ['#ef4444', '#f87171', '#ffffff']);
               obs.markedForDeletion = true;
@@ -1102,7 +1101,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       ctx.fillStyle = 'white';
       ctx.font = 'bold 8px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`${Math.floor(currentDistance)} / ${GOAL_DISTANCE}m`, GAME_W/2, 21);
+      ctx.fillText(`${Math.floor(currentDistance)} / ${GOAL_DISTANCE}km`, GAME_W/2, 21);
 
       // Fuel Progress Bar
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
