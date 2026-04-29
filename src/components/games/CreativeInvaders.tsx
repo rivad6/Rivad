@@ -1563,7 +1563,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         t === "haste" ? '#fb923c' :
         '#d946ef';
 
-      const palette = ['#1e293b', primaryColor, t === "secret" ? '#f472b6' : '#ffffff'];
+      const palette = ['#1e293b', primaryColor, t === "secret" ? '#f472b6' : '#ffffff', '#000000'];
       ctx.shadowColor = glowColor;
       drawSprite(ctx, sprites.drop, drop.x - 10, drop.y - 10, 20, 20, palette);
       if (t === "secret") {
@@ -1875,8 +1875,9 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         {/* Glow vignette */}
         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.9)]"></div>
 
+        <AnimatePresence>
         {gameState === "start" && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 pointer-events-auto overflow-y-auto">
+          <motion.div initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 pointer-events-auto overflow-y-auto">
             <div className="min-h-full w-full flex flex-col items-center justify-center p-4 sm:p-8">
               <div className="w-full max-w-2xl flex flex-col md:flex-row items-center gap-6 md:gap-8">
               <div className="flex-1 text-left flex flex-col items-center md:items-start text-center md:text-left">
@@ -2093,12 +2094,12 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                  )}
               </div>
             </div>
-          </div>
-          </div>
+            </div>
+          </motion.div>
         )}
 
         {gameState === "gameover" && (
-          <div className="absolute inset-0 bg-red-950/90 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-red-500/30 pointer-events-auto z-50">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-red-950/90 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-red-500/30 pointer-events-auto z-50">
             <h3 className="text-5xl font-display text-red-500 mb-2 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
               {t("game.invaders.gameover")}
             </h3>
@@ -2116,22 +2117,22 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
             >
               <RefreshCw size={18} /> {t("game.invaders.tryagain")}
             </button>
-          </div>
+          </motion.div>
         )}
 
         {gameState === "takeoff" && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-50">
                 <h3 className="text-4xl font-display text-brand-accent animate-pulse uppercase tracking-[0.2em] drop-shadow-[0_0_15px_rgba(242,74,41,0.6)]">
                     {t('game.invaders.entering_deep_space')}
                 </h3>
                 <p className="text-white/50 font-mono mt-4 uppercase tracking-[0.4em] text-[10px] animate-bounce">
                     {t('game.invaders.stabilizing')}
                 </p>
-            </div>
+            </motion.div>
         )}
 
         {gameState === "win" && (
-          <div className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30 pointer-events-auto z-50">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-brand-accent/20 backdrop-blur-md flex flex-col items-center justify-center ring-1 ring-brand-accent/30 pointer-events-auto z-50">
             <h3 className="text-5xl font-display text-white mb-2 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(242,74,41,0.5)]">
               {t("game.invaders.win")}
             </h3>
@@ -2151,8 +2152,9 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
             >
               <RefreshCw size={18} /> {t("game.invaders.next")}
             </button>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {showMobileControls && (gameState === "playing" || gameState === "asteroids" || gameState === "takeoff") && (
           <div className="absolute inset-0 z-20 pointer-events-none">

@@ -3,6 +3,7 @@ import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { Eye, Landmark, HelpCircle } from 'lucide-react';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
@@ -247,11 +248,11 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
             )}
           >
             {square === 'X' ? (
-              <motion.span initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}>👁</motion.span>
+              <motion.span initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}><Eye className="w-8 h-8 sm:w-10 sm:h-10 text-brand-accent mt-1 drop-shadow-[0_0_10px_rgba(242,74,41,0.5)]" /></motion.span>
             ) : square === 'O' ? (
-              <motion.span initial={{ scale: 0, rotate: 20 }} animate={{ scale: 1, rotate: 0 }}>🏛</motion.span>
+              <motion.span initial={{ scale: 0, rotate: 20 }} animate={{ scale: 1, rotate: 0 }}><Landmark className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 mt-1 drop-shadow-[0_0_10px_rgba(96,165,250,0.5)]" /></motion.span>
             ) : (
-              <span className="opacity-0 group-hover:opacity-10 transition-opacity text-white/50">?</span>
+              <span className="opacity-0 group-hover:opacity-10 transition-opacity text-white/50"><HelpCircle className="w-6 h-6" /></span>
             )}
             
             {/* Cell visual flair */}

@@ -395,8 +395,9 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
             </motion.div>
           )}
         </AnimatePresence>
-        {!isPlaying ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80">
+        <AnimatePresence>
+        {!isPlaying && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ type: 'spring', bounce: 0.1 }} className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80 backdrop-blur-sm">
             <h3 className="text-white text-lg mb-2 text-center leading-loose relative inline-block">
               {playerScore >= 5 ? t('game.pong.win') : cpuScore >= 5 ? t('game.pong.lose') : t('game.pong.title')}
               <span className="absolute -top-3 -right-6 rotate-12 text-[8px] bg-brand-accent text-white font-bold px-1 py-0.5 shadow-[0_0_5px_rgba(138,99,210,0.8)] border border-white">BY RIVAD</span>
@@ -417,13 +418,14 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
                 setCpuScore(0);
                 setIsPlaying(true);
               }}
-              className="bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto"
+              className="bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto shadow-[0_0_20px_rgba(138,99,210,0.4)]"
             >
               {playerScore >= 5 || cpuScore >= 5 ? t('game.retry') : t('game.insert')}
             </button>
             <p className="text-[8px] text-gray-500 mt-6 mt-4">{t('game.pong.controls')}</p>
-          </div>
-        ) : null}
+          </motion.div>
+        )}
+        </AnimatePresence>
         <canvas 
           ref={canvasRef} 
           width={400} 

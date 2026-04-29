@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, Car, Heart, TerminalSquare, Zap, Banknote, Coffee, FileText } from 'lucide-react';
+import { AlertCircle, Car, Heart, TerminalSquare, Zap, Banknote, Coffee, FileText, Shield } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
 
 type ObstacleType = 'microbus' | 'taco' | 'msg' | 'bache' | 'enemy' | 'shield' | 'nitro' | 'oil' | 'cone' | 'tree' | 'building' | 'gas';
@@ -1290,8 +1290,9 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
           </>
         )}
 
-        {!isPlaying && !gameOver && !showStory ? (
-          <div className="absolute inset-0 flex flex-col bg-[#111]/90 backdrop-blur-md p-4 z-20 overflow-y-auto">
+        <AnimatePresence>
+        {!isPlaying && !gameOver && !showStory && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col bg-[#111]/90 backdrop-blur-md p-4 z-20 overflow-y-auto">
             <div className="flex flex-col items-center mb-4">
               <Car size={32} className="text-orange-500 mb-1" />
               <h3 className="text-xl font-bold text-brand-accent leading-none uppercase tracking-widest relative inline-block">
@@ -1343,8 +1344,8 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#10b981] rounded-sm mb-1" />BUS</div>
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#450a0a] rounded-sm mb-1" />POLI</div>
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#ef4444] rounded-sm mb-1" />{t('game.race.gas', 'GAS')}</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#818cf8] rounded-full mb-1" />🛡️</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#3b82f6] rounded-full mb-1" />🔥</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#818cf8] rounded-full mb-1 flex items-center justify-center"><Shield size={10} className="text-white"/></div>SHLD</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#3b82f6] rounded-full mb-1 flex items-center justify-center"><Zap size={10} className="text-white"/></div>NITR</div>
             </div>
 
             <button 
@@ -1361,20 +1362,23 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             >
               {t('game.insert', 'INSERT COIN')}
             </button>
-          </div>
-        ) : (
-          <canvas 
-            ref={canvasRef} 
-            width={400} 
-            height={600} 
-            className="w-full h-full object-contain cursor-none"
-          />
+          </motion.div>
         )}
+        </AnimatePresence>
 
+        <canvas 
+          ref={canvasRef} 
+          width={400} 
+          height={600} 
+          className="w-full h-full object-contain cursor-none"
+        />
+
+        <AnimatePresence>
         {gameOver && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
             className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm backdrop-blur-md"
           >
              {outOfGas ? (
@@ -1420,6 +1424,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             </div>
           </motion.div>
         )}
+        </AnimatePresence>
       </div>
     </div>
   );

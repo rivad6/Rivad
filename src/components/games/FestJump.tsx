@@ -257,14 +257,24 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.fillRect(charX + 4, charY + 4, pWidth, pHeight);
 
+      // Add a slight gradient to the player
+      const gradient = ctx.createLinearGradient(charX, charY, charX, charY + pHeight);
+      gradient.addColorStop(0, selectedChar.color);
+      gradient.addColorStop(1, '#0f172a');
+
       ctx.fillStyle = '#000'; // outline
       ctx.fillRect(charX - 1, charY - 1, pWidth + 2, pHeight + 2);
-      ctx.fillStyle = selectedChar.color;
+      ctx.fillStyle = gradient;
       ctx.fillRect(charX, charY, pWidth, pHeight);
       ctx.fillStyle = 'rgba(255,255,255,0.4)';
       ctx.fillRect(charX, charY, pWidth, 2);
+      ctx.fillRect(charX, charY, 2, pHeight); // highlight edge
       ctx.fillStyle = 'rgba(0,0,0,0.4)';
       ctx.fillRect(charX, charY + pHeight - 4, pWidth, 4);
+
+      // Details
+      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillRect(charX + 2, charY + 2, 4, 4);
       
       // Visor
       ctx.fillStyle = selectedChar.accent;
@@ -358,7 +368,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           p.y += vDiff;
           if (p.y > canvas.height) {
             let minY = Math.min(...platforms.map(p2 => p2.y));
-            p.y = minY - (Math.random() * 40 + 75);
+            p.y = Math.max(-500, minY) - (Math.random() * 60 + 60); // Adjust spacing
             
             const rand = Math.random();
             const progress = Math.min(1, maxScore / 30000);
@@ -368,8 +378,11 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                      rand < 0.2 + progress * 0.3 ? 'moving' : 
                      rand < 0.3 + progress * 0.4 ? 'breaking' : 'normal';
             
-            p.vx = p.type === 'moving' ? (Math.random() * 2 + 1 + progress * 2) * (Math.random() > 0.5 ? 1 : -1) : 0;
             p.width = p.type === 'billboard' ? PLATFORM_WIDTH * 2.5 : PLATFORM_WIDTH;
+            // Prevent platforms going off-screen horizontally
+            p.x = Math.random() * (canvas.width - p.width - 20) + 10;
+            
+            p.vx = p.type === 'moving' ? (Math.random() * 2 + 1 + progress * 2) * (Math.random() > 0.5 ? 1 : -1) : 0;
             p.broken = false;
             p.crackValue = 0;
             p.isStepped = false;
@@ -622,10 +635,20 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             ctx.fillRect(p.x - 1, p.y - 1, p.width + 2, PLATFORM_HEIGHT + 2);
             ctx.fillStyle = '#1e1b4b'; // dark retro base
             ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
-            ctx.fillStyle = pColor;
+            
+            const gradient = ctx.createLinearGradient(p.x, p.y, p.x, p.y + PLATFORM_HEIGHT);
+            gradient.addColorStop(0, pColor);
+            gradient.addColorStop(1, '#0f172a');
+            ctx.fillStyle = gradient;
             ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT - 4);
+            
             ctx.fillStyle = 'rgba(255,255,255,0.4)';
             ctx.fillRect(p.x, p.y, p.width, 2);
+            
+            // Tech details
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(p.x + 4, p.y + 4, 8, 4);
+            ctx.fillRect(p.x + p.width - 12, p.y + 4, 8, 4);
 
             if (p.type === 'breaking') {
                 ctx.beginPath();
@@ -633,38 +656,125 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                 ctx.lineWidth = 1;
                 ctx.moveTo(p.x + 10, p.y);
                 ctx.lineTo(p.x + 15, p.y + PLATFORM_HEIGHT);
+                ctx.moveTo(p.x + 18, p.y);
+                ctx.lineTo(p.x + 22, p.y + PLATFORM_HEIGHT);
                 ctx.stroke();
             }
         }
       });
 
       powerups.forEach(pw => {
+        const timeOffset = Date.now() * 0.005;
+        const bob = Math.sin(timeOffset + pw.x) * 3;
+        
+        ctx.save();
+        ctx.translate(pw.x + 10, pw.y + 10 + bob);
+        
         if (pw.type === 'glowstick') {
+            ctx.shadowColor = '#10b981';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#a7f3d0';
+            ctx.beginPath();
+            ctx.roundRect(2, -5, 4, 16, 2);
+            ctx.fill();
             ctx.fillStyle = '#10b981';
+            ctx.fillRect(2, 0, 4, 10);
+            ctx.shadowBlur = 0;
+        } else if (pw.type === 'vip') {
+            ctx.shadowColor = '#f59e0b';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#1e1b4b'; // dark retro base
             ctx.beginPath();
-            ctx.roundRect(pw.x + 12, pw.y + 5, 4, 16, 2);
+            ctx.arc(0, 0, 12, 0, Math.PI*2);
             ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#f59e0b';
+            ctx.stroke();
+            // Golden star inside
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            for(let i=0; i<5; i++) {
+                ctx.lineTo(Math.cos((18+i*72)/180*Math.PI)*6, -Math.sin((18+i*72)/180*Math.PI)*6);
+                ctx.lineTo(Math.cos((54+i*72)/180*Math.PI)*3, -Math.sin((54+i*72)/180*Math.PI)*3);
+            }
+            ctx.fill();
+            ctx.shadowBlur = 0;
         } else {
-            ctx.fillStyle = pw.type === 'vip' ? '#f59e0b' : '#3b82f6';
+            ctx.shadowColor = '#a855f7';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#1e1b4b'; // dark retro base
             ctx.beginPath();
-            ctx.arc(pw.x + 10, pw.y + 10, 10, 0, Math.PI*2);
+            ctx.arc(0, 0, 12, 0, Math.PI*2);
             ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.font = '12px Arial';
-            ctx.fillText(pw.type === 'vip' ? '🎟️' : (pw.type === 'magnet' ? '🧲' : '⚡'), pw.x + 2, pw.y + 14);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#a855f7';
+            ctx.stroke();
+            // Magnet U shape
+            ctx.strokeStyle = '#d8b4fe';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(0, 2, 5, Math.PI, 0);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-5, 2); ctx.lineTo(-5, -3);
+            ctx.moveTo(5, 2); ctx.lineTo(5, -3);
+            ctx.stroke();
+            ctx.strokeStyle = '#ef4444'; // Red tips
+            ctx.beginPath();
+            ctx.moveTo(-5, -3); ctx.lineTo(-5, -4);
+            ctx.moveTo(5, -3); ctx.lineTo(5, -4);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         }
+        ctx.restore();
       });
 
       enemies.forEach(e => {
-          ctx.fillStyle = '#171717';
+          ctx.save();
+          ctx.translate(e.x + e.width / 2, e.y + e.width / 2);
+          ctx.rotate(Math.sin(Date.now() * 0.005 + e.x) * 0.1);
+          
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 10;
+          ctx.fillStyle = '#450a0a'; // dark red
           ctx.beginPath();
-          ctx.roundRect(e.x, e.y, e.width, e.width, 4);
+          ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 4);
           ctx.fill();
+          
           ctx.fillStyle = '#ef4444';
-          ctx.fillRect(e.x, e.y, e.width, 4);
-          ctx.fillStyle = 'white';
-          ctx.font = '18px Arial';
-          ctx.fillText('👾', e.x + 6, e.y + 22);
+          ctx.fillRect(-e.width/2, -e.width/2 + 2, e.width, 4);
+          
+          ctx.shadowBlur = 0;
+          if (e.isBouncer) {
+              // Skull vector
+              ctx.fillStyle = 'white';
+              ctx.beginPath();
+              ctx.arc(0, -2, 6, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillRect(-4, 2, 8, 4);
+              ctx.fillStyle = '#450a0a';
+              ctx.fillRect(-3, -2, 2, 3);
+              ctx.fillRect(1, -2, 2, 3);
+              ctx.fillRect(-1, 2, 2, 2);
+              ctx.fillStyle = 'white';
+              ctx.fillRect(-2, 6, 1, 2);
+              ctx.fillRect(1, 6, 1, 2);
+          } else {
+              // Space invader vector
+              ctx.fillStyle = 'white';
+              ctx.fillRect(-6, -4, 12, 6);
+              ctx.fillRect(-8, -2, 2, 6);
+              ctx.fillRect(6, -2, 2, 6);
+              ctx.fillStyle = '#450a0a';
+              ctx.fillRect(-3, -2, 2, 2);
+              ctx.fillRect(1, -2, 2, 2);
+              ctx.fillStyle = 'white';
+              ctx.fillRect(-4, 4, 2, 2);
+              ctx.fillRect(2, 4, 2, 2);
+          }
+          
+          ctx.restore();
       });
 
       particles.forEach(p => {
@@ -788,10 +898,19 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           )}
 
           {!isPlaying && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#0f172a] p-4 text-center overflow-y-auto">
+            <motion.div 
+               initial={{ opacity: 0, scale: 1.1 }} 
+               animate={{ opacity: 1, scale: 1 }} 
+               exit={{ opacity: 0, scale: 0.9 }} 
+               transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
+               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#0f172a]/95 backdrop-blur-md p-4 text-center overflow-y-auto"
+            >
               {!showCodeInput ? (
                 <div className="w-full flex flex-col items-center flex-1 py-4 justify-start h-full">
-                  <h3 className="text-brand-accent text-3xl mb-4 italic font-black uppercase drop-shadow-[4px_4px_0_#b91c1c]">JUMPER OS</h3>
+                  <h3 className="text-brand-accent text-3xl mb-4 italic font-black uppercase drop-shadow-[4px_4px_0_#b91c1c] relative inline-block">
+                     JUMPER OS
+                     <span className="absolute -top-3 -right-6 rotate-12 text-[8px] bg-red-600 text-white font-bold px-1 py-0.5 border border-red-500 shadow-md">BY RIVAD</span>
+                  </h3>
                   
                   <div className="flex w-full px-2 gap-2 mb-4 shrink-0">
                     <button onClick={() => setShopTab('chars')} className={`flex-1 py-2 text-[10px] font-black uppercase border-b-4 transition-all ${shopTab === 'chars' ? 'border-brand-accent text-white' : 'border-zinc-700 text-zinc-500'}`}>Char</button>

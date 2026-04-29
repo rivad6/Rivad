@@ -500,15 +500,16 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   }, [turn, hands, winner, topCard, isPausedGlobal, isGameStarted]);
 
   const CardIcon = ({ action }: { action: SpecialAction }) => {
+    const iconClass = isFullscreen ? "w-6 h-6 md:w-8 md:h-8" : "w-4 h-4";
     switch (action) {
-      case 'moche': return <Coins className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'fuero': return <Shield className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'alianza': return <Handshake className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'dedazo': return <Fingerprint className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'fake_news': return <Megaphone className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'consulta': return <AlertTriangle className="w-6 h-6 md:w-8 md:h-8" />;
-      case 'guerra_sucia': return <ArrowLeftRight className="w-6 h-6 md:w-8 md:h-8 text-red-500" />;
-      case 'voto_por_voto': return <Star className="w-6 h-6 md:w-8 md:h-8 text-yellow-500 animate-[spin_3s_linear_infinite]" />;
+      case 'moche': return <Coins className={iconClass} />;
+      case 'fuero': return <Shield className={iconClass} />;
+      case 'alianza': return <Handshake className={iconClass} />;
+      case 'dedazo': return <Fingerprint className={iconClass} />;
+      case 'fake_news': return <Megaphone className={iconClass} />;
+      case 'consulta': return <AlertTriangle className={iconClass} />;
+      case 'guerra_sucia': return <ArrowLeftRight className={cn(iconClass, "text-red-500")} />;
+      case 'voto_por_voto': return <Star className={cn(iconClass, "text-yellow-500 animate-[spin_3s_linear_infinite]")} />;
       default: return null;
     }
   };
@@ -522,7 +523,8 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
       whileHover={!hidden ? { scale: 1.05, y: -10, zIndex: 50 } : {}}
       onClick={onClick}
       className={cn(
-        "w-16 h-24 md:w-24 md:h-36 rounded-xl border-t-2 border-l-2 flex flex-col items-center justify-between p-2 md:p-3 text-white font-bold cursor-pointer transition-all relative overflow-hidden shrink-0 shadow-xl",
+        "rounded-xl border-t-2 border-l-2 flex flex-col items-center justify-between p-2 text-white font-bold cursor-pointer transition-all relative overflow-hidden shrink-0 shadow-xl",
+        isFullscreen ? "w-16 h-24 md:w-24 md:h-36 md:p-3" : "w-12 h-16 sm:w-14 sm:h-20 text-[8px]",
         hidden ? "bg-zinc-900 border-zinc-700" : `bg-gradient-to-br ${colorStyles[card.color]}`,
         isSelected && "ring-2 ring-white ring-offset-2 ring-offset-black scale-110"
       )}
@@ -532,25 +534,25 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
       {!hidden ? (
         <>
           <div className="w-full flex justify-between items-start">
-            <span className="text-[10px] md:text-sm">{card.value}</span>
+            <span className={cn("text-[10px]", isFullscreen && "md:text-sm")}>{card.value}</span>
             {card.action !== 'normal' && <span className="opacity-50"><AlertTriangle className="w-3 h-3" /></span>}
           </div>
           
           <div className="flex flex-col items-center gap-1 opacity-90">
              {card.action === 'normal' ? (
-                <span className="text-2xl md:text-5xl font-display font-medium">{card.value}</span>
+                <span className={cn("font-display font-medium", isFullscreen ? "text-2xl md:text-5xl" : "text-xl")}>{card.value}</span>
              ) : (
                 <CardIcon action={card.action} />
              )}
              {card.partyNameKey && (
-               <span className="text-[6px] md:text-[8px] uppercase tracking-tighter opacity-70 text-center">
+               <span className={cn("uppercase tracking-tighter opacity-70 text-center", isFullscreen ? "text-[6px] md:text-[8px]" : "text-[5px]")}>
                  {t(card.partyNameKey)}
                </span>
              )}
           </div>
 
           <div className="w-full flex justify-end items-end rotate-180">
-            <span className="text-[10px] md:text-sm">{card.value}</span>
+            <span className={cn("text-[10px]", isFullscreen && "md:text-sm")}>{card.value}</span>
           </div>
         </>
       ) : (
@@ -563,19 +565,20 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
   return (
     <div ref={containerRef} className={cn(
-      "flex flex-col items-center h-full w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-8 relative overflow-hidden bg-[#0a0a0A]",
-      isFullscreen && "bg-black pb-4"
+      "flex flex-col items-center h-full min-h-[450px] md:min-h-[600px] w-full max-w-7xl mx-auto font-[var(--font-mono)] text-[10px] md:text-xs text-white pt-2 pb-8 relative overflow-y-auto custom-scrollbar bg-[#0a0a0A]",
+      isFullscreen && "bg-black pb-4 text-xs md:text-sm overflow-hidden"
     )}>
-      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
+      {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50" />}
 
       {/* Start Screen */}
       <AnimatePresence>
         {!isGameStarted && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[80] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm backdrop-blur-3xl p-6"
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
+            className="absolute inset-0 z-[80] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm backdrop-blur-3xl p-6"
           >
             <div className="mb-8 text-center relative group">
               <Megaphone className="w-16 h-16 text-brand-accent mx-auto mb-4 group-hover:scale-110 transition-transform" />
@@ -688,10 +691,10 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
       {/* The Table Arena */}
       {isGameStarted && (
-        <div className="flex flex-col items-center w-full relative z-10 flex-grow py-2 px-4 overflow-hidden justify-center min-h-0">
+        <div className="flex flex-col items-center w-full relative z-10 flex-grow py-2 px-4 justify-between md:justify-center min-h-[450px]">
           
           {/* TOP Player */}
-          <div className="w-full flex justify-center mb-4">
+          <div className="w-full flex justify-center mt-6 md:mb-4">
              {playerCount >= 2 && hands[playerCount === 2 ? 1 : 2] && (
                <div className={cn(
                  "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
@@ -706,17 +709,17 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
              )}
           </div>
 
-        <div className="flex items-center justify-between w-full max-w-5xl gap-4">
+          <div className="flex items-center justify-between w-full max-w-5xl gap-2 md:gap-4">
             {/* LEFT Player */}
-            <div className="w-24">
+            <div className="w-12 sm:w-16 md:w-24">
               {playerCount >= 3 && hands[1] && (
                 <div className={cn(
                   "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
                   turn === 1 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
                 )}>
                     <span className="text-[8px] uppercase font-bold text-zinc-400 rotate-90 mb-4">{playerNames[1]}</span>
-                    <div className="flex flex-col -space-y-6">
-                      {hands[1].slice(0, 4).map(c => <div key={c.id} className="w-8 h-12 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
+                    <div className="flex flex-col -space-y-4 md:-space-y-6">
+                      {hands[1].slice(0, 4).map(c => <div key={c.id} className="w-6 h-8 md:w-8 md:h-12 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
                       {hands[1].length > 4 && <div className="text-[8px] font-black text-center">+ {hands[1].length - 4}</div>}
                     </div>
                 </div>
@@ -724,7 +727,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             </div>
 
             {/* Central Arena */}
-            <div className="relative flex flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full max-w-md py-4 min-h-[140px] md:min-h-[200px]">
+            <div className={cn("relative flex flex-row items-center justify-center gap-1 sm:gap-2 md:gap-8 w-full max-w-full", isFullscreen ? "min-h-[140px] md:min-h-[200px]" : "min-h-[100px] sm:min-h-[120px]")}>
                {/* Direction Indicator */}
                <motion.div 
                  animate={{ rotate: direction === 1 ? 360 : -360 }}
@@ -739,7 +742,8 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                  onClick={drawCard}
                  disabled={turn !== 0 || winner !== null || isChoosingColor}
                  className={cn(
-                   "w-16 h-24 md:w-20 md:h-30 bg-zinc-900 border shadow-2xl rounded-lg flex flex-col items-center justify-center transition-all",
+                   "bg-zinc-900 border shadow-2xl rounded-lg flex flex-col items-center justify-center transition-all",
+                   isFullscreen ? "w-16 h-24 md:w-20 md:h-32" : "w-12 h-16 sm:w-14 sm:h-20",
                    turn === 0 ? "border-brand-accent/50 cursor-pointer hover:-translate-y-1" : "border-zinc-800 opacity-50"
                  )}
                >
@@ -823,15 +827,15 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             </div>
 
             {/* RIGHT Player */}
-            <div className="w-24">
+            <div className="w-12 sm:w-16 md:w-24">
               {playerCount >= 4 && hands[3] && (
                 <div className={cn(
                   "flex flex-col items-center gap-1 p-2 rounded-xl border transition-all",
                   turn === 3 ? "border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)] bg-red-500/10" : "border-white/5 opacity-60"
                 )}>
                     <span className="text-[8px] uppercase font-bold text-zinc-400 -rotate-90 mb-4">{playerNames[3]}</span>
-                    <div className="flex flex-col -space-y-6">
-                      {hands[3].slice(0, 4).map(c => <div key={c.id} className="w-8 h-12 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
+                    <div className="flex flex-col -space-y-4 md:-space-y-6">
+                      {hands[3].slice(0, 4).map(c => <div key={c.id} className="w-6 h-8 md:w-8 md:h-12 bg-zinc-900 border border-white/10 rounded shadow-md" />)}
                       {hands[3].length > 4 && <div className="text-[8px] font-black text-center">+ {hands[3].length - 4}</div>}
                     </div>
                 </div>
@@ -853,7 +857,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                {hands[0]?.length || 0} {t('game.uno.label.cards')}
              </span>
           </div>
-          <div className="flex -space-x-8 md:-space-x-12 hover:-space-x-4 transition-all duration-300 w-full overflow-x-auto scrollbar-hide py-2 px-2 min-h-[100px] md:min-h-[140px] items-center justify-center">
+          <div className="flex -space-x-8 sm:-space-x-10 md:-space-x-12 hover:-space-x-2 sm:hover:-space-x-4 transition-all duration-300 w-full overflow-x-auto scrollbar-hide py-2 px-2 min-h-[90px] md:min-h-[140px] items-center justify-center">
             <AnimatePresence>
               {hands[0]?.map((card, i) => (
                 <CardView 

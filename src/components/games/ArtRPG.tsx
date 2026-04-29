@@ -311,7 +311,10 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
     return (
       <div ref={containerRef} className={cn("w-full h-full flex items-center justify-center p-4 transition-all duration-1000 overflow-y-auto custom-scrollbar", mood.bg)}>
         {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
-        <div className={cn("w-full max-w-2xl flex flex-col justify-center items-center text-center p-6 sm:p-12 rounded-3xl border-2 transition-all duration-1000 relative shadow-2xl overflow-hidden [&.is-fullscreen]:shadow-none [&.is-fullscreen]:border-none shadow-brand-accent/20", mood.border, mood.bg)}>
+        <motion.div 
+          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+          className={cn("w-full max-w-2xl flex flex-col justify-center items-center text-center p-6 sm:p-12 rounded-3xl border-2 transition-all duration-1000 relative shadow-2xl overflow-hidden [&.is-fullscreen]:shadow-none [&.is-fullscreen]:border-none shadow-brand-accent/20", mood.border, mood.bg)}
+        >
           <div className="absolute inset-0 bg-[linear-gradient(rgba(138,99,210,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,210,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
           
           <div className="relative z-10 w-full mb-8 flex justify-between items-end border-b pb-2 transition-colors duration-1000 border-white/10">
@@ -338,7 +341,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
           >
             {t('game.rpg.start')}
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }
