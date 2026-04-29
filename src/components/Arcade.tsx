@@ -163,9 +163,12 @@ export function Arcade() {
   }, []);
 
   return (
-    <div className="w-full bg-[#110f1c] border-y border-[#3a2d59] py-20 pb-40 relative">
+    <div className="w-full bg-[#06060c] border-y border-[#3a2d59]/50 py-24 pb-48 relative overflow-hidden">
       <div className="w-full max-w-5xl mx-auto px-6 md:px-0">
-        <div className="mb-12 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-12 md:mt-4">
+        {/* Background glow around the arcade */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-accent/20 rounded-full blur-[150px] opacity-30 pointer-events-none" />
+        
+        <div className="mb-12 flex flex-col md:flex-row items-start md:items-end justify-between gap-8 mt-12 md:mt-4 relative z-10">
           <div>
             <h2 className="text-sm font-mono tracking-[0.2em] text-brand-accent uppercase mb-4 border-b border-brand-accent/30 pb-2 inline-block">
               {t('arc.restricted')}
@@ -231,7 +234,7 @@ export function Arcade() {
                     whileHover={{ y: -5, scale: 1.02 }}
                     whileTap={{ y: 0, scale: 0.98 }}
                     disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                    className={`flex-shrink-0 relative w-24 h-24 md:w-32 md:h-32 rounded-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-start p-1.5 md:p-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-brand-accent -translate-y-4 shadow-[0_10px_20px_rgba(var(--color-brand-accent-rgb),0.3)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`flex-shrink-0 relative w-24 h-24 md:w-32 md:h-32 rounded-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-start p-1.5 md:p-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-brand-accent -translate-y-4 shadow-[0_10px_30px_rgba(242,74,41,0.5)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {/* Metal Slider */}
                     <div className="absolute top-0 right-4 w-8 h-8 bg-zinc-300 border-x border-b border-zinc-500 rounded-b-sm flex justify-center py-1">
@@ -250,20 +253,20 @@ export function Arcade() {
 
           {/* Arcade Machine Component */}
           <div className={cn(
-            "relative bg-[#d8d9d3] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#c0c2bb] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_2px_10px_rgba(255,255,255,0.8)] rounded-2xl w-full transition-all duration-500",
-            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-black/20"
+            "relative bg-[#0d0d14] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#181822] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.9),inset_0_2px_10px_rgba(255,255,255,0.05)] rounded-3xl w-full transition-all duration-500",
+            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-white/5"
           )}>
 
           {/* Cabinet texture effect */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-          <div className="absolute inset-x-0 top-0 h-32 opacity-20 pointer-events-none bg-gradient-to-b from-white to-transparent" ></div>
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[radial-gradient(var(--color-brand-accent)_1px,transparent_1px)] [background-size:16px_16px]"></div>
+          <div className="absolute inset-x-0 top-0 h-40 opacity-10 pointer-events-none bg-gradient-to-b from-brand-accent to-transparent mix-blend-screen" ></div>
           <div className="absolute inset-0 z-20 pointer-events-none shadow-[inset_0_20px_50px_rgba(0,0,0,0.1)]"></div>
 
           {/* Hardware Vents */}
           {!isFullscreen && (
              <div className="absolute top-3 md:top-6 left-1/2 -translate-x-1/2 flex gap-3 md:gap-5 opacity-60 pointer-events-none z-10">
                 {Array(8).fill(0).map((_, i) => (
-                   <div key={i} className="w-1.5 md:w-3 h-6 md:h-12 bg-[#222] rounded-full shadow-[inset_2px_2px_4px_rgba(0,0,0,0.8),1px_1px_0_rgba(255,255,255,0.4)] border border-black/80"></div>
+                   <div key={i} className="w-1.5 md:w-3 h-6 md:h-12 bg-[#050505] rounded-full shadow-[inset_1px_1px_4px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.1)] border border-[#111]"></div>
                 ))}
              </div>
           )}
@@ -280,9 +283,12 @@ export function Arcade() {
           
           <div className="flex justify-between items-center mb-6 relative z-10 block">
             
-            <div className="flex flex-col bg-[#1e201b]/10 p-2 md:p-3 rounded-lg border-b border-white/50 border-t border-black/10">
-              <h2 className="text-[#555] font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1">RIVAD CORP ENTERTAINMENT SYSTEM</h2>
-              <h2 className="text-[#207c4b] font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[1px_1px_0_rgba(255,255,255,0.5)] uppercase">SISYPHUS_OS_v3.1</h2>
+            <div className="flex flex-col bg-[#020205] p-3 md:p-4 rounded-xl border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+              <h2 className="text-zinc-500 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1 flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
+                 RIVAD CORP ENTERTAINMENT SYSTEM
+              </h2>
+              <h2 className="text-brand-accent font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[0_0_8px_rgba(242,74,41,0.6)] uppercase">SISYPHUS_OS_v3.1</h2>
             </div>
             
             <div className="flex gap-2 md:gap-4 items-center">
@@ -334,9 +340,12 @@ export function Arcade() {
 
           {/* CRT Screen Frame */}
           <div className={cn(
-            "bg-[#050505] border-[16px] md:border-[24px] border-[#101010] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden p-0 md:p-4 transition-all duration-500",
+            "bg-[#050505] border-[16px] md:border-[24px] border-[#0a0a0a] flex flex-col items-center justify-center relative shadow-[inset_0_0_100px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-3xl overflow-hidden p-0 md:p-4 transition-all duration-500 group/screen",
             isFullscreen ? "flex-grow h-full border-none rounded-none p-0" : "min-h-[400px] md:min-h-[500px]"
           )}>
+            
+            {/* Glass reflection */}
+            <div className="absolute top-0 right-0 w-full h-[150%] bg-gradient-to-bl from-white/5 via-white/5 to-transparent -rotate-12 translate-x-1/2 -translate-y-1/4 pointer-events-none z-[60] mix-blend-overlay transition-opacity group-hover/screen:opacity-50"></div>
             
             {/* CRT Screen Effect overlay */}
             <div className="absolute inset-0 pointer-events-none z-20 crt"></div>
@@ -356,6 +365,9 @@ export function Arcade() {
 
               {(powerState === 'booting' || powerState === 'waiting' || powerState === 'inserting') && (
                 <div className="w-full h-full min-h-[400px] bg-black flex justify-start items-start p-6 md:p-12 overflow-y-auto relative custom-scrollbar">
+                  {powerState === 'booting' && bootLog.length <= 1 && (
+                    <motion.div initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute inset-0 bg-white z-50 pointer-events-none" />
+                  )}
                   {/* Scanline overlay specifically for terminal text */}
                   <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] z-10" />
                   
@@ -449,9 +461,9 @@ export function Arcade() {
           </div>
           
           {/* Vintage PC Keyboard & Drive Area */}
-          <div className="mt-8 flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#CED0C8] py-6 rounded-xl border-t-2 border-white/50 border-b-8 border-[#9a9b95] shadow-[0_10px_20px_rgba(0,0,0,0.5)] relative z-10 gap-6">
+          <div className="mt-8 flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#121218] py-8 rounded-2xl border-t border-white/10 border-b-[12px] border-[#08080c] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-8">
              {/* Decorative Floppy Drive */}
-             <div className="flex flex-col gap-2 bg-[#b0b3ab] p-3 rounded border-2 border-[#82847e] shadow-inner w-full md:w-64">
+             <div className="flex flex-col gap-2 bg-[#1a1a24] p-3 rounded-lg border border-[#2a2a36] shadow-inner w-full md:w-64">
                 <div className="bg-[#111] h-3 w-full rounded-sm relative">
                    <div className="absolute top-1/2 -translate-y-1/2 right-2 w-4 h-1 bg-[#111] rounded shadow-inner"></div>
                 </div>
@@ -465,22 +477,22 @@ export function Arcade() {
              <div className="flex gap-6 items-center">
                 {/* Arrow Keys */}
                 <div className="flex flex-col items-center gap-1">
-                   <button onMouseDown={() => startHoldKey('ArrowUp')} onMouseUp={() => stopHoldKey('ArrowUp')} className="w-10 h-10 md:w-12 md:h-12 bg-[#e0e2dc] border-b-4 border-[#b0b3ab] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-bold text-zinc-500">↑</button>
+                   <button onMouseDown={() => startHoldKey('ArrowUp')} onMouseUp={() => stopHoldKey('ArrowUp')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">↑</button>
                    <div className="flex gap-1">
-                     <button onMouseDown={() => startHoldKey('ArrowLeft')} onMouseUp={() => stopHoldKey('ArrowLeft')} className="w-10 h-10 md:w-12 md:h-12 bg-[#e0e2dc] border-b-4 border-[#b0b3ab] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-bold text-zinc-500">←</button>
-                     <button onMouseDown={() => startHoldKey('ArrowDown')} onMouseUp={() => stopHoldKey('ArrowDown')} className="w-10 h-10 md:w-12 md:h-12 bg-[#e0e2dc] border-b-4 border-[#b0b3ab] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-bold text-zinc-500">↓</button>
-                     <button onMouseDown={() => startHoldKey('ArrowRight')} onMouseUp={() => stopHoldKey('ArrowRight')} className="w-10 h-10 md:w-12 md:h-12 bg-[#e0e2dc] border-b-4 border-[#b0b3ab] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-bold text-zinc-500">→</button>
+                     <button onMouseDown={() => startHoldKey('ArrowLeft')} onMouseUp={() => stopHoldKey('ArrowLeft')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">←</button>
+                     <button onMouseDown={() => startHoldKey('ArrowDown')} onMouseUp={() => stopHoldKey('ArrowDown')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">↓</button>
+                     <button onMouseDown={() => startHoldKey('ArrowRight')} onMouseUp={() => stopHoldKey('ArrowRight')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">→</button>
                    </div>
                 </div>
                 
                 {/* Action Keys */}
                 <div className="flex flex-col gap-2">
                    <div className="flex gap-2">
-                     <button onMouseDown={() => startHoldKey(' ')} onMouseUp={() => stopHoldKey(' ')} className="w-32 h-10 md:h-12 bg-[#e0e2dc] border-b-4 border-[#b0b3ab] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center justify-center">SPACE</button>
+                     <button onMouseDown={() => startHoldKey(' ')} onMouseUp={() => stopHoldKey(' ')} className="w-32 h-10 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold hover:text-white uppercase tracking-widest flex items-center justify-center">SPACE</button>
                    </div>
                    <div className="flex gap-2">
-                     <button onMouseDown={() => startHoldKey('Enter')} onMouseUp={() => stopHoldKey('Enter')} className="flex-1 h-10 md:h-12 bg-[#e0e2dc] border-b-4 border-[#b0b3ab] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold text-zinc-500 uppercase flex items-center justify-center">ENTER</button>
-                     <button onMouseDown={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onMouseUp={() => stopHoldKey('Escape')} className="w-16 h-10 md:h-12 bg-[#d69f9f] border-b-4 border-[#b57a7a] rounded shadow-sm hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold text-red-900 uppercase flex items-center justify-center">ESC</button>
+                     <button onMouseDown={() => startHoldKey('Enter')} onMouseUp={() => stopHoldKey('Enter')} className="flex-1 h-10 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold hover:text-white uppercase flex items-center justify-center">ENTER</button>
+                     <button onMouseDown={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onMouseUp={() => stopHoldKey('Escape')} className="w-16 h-10 md:h-12 bg-red-950/30 border-b-4 border-red-900 text-red-500 shadow-[inset_0_1px_2px_rgba(239,68,68,0.2)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold hover:text-white uppercase flex items-center justify-center">ESC</button>
                    </div>
                 </div>
              </div>
