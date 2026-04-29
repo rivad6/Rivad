@@ -35,31 +35,31 @@ function Nav() {
   const { language, setLanguage, t } = useLanguage();
   const { isMuted, toggleMute } = useAudio();
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 md:px-12 py-6 pointer-events-none">
-      <div className="flex items-center gap-4">
-        <Link to="/" className="pointer-events-auto font-display font-medium text-xl uppercase tracking-widest text-white hover:text-brand-accent transition-colors flex items-center gap-3">
-          <span className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center p-1 frosted-layer overflow-hidden focus:outline-none">
-            <HomeIcon size={14} className="text-white" />
+    <nav className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 sm:px-6 md:px-12 py-6 pointer-events-none">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <Link to="/" className="pointer-events-auto font-display font-medium text-lg sm:text-xl uppercase tracking-widest text-white hover:text-brand-accent transition-colors flex items-center gap-2 sm:gap-3">
+          <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/20 flex items-center justify-center p-1 frosted-layer overflow-hidden focus:outline-none">
+            <HomeIcon size={12} className="text-white" />
           </span>
           Rivad
         </Link>
-        <Link to="/juegos" className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 group px-2.5 sm:px-3 py-1.5 rounded-full border border-white/10 hover:border-brand-accent/50 bg-black/20 hover:bg-brand-accent/10 transition-all">
-          <Gamepad2 size={16} className="text-brand-accent group-hover:scale-110 transition-transform w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="text-[9px] sm:text-xs font-mono text-white/70 group-hover:text-white transition-colors uppercase tracking-widest whitespace-nowrap">{t('nav.minigames')}</span>
+        <Link to="/juegos" className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 group px-1.5 sm:px-3 py-1.5 rounded-full border border-white/10 hover:border-brand-accent/50 bg-black/20 hover:bg-brand-accent/10 transition-all">
+          <Gamepad2 size={14} className="text-brand-accent group-hover:scale-110 transition-transform w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline text-[9px] sm:text-xs font-mono text-white/70 group-hover:text-white transition-colors uppercase tracking-widest whitespace-nowrap">{t('nav.minigames')}</span>
         </Link>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <ThemeSwitcher />
         <button 
           onClick={toggleMute}
-          className="text-gray-400 hover:text-white transition-colors pointer-events-auto p-2.5 frosted-layer rounded-full"
+          className="text-gray-400 hover:text-white transition-colors pointer-events-auto p-2 frosted-layer rounded-full"
         >
-          {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+          {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
         </button>
-        <div className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-widest frosted-layer p-1.5 rounded-full pointer-events-auto">
-          <button onClick={() => setLanguage('es')} className={`px-4 py-2 rounded-full transition-all duration-500 ${language === 'es' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>ES</button>
-          <button onClick={() => setLanguage('en')} className={`px-4 py-2 rounded-full transition-all duration-500 ${language === 'en' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>EN</button>
-          <button onClick={() => setLanguage('fr')} className={`px-4 py-2 rounded-full transition-all duration-500 ${language === 'fr' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>FR</button>
+        <div className="flex items-center gap-0.5 font-mono text-[8px] sm:text-[9px] uppercase tracking-widest frosted-layer p-1 rounded-full pointer-events-auto">
+          <button onClick={() => setLanguage('es')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'es' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>ES</button>
+          <button onClick={() => setLanguage('en')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'en' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>EN</button>
+          <button onClick={() => setLanguage('fr')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'fr' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>FR</button>
         </div>
       </div>
     </nav>

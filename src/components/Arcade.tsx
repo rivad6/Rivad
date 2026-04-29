@@ -128,11 +128,11 @@ export function Arcade() {
        }
     }
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+    window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
   };
 
   const stopHoldKey = (key: string) => {
-    window.dispatchEvent(new KeyboardEvent('keyup', { key }));
+    window.dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true }));
   };
 
   const toggleFullscreen = () => {
@@ -438,13 +438,13 @@ export function Arcade() {
              </div>
              
              {/* Coin Slot */}
-             <div className="flex flex-col items-center gap-2">
+             <button onClick={() => playSound('score')} className="flex flex-col items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                <div className="w-10 h-14 md:w-12 md:h-16 bg-zinc-800 border-2 border-zinc-950 rounded-sm flex flex-col items-center justify-start py-2 shadow-inner">
                   <div className="w-2 h-6 md:h-8 bg-black rounded-full shadow-[inset_0_2px_4px_rgba(255,255,255,0.2)]" />
                   <div className="w-5 h-2 md:w-6 md:h-3 bg-orange-500 mt-2 rounded-sm opacity-80 shadow-[0_0_5px_#f97316]"></div>
                </div>
                <span className="text-zinc-500 text-[8px] md:text-[10px] tracking-widest font-mono font-black uppercase">{t('game.insert', 'INSERT COIN')}</span>
-             </div>
+             </button>
           </div>
         </div>
         {/* End of arcadeCabinetRef */}

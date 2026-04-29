@@ -775,7 +775,7 @@ export function MeetingRace({ isPausedGlobal = false }: { isPausedGlobal?: boole
       
       const diff = player.targetX - player.x;
       player.vx = diff * 12 * (oilTimer > 0 ? 0.5 : 1.0); 
-      player.x += player.vx * dt;
+      player.x = Math.max(0, Math.min(GAME_W - player.width, player.x + (player.vx * dt)));
       
       // Visual Tilt for "Steering Wheel" effect
       player.tilt = (player.vx / 500) * 0.4;
