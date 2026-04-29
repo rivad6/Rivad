@@ -1144,7 +1144,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   }, [isPlaying, playSound, isPausedGlobal]);
 
   return (
-    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-y-auto custom-scrollbar border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
+    <div ref={containerRef} className="flex flex-col items-center justify-center w-full h-full min-h-[350px] md:min-h-[400px] font-mono text-white p-2 relative bg-[#0a0a0a] rounded-xl flex-grow overflow-y-auto custom-scrollbar border-2 border-zinc-800 [&.is-fullscreen]:bg-black [&.is-fullscreen]:border-none [&.is-fullscreen]:rounded-none">
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50 transition-opacity opacity-20 hover:opacity-100" />}
       
       {/* Universal/Manual Pause Overlay */}
@@ -1154,19 +1154,19 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-4 md:gap-6 text-center p-4"
           >
             <div className="flex flex-col items-center gap-2">
                {isPausedGlobal ? (
-                 <Zap size={48} className="text-brand-accent animate-pulse" />
+                 <Zap className="w-10 h-10 md:w-12 md:h-12 text-brand-accent animate-pulse" />
                ) : (
-                 <TerminalSquare className="w-16 h-16 animate-pulse text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]" />
+                 <TerminalSquare className="w-10 h-10 md:w-16 md:h-16 animate-pulse text-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.4)]" />
                )}
-               <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
+               <h2 className="text-white font-black text-xl md:text-2xl uppercase tracking-[0.3em]">
                  {isPausedGlobal ? t('game.paused.system', 'RACE SUSPENDED') : 'RACE PAUSED'}
                </h2>
             </div>
-            <p className="text-zinc-500 text-[10px] uppercase font-bold text-center px-16 leading-relaxed max-w-xs">
+            <p className="text-zinc-500 text-[8px] md:text-[10px] uppercase font-bold text-center px-4 md:px-16 leading-relaxed max-w-xs">
               {isPausedGlobal 
                 ? t('game.paused.desc', 'Red flag on the track. The race will resume when clear.')
                 : t('game.paused.manual', 'Pit stop in progress. Take a breath to resume.')}
@@ -1174,7 +1174,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             {!isPausedGlobal && (
               <button
                 onClick={() => { pausedRef.current = false; playSound('start'); }}
-                className="bg-orange-500 text-white px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
+                className="bg-orange-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
               >
                 RESUME
               </button>
@@ -1183,26 +1183,30 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
         )}
       </AnimatePresence>
       
-      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-4 py-2 text-xs text-brand-accent font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-brand-accent/50 shadow-lg shrink-0">
-         <div className="flex items-center gap-4">
+      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-xs text-brand-accent font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-brand-accent/50 shadow-lg shrink-0">
+         <div className="flex items-center gap-2 md:gap-4">
             <button 
               onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
-              className={`flex items-center gap-1 uppercase text-[8px] font-bold border px-1.5 py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
+              className={`flex items-center gap-1 uppercase text-[7px] md:text-[8px] font-bold border px-1 md:px-1.5 py-0.5 md:py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
             >
-              <Zap className="w-3 h-3" /> {showMobileControls ? 'CONTROLS ON' : 'OFF'}
+              <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {showMobileControls ? 'ON' : 'OFF'}
             </button>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1 md:gap-2">
                <button 
                  onClick={() => { pausedRef.current = !pausedRef.current; playSound('click'); }}
                  className="p-1 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white"
                >
-                 <Banknote size={16} className="text-green-500 animate-pulse" />
+                 <Banknote className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 animate-pulse" />
                </button>
-               <span className="font-mono text-lg">{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
-               {hp > 0 && Array.from({length: hp}).map((_, i) => <Heart key={i} size={12} className="text-red-500 fill-red-500 animate-pulse" />)}
+               <span className="font-mono text-sm md:text-lg">{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
+               {hp > 0 && (
+                 <div className="flex gap-0.5 md:gap-1">
+                   {Array.from({length: hp}).map((_, i) => <Heart key={i} size={10} className="text-red-500 fill-red-500 animate-pulse" />)}
+                 </div>
+               )}
             </span>
          </div>
-         <span className="flex items-center gap-1 opacity-50"><TerminalSquare size={14} /> {t('arc.game7')}</span>
+         <span className="flex items-center gap-1 opacity-50 text-[8px] md:text-xs"><TerminalSquare size={12} /> {t('arc.game7')}</span>
       </div>
 
       <div className="relative border-4 border-brand-accent/50 rounded-b-xl shadow-2xl bg-[#27272a] overflow-hidden w-full max-w-lg flex-grow h-full max-h-[800px] touch-none">
@@ -1214,25 +1218,25 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
-               className="absolute inset-0 z-[60] bg-black flex flex-col justify-center items-center p-6 border-4 border-white"
+               className="absolute inset-0 z-[60] bg-black flex flex-col justify-center items-center p-4 md:p-6 border-4 border-white overflow-y-auto"
              >
-               <h1 className="text-3xl font-black text-white text-center mb-6 tracking-widest">{t('game.arc.race', 'PAY DAY RACE')}</h1>
+               <h1 className="text-xl md:text-3xl font-black text-white text-center mb-4 md:mb-6 tracking-widest">{t('game.arc.race', 'PAY DAY RACE')}</h1>
                
-               <div className="flex flex-col gap-4 mb-8 w-full">
-                 <div className="bg-zinc-900 border-2 border-white p-4">
-                   <p className="font-mono text-zinc-300 text-sm">{t('game.race.story.1', 'FRIDAY, 4:45 PM. RENT IS DUE.')}</p>
+               <div className="flex flex-col gap-2 md:gap-4 mb-6 md:mb-8 w-full">
+                 <div className="bg-zinc-900 border-2 border-white p-3 md:p-4">
+                   <p className="font-mono text-zinc-300 text-xs md:text-sm">{t('game.race.story.1', 'FRIDAY, 4:45 PM. RENT IS DUE.')}</p>
                  </div>
-                 <div className="bg-zinc-900 border-2 border-red-500 p-4 transform rotate-1">
-                   <p className="font-mono text-red-500 font-bold text-sm">{t('game.race.story.2', 'THE BANK CLOSES AT 5:00 PM.')}</p>
+                 <div className="bg-zinc-900 border-2 border-red-500 p-3 md:p-4 transform rotate-1">
+                   <p className="font-mono text-red-500 font-bold text-xs md:text-sm">{t('game.race.story.2', 'THE BANK CLOSES AT 5:00 PM.')}</p>
                  </div>
-                 <div className="bg-zinc-900 border-2 border-orange-500 p-4 transform -rotate-1">
-                   <p className="font-mono text-orange-400 font-bold max-w-[200px] mx-auto text-center leading-tight">{t('game.race.story.3', 'IF I DON\'T MAKE IT, I\'M SLEEPING ON THE STREET!')}</p>
+                 <div className="bg-zinc-900 border-2 border-orange-500 p-3 md:p-4 transform -rotate-1">
+                   <p className="font-mono text-orange-400 font-bold max-w-[200px] mx-auto text-center leading-tight text-xs md:text-sm">{t('game.race.story.3', 'IF I DON\'T MAKE IT, I\'M SLEEPING ON THE STREET!')}</p>
                  </div>
                </div>
                
                <button 
                  onClick={() => setShowStory(false)}
-                 className="bg-white text-black font-black px-8 py-3 uppercase text-lg hover:bg-orange-500 transition-colors shadow-[4px_4px_0_0_rgba(249,115,22,1)]"
+                 className="bg-white text-black font-black px-6 md:px-8 py-2 md:py-3 uppercase text-sm md:text-lg hover:bg-orange-500 transition-colors shadow-[4px_4px_0_0_rgba(249,115,22,1)]"
                >
                  {t('game.race.story.start', 'START ENGINE')}
                </button>
@@ -1245,28 +1249,28 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
         {isPlaying && showMobileControls && (
           <>
-            <div className="absolute bottom-10 left-4 z-20 pointer-events-none">
+            <div className="absolute bottom-6 md:bottom-10 left-2 md:left-4 z-20 pointer-events-none">
               <button 
                 onMouseDown={() => { keysGamepad.current.left = true; playSound('click'); }}
                 onMouseUp={() => keysGamepad.current.left = false}
                 onMouseLeave={() => keysGamepad.current.left = false}
                 onTouchStart={(e) => { e.preventDefault(); keysGamepad.current.left = true; playSound('click'); }}
                 onTouchEnd={(e) => { e.preventDefault(); keysGamepad.current.left = false; }}
-                className="w-24 h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                className="w-20 h-20 md:w-24 md:h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
               >
-                <div className="w-0 h-0 border-t-[15px] border-t-transparent border-r-[25px] border-r-white/30 border-b-[15px] border-b-transparent mr-2" />
+                <div className="w-0 h-0 border-t-[12px] md:border-t-[15px] border-t-transparent border-r-[20px] md:border-r-[25px] border-r-white/30 border-b-[12px] md:border-b-[15px] border-b-transparent mr-2" />
               </button>
             </div>
-            <div className="absolute bottom-10 right-4 z-20 pointer-events-none">
+            <div className="absolute bottom-6 md:bottom-10 right-2 md:right-4 z-20 pointer-events-none">
               <button 
                 onMouseDown={() => { keysGamepad.current.right = true; playSound('click'); }}
                 onMouseUp={() => keysGamepad.current.right = false}
                 onMouseLeave={() => keysGamepad.current.right = false}
                 onTouchStart={(e) => { e.preventDefault(); keysGamepad.current.right = true; playSound('click'); }}
                 onTouchEnd={(e) => { e.preventDefault(); keysGamepad.current.right = false; }}
-                className="w-24 h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
+                className="w-20 h-20 md:w-24 md:h-24 bg-white/5 backdrop-blur-md border-2 border-white/20 rounded-full flex items-center justify-center active:bg-white/20 active:border-white/40 transition-all pointer-events-auto"
               >
-                <div className="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white/30 border-b-[15px] border-b-transparent ml-2" />
+                <div className="w-0 h-0 border-t-[12px] md:border-t-[15px] border-t-transparent border-l-[20px] md:border-l-[25px] border-l-white/30 border-b-[12px] md:border-b-[15px] border-b-transparent ml-2" />
               </button>
             </div>
           </>
@@ -1358,29 +1362,29 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
           >
              {outOfGas ? (
               <>
-                <Coffee size={48} className="text-orange-500 mb-4" />
-                <h2 className="text-3xl text-orange-500 font-black mb-2 tracking-widest text-center uppercase">{t('game.race.out_of_gas', 'OUT OF GAS!')}</h2>
-                <p className="text-sm text-zinc-300 mb-6 uppercase text-center max-w-xs">{t('game.race.out_of_gas_desc', 'You ran out of fuel.')}</p>
+                <Coffee className="w-12 h-12 md:w-16 md:h-16 text-orange-500 mb-4" />
+                <h2 className="text-2xl md:text-3xl text-orange-500 font-black mb-2 tracking-widest text-center uppercase">{t('game.race.out_of_gas', 'OUT OF GAS!')}</h2>
+                <p className="text-[10px] md:text-sm text-zinc-300 mb-6 uppercase text-center max-w-xs">{t('game.race.out_of_gas_desc', 'You ran out of fuel.')}</p>
               </>
             ) : hp > 0 ? (
               <>
-                <Zap size={48} className="text-yellow-400 mb-4 animate-bounce" />
-                <h2 className="text-3xl text-yellow-400 font-black mb-2 tracking-widest text-center uppercase">{t('game.race.win_title', 'ON TIME!')}</h2>
-                <p className="text-sm text-zinc-300 mb-6 uppercase text-center max-w-xs">{t('game.race.win_desc', 'You dodged the bills and traffic just in time.')}</p>
+                <Zap className="w-12 h-12 md:w-16 md:h-16 text-yellow-400 mb-4 animate-bounce" />
+                <h2 className="text-2xl md:text-3xl text-yellow-400 font-black mb-2 tracking-widest text-center uppercase">{t('game.race.win_title', 'ON TIME!')}</h2>
+                <p className="text-[10px] md:text-sm text-zinc-300 mb-6 uppercase text-center max-w-xs">{t('game.race.win_desc', 'You dodged the bills and traffic just in time.')}</p>
               </>
             ) : (
               <>
-                <AlertCircle size={48} className="text-red-500 mb-4" />
-                <h2 className="text-3xl text-red-500 font-black mb-2 tracking-widest text-center uppercase">{t('game.race.crash')}</h2>
-                <p className="text-sm text-zinc-300 mb-6 uppercase">{t('game.race.collision_desc', 'Debt collectors caught up with you.')}</p>
+                <AlertCircle className="w-12 h-12 md:w-16 md:h-16 text-red-500 mb-4" />
+                <h2 className="text-2xl md:text-3xl text-red-500 font-black mb-2 tracking-widest text-center uppercase">{t('game.race.crash')}</h2>
+                <p className="text-[10px] md:text-sm text-zinc-300 mb-6 uppercase">{t('game.race.collision_desc', 'Debt collectors caught up with you.')}</p>
               </>
             )}
             
-            <div className="bg-zinc-900 border border-white/10 p-6 rounded-2xl mb-8 w-64 text-center">
-              <p className="text-[10px] text-zinc-500 uppercase mb-1">{t('game.race.score')}</p>
-              <p className="text-4xl font-black text-white tracking-tight">{score.toLocaleString()}</p>
+            <div className="bg-zinc-900 border border-white/10 p-4 md:p-6 rounded-2xl mb-6 md:mb-8 w-48 md:w-64 text-center">
+              <p className="text-[8px] md:text-[10px] text-zinc-500 uppercase mb-1">{t('game.race.score')}</p>
+              <p className="text-2xl md:text-4xl font-black text-white tracking-tight">{score.toLocaleString()}</p>
             </div>
-
+            
             <div className="flex gap-4">
               <button
                  onClick={() => {
@@ -1392,7 +1396,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
                    setIsPlaying(true);
                    playSound('start');
                  }}
-                 className="bg-orange-500 text-black px-8 py-3 text-sm font-black hover:bg-orange-400 transition-all uppercase rounded-full glow-orange shadow-lg active:scale-95"
+                 className="bg-orange-500 text-black px-6 md:px-8 py-2 md:py-3 text-xs md:text-sm font-black hover:bg-orange-400 transition-all uppercase rounded-full glow-orange shadow-lg active:scale-95"
               >
                 {t('game.retry', 'PLAY AGAIN')}
               </button>
