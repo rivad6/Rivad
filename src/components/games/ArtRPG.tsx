@@ -68,7 +68,7 @@ const generatePathMapping = (p: string): Record<string, StoryNode> => {
       textKey: `game.rpg.${p}.q4b2`,
       choices: [
         { textKey: `game.rpg.${p}.q4b2.1`, next: `${p}.e7` },
-        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.e8` }
+        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.final.4` }
       ]
     },
     // The previous e1 through e4 were duplicated over the a/b branches. Let's redirect them to the bizarre layer.
