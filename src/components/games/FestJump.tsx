@@ -367,8 +367,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         platforms.forEach((p) => {
           p.y += vDiff;
           if (p.y > canvas.height) {
-            let minY = Math.min(...platforms.map(p2 => p2.y));
-            p.y = Math.max(-500, minY) - (Math.random() * 60 + 60); // Adjust spacing
+            let sortedPlatforms = [...platforms].sort((a,b) => a.y - b.y);
+            let topP = sortedPlatforms[0];
+            let spacing = 60 + Math.random() * 40; // 60 to 100 spacing
+            p.y = topP.y - spacing;
             
             const rand = Math.random();
             const progress = Math.min(1, maxScore / 30000);
@@ -376,13 +378,28 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             p.type = rand < 0.1 ? 'billboard' : 
                      rand < 0.15 ? 'boost' : 
                      rand < 0.2 + progress * 0.3 ? 'moving' : 
-                     rand < 0.3 + progress * 0.4 ? 'breaking' : 'normal';
+                     rand < 0.25 + progress * 0.4 ? 'breaking' : 'normal';
             
             p.width = p.type === 'billboard' ? PLATFORM_WIDTH * 2.5 : PLATFORM_WIDTH;
-            // Prevent platforms going off-screen horizontally
-            p.x = Math.random() * (canvas.width - p.width - 20) + 10;
             
-            p.vx = p.type === 'moving' ? (Math.random() * 2 + 1 + progress * 2) * (Math.random() > 0.5 ? 1 : -1) : 0;
+            // Smarter X placement relative to the top platform
+            let offset = (Math.random() * 200 - 100);
+            let prevX = topP.x + topP.width / 2;
+            let newX = prevX + offset - p.width/2;
+            
+            // Screen wrapping constraint for spawning
+            if (newX < 10) newX = canvas.width - p.width - 10;
+            if (newX > canvas.width - p.width - 10) newX = 10;
+            
+            // Avoid spawning directly on top of another platform vertically
+            let overlaps = sortedPlatforms.some(op => op !== p && Math.abs(op.y - p.y) < 30 && Math.abs(op.x - newX) < p.width);
+            if (overlaps) {
+                newX = (newX + 150) % (canvas.width - p.width);
+            }
+
+            p.x = Math.max(0, Math.min(canvas.width - p.width, newX));
+            
+            p.vx = p.type === 'moving' ? (Math.random() * 1.5 + 1 + progress * 1.5) * (Math.random() > 0.5 ? 1 : -1) : 0;
             p.broken = false;
             p.crackValue = 0;
             p.isStepped = false;
@@ -567,11 +584,26 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     const draw = (dt: number) => {
-      ctx.fillStyle = '#050510'; // Deep dark blue for synth grid
+      ctx.fillStyle = '#0f0c29'; // Deep dark blue for synth grid
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
+      // Starfield parallax
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      for(let i=1; i<40; i++) {
+         let sy = (canvas.height - ((cameraY * (i%3 + 1) * 0.1) % canvas.height) + (i*17)) % canvas.height;
+         let sx = (i * 23) % canvas.width;
+         ctx.fillRect(sx, sy, i%3 === 0 ? 2 : 1, i%3 === 0 ? 2 : 1);
+      }
+      
       // Synthwave / Retro grid background
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
+      const gradientBg = ctx.createLinearGradient(0, canvas.height, 0, 0);
+      gradientBg.addColorStop(0, 'rgba(236, 72, 153, 0.2)'); // Pink
+      gradientBg.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+      ctx.fillStyle = gradientBg;
+      ctx.fillRect(0, Math.max(0, canvas.height - 200), canvas.width, 200);
+
+      ctx.strokeStyle = 'rgba(236, 72, 153, 0.15)'; // Pink grid lines
       ctx.lineWidth = 1;
       const gridSize = 40;
       const yOffset = (cameraY * 0.3) % gridSize;
@@ -600,65 +632,83 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         if (p.broken) return;
         
         ctx.fillStyle = '#020617'; // hard drop shadow instead of alpha for retro style
-        ctx.fillRect(p.x + 4, p.y + 4, p.width, PLATFORM_HEIGHT);
+        ctx.fillRect(p.x + 6, p.y + 6, p.width, PLATFORM_HEIGHT);
 
         if (p.type === 'billboard') {
-             ctx.fillStyle = '#1e293b'; 
+             ctx.fillStyle = '#0f172a'; 
              ctx.beginPath();
              ctx.roundRect(p.x, p.y - 40, p.width, 40 + PLATFORM_HEIGHT, 4);
              ctx.fill();
-             ctx.strokeStyle = '#38bdf8';
+             ctx.strokeStyle = '#ec4899';
              ctx.lineWidth = 2;
              ctx.stroke();
-             ctx.fillStyle = '#38bdf8';
+             ctx.fillStyle = '#ec4899';
              ctx.font = 'bold 12px monospace';
              const brands = ['CYBER-COLA', 'SNEAKER CORP', 'SISYPHUS TECH', 'NEON GEAR', 'BY RIVAD'];
-             const idx = Math.floor((p.y % 100) / 25) % brands.length;
+             const idx = Math.floor(Math.abs(p.y) % brands.length);
              ctx.fillText(brands[idx], p.x + 10, p.y - 15);
              
-             ctx.fillStyle = '#64748b';
+             ctx.fillStyle = '#334155';
              ctx.fillRect(p.x + 10, p.y, 4, PLATFORM_HEIGHT);
              ctx.fillRect(p.x + p.width - 14, p.y, 4, PLATFORM_HEIGHT);
              
-             ctx.fillStyle = '#334155';
+             ctx.fillStyle = '#1e293b';
              ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
-             ctx.fillStyle = '#0f172a';
+             ctx.fillStyle = '#020617';
              ctx.fillRect(p.x, p.y, p.width, 3);
         } else {
-            let pColor = '#34d399';
-            if (p.type === 'moving') pColor = '#60a5fa';
-            else if (p.type === 'breaking') pColor = '#fca5a5';
-            else if (p.type === 'boost') pColor = '#facc15';
-            if (p.hasSpring) pColor = '#fde047';
-
-            ctx.fillStyle = '#000';
-            ctx.fillRect(p.x - 1, p.y - 1, p.width + 2, PLATFORM_HEIGHT + 2);
-            ctx.fillStyle = '#1e1b4b'; // dark retro base
+            let pColor = '#10b981'; // Emerald
+            let darkColor = '#065f46';
+            if (p.type === 'moving') { pColor = '#3b82f6'; darkColor = '#1e3a8a'; } // Blue
+            else if (p.type === 'breaking') { pColor = '#ef4444'; darkColor = '#7f1d1d'; } // Red
+            else if (p.type === 'boost') { pColor = '#eab308'; darkColor = '#713f12'; } // Yellow
+            
+            // Base rectangle
+            ctx.fillStyle = pColor;
             ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
             
-            const gradient = ctx.createLinearGradient(p.x, p.y, p.x, p.y + PLATFORM_HEIGHT);
-            gradient.addColorStop(0, pColor);
-            gradient.addColorStop(1, '#0f172a');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT - 4);
-            
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            // Highlight top lip
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
             ctx.fillRect(p.x, p.y, p.width, 2);
             
-            // Tech details
-            ctx.fillStyle = 'rgba(255,255,255,0.1)';
-            ctx.fillRect(p.x + 4, p.y + 4, 8, 4);
-            ctx.fillRect(p.x + p.width - 12, p.y + 4, 8, 4);
-
-            if (p.type === 'breaking') {
+            // Dark bottom shadow
+            ctx.fillStyle = darkColor;
+            ctx.fillRect(p.x, p.y + PLATFORM_HEIGHT - 3, p.width, 3);
+            
+            // Danger stripes for breaking or boost
+            if (p.type === 'breaking' || p.type === 'boost') {
+                ctx.save();
                 ctx.beginPath();
-                ctx.strokeStyle = '#7f1d1d';
-                ctx.lineWidth = 1;
-                ctx.moveTo(p.x + 10, p.y);
-                ctx.lineTo(p.x + 15, p.y + PLATFORM_HEIGHT);
-                ctx.moveTo(p.x + 18, p.y);
-                ctx.lineTo(p.x + 22, p.y + PLATFORM_HEIGHT);
-                ctx.stroke();
+                ctx.rect(p.x, p.y, p.width, PLATFORM_HEIGHT);
+                ctx.clip();
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                for(let i=-20; i<p.width; i+=10) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + i, p.y);
+                    ctx.lineTo(p.x + i + 5, p.y);
+                    ctx.lineTo(p.x + i - 5, p.y + PLATFORM_HEIGHT);
+                    ctx.lineTo(p.x + i - 10, p.y + PLATFORM_HEIGHT);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            if (p.type === 'breaking' && p.crackValue > 0) {
+              ctx.strokeStyle = '#450a0a';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.moveTo(p.x + p.width/2, p.y);
+              ctx.lineTo(p.x + p.width/2 + p.crackValue * 4, p.y + 4);
+              ctx.lineTo(p.x + p.width/2 - p.crackValue * 3, p.y + 8);
+              ctx.lineTo(p.x + p.width/2 + p.crackValue * 5, p.y + 12);
+              ctx.stroke();
+            }
+            
+            if (p.hasSpring) {
+               ctx.fillStyle = '#64748b';
+               ctx.fillRect(p.x + p.width/2 - 6, p.y - 8, 12, 8);
+               ctx.fillStyle = '#f43f5e';
+               ctx.fillRect(p.x + p.width/2 - 8, p.y - 12, 16, 4);
             }
         }
       });

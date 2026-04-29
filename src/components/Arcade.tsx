@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize, Joystick, Trophy } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize, Joystick, Trophy, Zap } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
@@ -8,6 +8,7 @@ import { ArtRPG } from './games/ArtRPG';
 import { SellOutGame } from './games/SellOutGame';
 import { CreativeInvaders } from './games/CreativeInvaders';
 import { MeetingRace } from './games/MeetingRace';
+import { FestJump } from './games/FestJump';
 import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -32,6 +33,7 @@ export function Arcade() {
     { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-brand-accent', label: t('arc.game5.lbl') },
     { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-brand-accent', label: t('arc.game6.lbl') },
     { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-brand-accent', label: t('arc.game7.lbl') },
+    { id: 'jump', title: t('arc.game8', 'FEST JUMP'), icon: <Zap size={24} />, color: 'bg-brand-accent', label: t('arc.game8.lbl', 'JUMP') },
   ] as const;
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
@@ -250,19 +252,20 @@ export function Arcade() {
 
           {/* Arcade Machine Component */}
           <div className={cn(
-            "relative bg-[#d8dad3] p-4 md:p-8 border-x-[12px] md:border-x-[20px] border-y-[16px] md:border-y-[30px] border-[#ced0c8] mx-auto overflow-hidden shadow-[20px_20px_0px_0px_rgba(0,0,0,0.8)] rounded-xl w-full transition-all duration-500",
-            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4" : "max-w-4xl"
+            "relative bg-[#252526] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#1a1a1a] mx-auto overflow-hidden shadow-[30px_30px_0px_0px_rgba(0,0,0,0.9)] rounded-2xl w-full transition-all duration-500 ring-1 ring-white/10",
+            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0 ring-0" : "max-w-[1000px]"
           )}>
 
-          
-          {/* Wood panel texture effect */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 8px)' }}></div>
-          
+          {/* Cabinet texture effect */}
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #000 2px, transparent 2px)', backgroundSize: '10px 10px' }}></div>
+          <div className="absolute inset-0 opacity-10 pointer-events-none bg-gradient-to-b from-transparent to-black" ></div>
+          <div className="absolute inset-0 z-20 pointer-events-none shadow-[inset_0_20px_50px_rgba(0,0,0,0.8)]"></div>
+
           {/* Hardware Vents */}
           {!isFullscreen && (
-             <div className="absolute top-2 md:top-4 left-1/2 -translate-x-1/2 flex gap-2 md:gap-4 opacity-30 pointer-events-none">
-                {Array(8).fill(0).map((_, i) => (
-                   <div key={i} className="w-1 md:w-2 h-4 md:h-8 bg-zinc-900 rounded-full shadow-inner border border-zinc-600/30"></div>
+             <div className="absolute top-3 md:top-6 left-1/2 -translate-x-1/2 flex gap-3 md:gap-5 opacity-40 pointer-events-none z-10">
+                {Array(6).fill(0).map((_, i) => (
+                   <div key={i} className="w-1.5 md:w-3 h-6 md:h-12 bg-black rounded-full shadow-[inset_2px_2px_4px_rgba(0,0,0,1)] border border-white/10"></div>
                 ))}
              </div>
           )}
@@ -270,18 +273,18 @@ export function Arcade() {
           {/* Console Screws */}
           {!isFullscreen && (
             <>
-              <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform rotate-45"></div></div>
-              <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform rotate-12"></div></div>
-              <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform rotate-90"></div></div>
-              <div className="absolute bottom-4 right-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform -rotate-45"></div></div>
+              <div className="absolute top-4 left-4 md:top-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-45"></div></div>
+              <div className="absolute top-4 right-4 md:top-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-12"></div></div>
+              <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-90"></div></div>
+              <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform -rotate-45"></div></div>
             </>
           )}
           
           <div className="flex justify-between items-center mb-6 relative z-10 block">
             
             <div className="flex flex-col">
-              <h2 className="text-zinc-500 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1">RIVAD CORP ENTERTAINMENT SYSTEM</h2>
-              <h2 className="text-zinc-700 font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.4)] uppercase">SISYPHUS_OS_v3.1</h2>
+              <h2 className="text-white/40 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1">RIVAD CORP ENTERTAINMENT SYSTEM</h2>
+              <h2 className="text-brand-accent/80 font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.6)] uppercase">SISYPHUS_OS_v3.1</h2>
             </div>
             
             <div className="flex gap-2 md:gap-4 items-center">
@@ -333,7 +336,7 @@ export function Arcade() {
 
           {/* CRT Screen Frame */}
           <div className={cn(
-            "bg-[#111614] border-[16px] md:border-[24px] border-[#b0b3ab] rounded-[2rem] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1)] rounded-3xl overflow-hidden p-0 md:p-4 transition-all duration-500",
+            "bg-[#050505] border-[16px] md:border-[24px] border-[#101010] flex flex-col items-center justify-center relative shadow-[inset_0_0_80px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-2xl overflow-hidden p-0 md:p-4 transition-all duration-500",
             isFullscreen ? "flex-grow h-full border-none rounded-none p-0" : "min-h-[400px] md:min-h-[500px]"
           )}>
             
@@ -441,6 +444,7 @@ export function Arcade() {
                     {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
                     {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'jump' && <FestJump isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
                   </motion.div>
                 )}
               </AnimatePresence>
