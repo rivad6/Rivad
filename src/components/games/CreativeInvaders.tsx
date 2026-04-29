@@ -43,6 +43,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
   const [hudShield, setHudShield] = useState(0);
   const [hudPower, setHudPower] = useState(1);
   const [hudTurbo, setHudTurbo] = useState(0);
+  const [hudTimer, setHudTimer] = useState(0);
 
   const scoreRefDOM = useRef<HTMLDivElement>(null);
 
@@ -100,18 +101,22 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
 
   const handleSecretSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (secretCode.toLowerCase() === "asteroid") {
+    if (secretCode.trim().toLowerCase() === "asteroid") {
       playSound('powerup');
       setIsAsteroidMode(true);
       setHasDiscoveredSecret(true);
       localStorage.setItem('invaders_secret_discovered', 'true');
-      initGame();
-      setTimeout(() => {
-        setGameState("takeoff");
-        state.current.score += 1000;
-        state.current.isAsteroidMode = true;
-      }, 100);
       setSecretCode("");
+      
+      // Initialize state and go directly to takeoff
+      initGame("takeoff");
+      
+      // Additional setup after state is initialized
+      if (state.current) {
+        state.current.isAsteroidMode = true;
+        state.current.score += 1000;
+        state.current.bgType = "deep";
+      }
     } else {
       playSound('alert');
       setSecretCode("");
@@ -289,6 +294,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     isTransitioning: false,
     levelUpTimer: 0,
     isAsteroidMode: false,
+    asteroidModeTimer: 0,
     pendingCoins: 0,
     joystick: {
       active: false,
@@ -309,6 +315,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     state.current.player.x = GAME_WIDTH / 2;
     state.current.player.y = GAME_HEIGHT / 2;
     state.current.bgType = "deep";
+    state.current.asteroidModeTimer = 0;
     
     // Add distant planets/moons
     state.current.planets = Array.from({length: 3}).map(() => ({
@@ -323,9 +330,20 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     const asteroidCount = difficulty === 'easy' ? 4 : difficulty === 'hard' ? 7 : 5;
     const asteroidSpeedMulti = difficulty === 'easy' ? 0.6 : difficulty === 'hard' ? 1.4 : 1.0;
     for(let i = 0; i < asteroidCount; i++) {
+        let ax, ay;
+        let attempts = 0;
+        // Safe spawn logic: ensure asteroid is not too close to player (center)
+        do {
+          ax = Math.random() * GAME_WIDTH;
+          ay = Math.random() * GAME_HEIGHT;
+          const dist = Math.sqrt(Math.pow(ax - state.current.player.x, 2) + Math.pow(ay - state.current.player.y, 2));
+          attempts++;
+          if (dist > 180 || attempts > 20) break;
+        } while (true);
+
         state.current.enemies.push({
-            x: Math.random() * GAME_WIDTH,
-            y: Math.random() * GAME_HEIGHT * 0.5,
+            x: ax,
+            y: ay,
             vx: (Math.random() - 0.5) * 4 * asteroidSpeedMulti,
             vy: (Math.random() - 0.5) * 4 * asteroidSpeedMulti,
             width: 80,
@@ -409,7 +427,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     }
   }, []);
 
-  const initGame = useCallback(() => {
+  const initGame = useCallback((initialState: GameState = "playing") => {
     state.current = {
       player: {
         x: GAME_WIDTH / 2,
@@ -455,12 +473,24 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       lastHitEdgeTime: 0,
       isTransitioning: false,
       levelUpTimer: 0,
-      pendingCoins: 0
+      activeTimer: 0,
+      asteroidModeTimer: 0,
+      pendingCoins: 0,
+      isAsteroidMode: false,
+      joystick: {
+        active: false,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+        distance: 0,
+        angle: 0
+      }
     };
 
     loadLevel(1);
     setScore(0);
-    setGameState("playing");
+    setGameState(initialState);
   }, [loadLevel, selectedChar, GAME_WIDTH, GAME_HEIGHT, upgrades, difficulty]);
 
   const fire = useCallback(() => {
@@ -550,14 +580,13 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
           setIsAsteroidMode(true);
           setHasDiscoveredSecret(true);
           localStorage.setItem('invaders_secret_discovered', 'true');
-          if (gameState === 'start') {
-            initGame();
-          }
-          setTimeout(() => {
-            setGameState("takeoff");
+          
+          initGame("takeoff");
+          if (state.current) {
             state.current.score += 1000;
             state.current.isAsteroidMode = true;
-          }, 100);
+            state.current.bgType = "deep";
+          }
           secretSequence.current = "";
           return;
       }
@@ -632,6 +661,68 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     if (s.playerFlash > 0) s.playerFlash -= normalDt;
     if (s.levelUpTimer > 0) s.levelUpTimer -= normalDt;
 
+    if (gameState === "asteroids") {
+      const prevTimer = s.asteroidModeTimer;
+      s.asteroidModeTimer += dt / 1000;
+      
+      // Red space transition starting at 280s, full at 300s
+      if (s.asteroidModeTimer > 280 && s.asteroidModeTimer < 320) {
+        s.shake = Math.min(2, s.shake + 0.1 * normalDt);
+      }
+
+      // Spawn Final Boss: Sol Rojo del Aburrimiento at 300s
+      if (prevTimer < 300 && s.asteroidModeTimer >= 300) {
+        playSound('boss_spawn');
+        s.enemies.push({
+          x: GAME_WIDTH / 2 - 150,
+          y: -300,
+          vx: 0,
+          vy: 0.5, // Slow entrance
+          width: 300,
+          height: 300,
+          type: "boss",
+          hp: 1500 * s.difficultyMultiplier,
+          maxHp: 1500 * s.difficultyMultiplier,
+          offset: 0,
+          variant: 99 // Special ID for Red Sun
+        });
+        s.isTransitioning = true;
+        setTimeout(() => { if(state.current) state.current.isTransitioning = false; }, 5000);
+      }
+      
+      // Dynamic spawning based on time (stop regular spawning if boss is active maybe, or keep it chaotic)
+      const hasRedSun = s.enemies.some(e => e.variant === 99);
+      const spawnFrequency = (hasRedSun ? 0.005 : (0.012 + Math.min(0.04, s.asteroidModeTimer / 120))) * normalDt;
+      if (Math.random() < spawnFrequency) {
+        const side = Math.floor(Math.random() * 4);
+        let ax, ay, vx, vy;
+        const margin = 50;
+        
+        if (side === 0) { ax = -margin; ay = Math.random() * GAME_HEIGHT; vx = 1.5; vy = (Math.random() - 0.5) * 2; }
+        else if (side === 1) { ax = GAME_WIDTH + margin; ay = Math.random() * GAME_HEIGHT; vx = -1.5; vy = (Math.random() - 0.5) * 2; }
+        else if (side === 2) { ax = Math.random() * GAME_WIDTH; ay = -margin; vx = (Math.random() - 0.5) * 2; vy = 1.5; }
+        else { ax = Math.random() * GAME_WIDTH; ay = GAME_HEIGHT + margin; vx = (Math.random() - 0.5) * 2; vy = -1.5; }
+        
+        const speedFactor = (1 + s.asteroidModeTimer / 45) * s.difficultyMultiplier;
+        
+        // Occasionally spawn enemy ships in asteroid field
+        if (s.asteroidModeTimer > 15 && Math.random() < 0.25) {
+          s.enemies.push({
+            x: ax, y: ay, vx: vx * speedFactor * 1.5, vy: vy * speedFactor * 1.5,
+            width: 30, height: 30, type: "distraction", hp: 1, maxHp: 1, offset: Math.random() * Math.PI,
+            variant: 1
+          });
+        } else {
+          const type = Math.random() < 0.3 ? "asteroid_l" : "asteroid_m";
+          s.enemies.push({
+            x: ax, y: ay, vx: vx * speedFactor, vy: vy * speedFactor,
+            width: type === "asteroid_l" ? 70 : 45, height: type === "asteroid_l" ? 70 : 45,
+            type: type as any, hp: type === "asteroid_l" ? 2 : 1, maxHp: type === "asteroid_l" ? 2 : 1, offset: Math.random() * Math.PI
+          });
+        }
+      }
+    }
+
     if (gameState === "takeoff") {
         const takeoffSpeed = 10 * s.difficultyMultiplier * normalDt;
         s.player.y -= takeoffSpeed;
@@ -694,30 +785,39 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     const baseSpeed = s.player.speedBoostTimer > 0 ? s.player.speed * 1.5 : s.player.speed;
     const playerCurrentSpeed = (s.player.hasteTimer > 0 ? baseSpeed * 1.4 : baseSpeed) * normalDt;
 
-    if (gameState === "asteroids" && s.joystick.active) {
-        const moveX = Math.cos(s.joystick.angle) * playerCurrentSpeed * Math.min(1, s.joystick.distance / 40);
-        const moveY = Math.sin(s.joystick.angle) * playerCurrentSpeed * Math.min(1, s.joystick.distance / 40);
-        s.player.x += moveX;
-        s.player.y += moveY;
-        s.player.angle = s.joystick.angle;
+    if (gameState === "asteroids") {
+        if (s.joystick.active) {
+            const moveX = Math.cos(s.joystick.angle) * playerCurrentSpeed * Math.min(1, s.joystick.distance / 40);
+            const moveY = Math.sin(s.joystick.angle) * playerCurrentSpeed * Math.min(1, s.joystick.distance / 40);
+            s.player.x += moveX;
+            s.player.y += moveY;
+            s.player.angle = s.joystick.angle;
+        } else {
+            // Keyboard control in 360
+            let moveX = 0;
+            let moveY = 0;
+            if (s.player.isMovingLeft) moveX -= 1;
+            if (s.player.isMovingRight) moveX += 1;
+            if (s.player.isMovingUp) moveY -= 1;
+            if (s.player.isMovingDown) moveY += 1;
+            
+            if (moveX !== 0 || moveY !== 0) {
+                const targetAngle = Math.atan2(moveY, moveX);
+                // Smooth rotation
+                let diff = targetAngle - s.player.angle;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                s.player.angle += diff * 0.2 * normalDt;
+                
+                s.player.x += Math.cos(targetAngle) * playerCurrentSpeed;
+                s.player.y += Math.sin(targetAngle) * playerCurrentSpeed;
+            }
+        }
     } else {
         if (s.player.isMovingLeft) s.player.x -= playerCurrentSpeed;
         if (s.player.isMovingRight) s.player.x += playerCurrentSpeed;
         if (s.player.isMovingUp) s.player.y -= playerCurrentSpeed;
         if (s.player.isMovingDown) s.player.y += playerCurrentSpeed;
-        
-        // Auto-rotate towards movement direction in asteroids mode for keyboard
-        if (gameState === "asteroids") {
-            let dx = 0;
-            let dy = 0;
-            if (s.player.isMovingLeft) dx -= 1;
-            if (s.player.isMovingRight) dx += 1;
-            if (s.player.isMovingUp) dy -= 1;
-            if (s.player.isMovingDown) dy += 1;
-            if (dx !== 0 || dy !== 0) {
-                s.player.angle = Math.atan2(dy, dx);
-            }
-        }
     }
 
     if (gameState === "asteroids") {
@@ -792,32 +892,53 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       }
     }
 
-    if (gameState === "playing" && Math.random() < (0.02 + (s.level * 0.01)) * s.difficultyMultiplier * normalDt) {
-      const shooters = s.enemies.filter(e => e.type !== 'block');
+    if ((gameState === "playing" || gameState === "asteroids") && Math.random() < (0.02 + (s.level * 0.01)) * s.difficultyMultiplier * normalDt) {
+      const shooters = s.enemies.filter(e => e.type !== 'block' && !e.type.startsWith('asteroid'));
       if (shooters.length > 0) {
         const shooter = shooters[Math.floor(Math.random() * shooters.length)];
         const isBoss = shooter.type === "boss";
         const isFast = shooter.type === "distraction";
+        const isRedSun = shooter.variant === 99;
         const variant = shooter.variant || 0;
         
         let bulletColor = "#ff00ff";
         if (isBoss) {
-          bulletColor = variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6";
+          bulletColor = isRedSun ? "#dc2626" : (variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6");
         } else if (isFast) {
           bulletColor = "#fbbf24";
         }
-
         const projSpeedBase = isFast ? 6 : 4;
         const projSpeed = (projSpeedBase + s.level * 0.5) * s.difficultyMultiplier;
-        s.projectiles.push({
-           x: shooter.x + shooter.width/2,
-           y: shooter.y + shooter.height,
-           vx: isBoss && variant === 2 ? (s.player.x - shooter.x) * 0.01 : (isBoss ? (Math.random() - 0.5) * 4 : 0),
-           vy: projSpeed,
-           speed: projSpeed,
-           color: bulletColor,
-           isEnemy: true
-        });
+
+        if (isRedSun) {
+            // Pattern: Circle of Boredom
+            const numBullets = 12;
+            const now = Date.now();
+            const phase = (now / 1000) % (Math.PI * 2);
+            
+            for (let i = 0; i < numBullets; i++) {
+                const angle = phase + (i * Math.PI * 2 / numBullets);
+                s.projectiles.push({
+                    x: shooter.x + shooter.width / 2,
+                    y: shooter.y + shooter.height / 2,
+                    vx: Math.cos(angle) * 3,
+                    vy: Math.sin(angle) * 3,
+                    speed: 3,
+                    color: bulletColor,
+                    isEnemy: true
+                });
+            }
+        } else {
+            s.projectiles.push({
+               x: shooter.x + shooter.width/2,
+               y: shooter.y + shooter.height,
+               vx: isBoss && variant === 2 ? (s.player.x - shooter.x) * 0.01 : (isBoss ? (Math.random() - 0.5) * 4 : 0),
+               vy: projSpeed,
+               speed: projSpeed,
+               color: bulletColor,
+               isEnemy: true
+            });
+        }
 
         if (isBoss) {
           if (variant === 0 && Math.random() < 0.5) {
@@ -853,13 +974,23 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
       enemy.offset += 0.05 * normalDt;
       
       if (gameState === "asteroids") {
-         enemy.x += (enemy.vx || 0) * normalDt;
-         enemy.y += (enemy.vy || 0) * normalDt;
-         
-         if (enemy.x < -enemy.width) enemy.x = GAME_WIDTH;
-         if (enemy.x > GAME_WIDTH) enemy.x = -enemy.width;
-         if (enemy.y < -enemy.height) enemy.y = GAME_HEIGHT;
-         if (enemy.y > GAME_HEIGHT) enemy.y = -enemy.height;
+         if (enemy.variant === 99) {
+           // Sol Rojo Boss movement: descend then hover
+           if (enemy.y < 50) {
+             enemy.y += 0.5 * normalDt;
+           } else {
+             enemy.x += Math.cos(s.time * 0.5) * 1.5 * normalDt;
+             enemy.y = 50 + Math.sin(s.time * 0.3) * 15;
+           }
+         } else {
+           enemy.x += (enemy.vx || 0) * (1 + s.asteroidModeTimer / 200) * normalDt;
+           enemy.y += (enemy.vy || 0) * (1 + s.asteroidModeTimer / 200) * normalDt;
+           
+           if (enemy.x < -enemy.width - 20) enemy.x = GAME_WIDTH + 10;
+           if (enemy.x > GAME_WIDTH) enemy.x = -enemy.width;
+           if (enemy.y < -enemy.height) enemy.y = GAME_HEIGHT;
+           if (enemy.y > GAME_HEIGHT) enemy.y = -enemy.height;
+         }
          
          if (
            s.player.x < enemy.x + enemy.width - 5 &&
@@ -958,13 +1089,31 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
               unlockAchievement('invaders_boss_kill');
               createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "#ef4444", 50);
               playSound('powerup');
-              for (let k = 0; k < 3; k++) {
-                const types = ["power", "shield", "speed"] as const;
-                s.drops.push({
-                  x: enemy.x + Math.random() * enemy.width,
-                  y: enemy.y + Math.random() * enemy.height,
-                  type: types[k],
-                });
+              
+              if (enemy.variant === 99) {
+                  // Final Boss defeated!
+                  s.score += 50000;
+                  // Huge reward
+                  for (let k = 0; k < 15; k++) {
+                      s.drops.push({
+                          x: enemy.x + Math.random() * enemy.width,
+                          y: enemy.y + Math.random() * enemy.height,
+                          type: "power",
+                      });
+                  }
+                  // Signal completion
+                  s.enemies = []; 
+                  s.isTransitioning = true;
+                  s.levelUpTimer = 200;
+              } else {
+                for (let k = 0; k < 3; k++) {
+                  const types = ["power", "shield", "speed"] as const;
+                  s.drops.push({
+                    x: enemy.x + Math.random() * enemy.width,
+                    y: enemy.y + Math.random() * enemy.height,
+                    type: types[k],
+                  });
+                }
               }
             } else if (enemy.type === "asteroid_l" || enemy.type === "asteroid_m") {
                const newType = enemy.type === "asteroid_l" ? "asteroid_m" : "asteroid_s";
@@ -1135,13 +1284,25 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         s.projectiles = [];
         state.current.wave++;
         saveScore();
-        if (state.current.level > 10) {
-           setGameState("win");
-        } else {
-           loadLevel(state.current.level);
-           setGameState("playing");
-        }
         playSound("win");
+        
+        // Show sequence and either continue asteroids or go back to main gameplay
+        if (state.current.wave % 2 === 0) {
+            // Every 2 asteroid waves, go back to main game
+            s.levelUpTimer = 150;
+            loadLevel(state.current.level);
+            setGameState("playing");
+            if (state.current) state.current.isTransitioning = false;
+        } else {
+            // Stay in asteroid mode, but reset for next wave
+            s.levelUpTimer = 100;
+            setTimeout(() => {
+                if (state.current) {
+                  loadAsteroidsLevel();
+                  state.current.isTransitioning = false;
+                }
+            }, 1500);
+        }
       }
     }
 
@@ -1149,7 +1310,12 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     if (hudPower !== s.player.power) setHudPower(s.player.power);
     const turboActive = s.player.speedBoostTimer > 0 ? 1 : 0;
     if (hudTurbo !== turboActive) setHudTurbo(turboActive);
-  }, [gameState, loadLevel, playSound, upgrades, t, unlockAchievement, loadAsteroidsLevel, hudShield, hudPower, hudTurbo, setHudShield, setHudPower, setHudTurbo, setGameState, setScore, highScore, setHighScore, setFestCoins]);
+    
+    if (gameState === "asteroids") {
+      const currentIntTimer = Math.floor(s.asteroidModeTimer);
+      if (hudTimer !== currentIntTimer) setHudTimer(currentIntTimer);
+    }
+  }, [gameState, loadLevel, playSound, upgrades, t, unlockAchievement, loadAsteroidsLevel, hudShield, hudPower, hudTurbo, hudTimer, setHudShield, setHudPower, setHudTurbo, setHudTimer, setGameState, setScore, highScore, setHighScore, setFestCoins]);
 
   const saveScore = () => {
     const s = state.current;
@@ -1164,6 +1330,13 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
     ctx.save();
     if (s.shake > 1) {
       ctx.translate((Math.random() - 0.5) * s.shake, (Math.random() - 0.5) * s.shake);
+    }
+
+    // Red Sun Boss transition in deep space
+    if (gameState === "asteroids" && s.asteroidModeTimer > 280) {
+        const intensity = Math.min(0.5, (s.asteroidModeTimer - 280) / 40);
+        ctx.fillStyle = `rgba(185, 28, 28, ${intensity})`;
+        ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     }
 
     // Draw grid background for 'creative space' feel
@@ -1307,10 +1480,53 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
         drawSprite(ctx, sprites.distraction, enemy.x, enemy.y, enemy.width, enemy.height, palette);
       } else if (enemy.type === "boss") {
         const variant = enemy.variant || 0;
-        const bossColor = variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6";
-        const metalColor = enemy.hp / enemy.maxHp > 0.5 ? '#d4d4d4' : '#fca5a5';
-        const palette = isHit ? ['#ffffff', '#ffffff'] : [bossColor, metalColor];
-        drawSprite(ctx, sprites.boss, enemy.x, enemy.y, enemy.width, enemy.height, palette);
+        if (variant === 99) {
+            // Sol Rojo del Aburrimiento
+            ctx.save();
+            ctx.translate(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+            
+            // Outer heat / boredom haze
+            const pulse = (Math.sin(s.time * 2) * 15) + (Math.sin(s.time * 5) * 5);
+            const gradient = ctx.createRadialGradient(0, 0, 10, 0, 0, enemy.width / 2 + pulse);
+            gradient.addColorStop(0, '#ef4444');
+            gradient.addColorStop(0.6, '#7f1d1d');
+            gradient.addColorStop(1, 'transparent');
+            
+            ctx.globalAlpha = 0.8;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, enemy.width / 2 + pulse, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Core
+            ctx.fillStyle = '#0a0a0B';
+            ctx.beginPath();
+            ctx.arc(0, 0, enemy.width / 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Border
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, enemy.width / 3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Text marking - Boredom Sun
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 16px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText("SOL ROJO", 0, -5);
+            ctx.font = 'bold 10px monospace';
+            ctx.fillText("ABURRIMIENTO", 0, 15);
+            
+            ctx.restore();
+        } else {
+            const bossColor = variant === 0 ? "#ef4444" : variant === 1 ? "#38bdf8" : "#8b5cf6";
+            const metalColor = enemy.hp / enemy.maxHp > 0.5 ? '#d4d4d4' : '#fca5a5';
+            const palette = isHit ? ['#ffffff', '#ffffff'] : [bossColor, metalColor];
+            drawSprite(ctx, sprites.boss, enemy.x, enemy.y, enemy.width, enemy.height, palette);
+        }
         // Health bar
         ctx.fillStyle = "#333";
         ctx.fillRect(enemy.x, enemy.y - 15, enemy.width, 10);
@@ -1508,6 +1724,14 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                    <Zap className="w-2.5 h-2.5 md:w-3 md:h-3 text-yellow-400" />
                    <span className="text-yellow-400 text-[8px] md:text-xs">LV.{hudPower}</span>
                 </div>
+                {gameState === 'asteroids' && (
+                  <div className="flex items-center gap-1 bg-brand-accent/20 px-2 py-0.5 rounded border border-brand-accent/30 animate-pulse">
+                     <Star className="w-2.5 h-2.5 text-brand-accent" />
+                     <span className="text-brand-accent text-[8px] md:text-xs font-black">
+                       T: {Math.floor(hudTimer / 60)}:{(hudTimer % 60).toString().padStart(2, '0')}
+                     </span>
+                  </div>
+                )}
             </div>
          </div>
          <div className="flex items-center gap-2 text-zinc-500">
@@ -1545,15 +1769,13 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
               let y = ((e.clientY - rect.top - offsetY) / displayedHeight) * canvas.height;
               
               if (gameState === "asteroids") {
+                  // In asteroids mode, mouse only rotates, doesn't move directly if not "follow" mode
                   const dx = x - (state.current.player.x + state.current.player.width / 2);
                   const dy = y - (state.current.player.y + state.current.player.height / 2);
                   
                   if (Math.sqrt(dx*dx + dy*dy) > 10) {
                       state.current.player.angle = Math.atan2(dy, dx);
                   }
-                  
-                  state.current.player.x = x - state.current.player.width / 2;
-                  state.current.player.y = y - state.current.player.height / 2;
               } else {
                   state.current.player.x = x - state.current.player.width / 2;
               }
@@ -1731,6 +1953,20 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                     {t('game.invaders.mejoras')}
                   </button>
                 </div>
+
+                {(hasDiscoveredSecret || secretCode.trim().toLowerCase() === "asteroid") && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSecretCode("asteroid");
+                      handleSecretSubmit(e);
+                    }}
+                    className="mt-6 w-full max-w-[200px] py-1.5 bg-brand-accent/20 border border-brand-accent/50 rounded text-brand-accent font-mono text-[8px] uppercase tracking-widest hover:bg-brand-accent hover:text-white transition-all flex items-center justify-center gap-2 group"
+                  >
+                    <Star className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                    {t('game.invaders.enter_deep_space') || 'DEEP SPACE'}
+                  </button>
+                )}
 
                 <form onSubmit={handleSecretSubmit} className="mt-6 flex gap-2 w-full max-w-[200px]">
                   <input 
