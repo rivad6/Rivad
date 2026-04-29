@@ -577,10 +577,11 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-[80] flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm backdrop-blur-3xl p-6"
           >
-            <div className="mb-8 text-center">
-              <Megaphone className="w-16 h-16 text-brand-accent mx-auto mb-4" />
-              <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">POLITICAL UNO</h1>
+            <div className="mb-8 text-center relative group">
+              <Megaphone className="w-16 h-16 text-brand-accent mx-auto mb-4 group-hover:scale-110 transition-transform" />
+              <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white drop-shadow-[4px_4px_0_#991b1b]">POLITICAL UNO</h1>
               <p className="text-zinc-500 text-xs md:text-sm tracking-widest uppercase mt-2">Selecciona el número de legisladores</p>
+              <div className="absolute top-0 right-0 -mr-4 -mt-2 rotate-12 bg-red-600 text-white text-[8px] px-2 py-1 font-bold shadow-lg border border-red-400">BY RIVAD</div>
             </div>
             
             <div className="grid grid-cols-3 gap-4 w-full max-w-md">

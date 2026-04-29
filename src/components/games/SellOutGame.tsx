@@ -308,7 +308,10 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
                  {gameState === 'playing' ? (
                    <>
                     <Star className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 text-brand-accent drop-shadow-[0_0_20px_rgba(138,99,210,0.6)]" />
-                    <span className="mt-2 md:mt-4 text-[8px] md:text-[10px] uppercase font-black text-zinc-500 tracking-[0.5em] group-hover:text-white transition-colors">{t('game.sell.label.sell')}</span>
+                    <span className="mt-2 md:mt-4 text-[8px] md:text-[10px] uppercase font-black text-zinc-500 tracking-[0.5em] group-hover:text-white transition-colors relative block text-center">
+                      {t('game.sell.label.sell')}
+                      <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 rotate-3 text-[6px] text-zinc-600 font-bold whitespace-nowrap tracking-wider group-hover:text-brand-accent transition-colors">BY RIVAD</span>
+                    </span>
                    </>
                  ) : (
                    <RefreshCw className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 text-zinc-800 rotate-180" />

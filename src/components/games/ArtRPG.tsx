@@ -324,8 +324,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
             animate={{ scale: 1, opacity: 1 }}
             className="relative z-10"
           >
-            <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-2 italic">
+            <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mb-2 italic relative inline-block">
               {t('game.rpg.title')}
+              <span className="absolute -top-6 -right-6 rotate-12 text-[10px] bg-brand-accent text-white font-bold px-2 py-0.5 border border-white drop-shadow-md shadow-[0_0_10px_rgba(138,99,210,0.8)]">BY RIVAD</span>
             </h3>
             <div className="h-1 w-24 bg-brand-accent mx-auto mb-12 rounded-full shadow-[0_0_15px_rgba(138,99,210,0.8)]" />
           </motion.div>

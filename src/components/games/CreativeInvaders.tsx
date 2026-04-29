@@ -1883,8 +1883,9 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
                 <div className="w-16 h-16 rounded-2xl bg-brand-accent/20 flex items-center justify-center mb-4 border border-brand-accent/30 shadow-[0_0_30px_rgba(242,74,41,0.3)]">
                   <Zap className="w-8 h-8 text-brand-accent" />
                 </div>
-                <h3 className="text-3xl font-display text-white mb-2 uppercase tracking-tighter">
+                <h3 className="text-3xl font-display text-white mb-2 uppercase tracking-tighter relative inline-block">
                   {t("game.invaders.subtitle")}
+                  <span className="absolute -top-4 -right-8 rotate-12 text-[8px] bg-red-600 text-white font-bold px-1 py-0.5 border border-red-400 drop-shadow-md">BY RIVAD</span>
                 </h3>
                 <p className="text-white/60 text-xs font-mono max-w-xs mb-4 leading-relaxed">
                   {t("game.invaders.instruction.desc", {

@@ -258,23 +258,59 @@ export function Arcade() {
           {/* Wood panel texture effect */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 2px, transparent 2px, transparent 8px)' }}></div>
           
+          {/* Hardware Vents */}
+          {!isFullscreen && (
+             <div className="absolute top-2 md:top-4 left-1/2 -translate-x-1/2 flex gap-2 md:gap-4 opacity-30 pointer-events-none">
+                {Array(8).fill(0).map((_, i) => (
+                   <div key={i} className="w-1 md:w-2 h-4 md:h-8 bg-zinc-900 rounded-full shadow-inner border border-zinc-600/30"></div>
+                ))}
+             </div>
+          )}
+
+          {/* Console Screws */}
+          {!isFullscreen && (
+            <>
+              <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform rotate-45"></div></div>
+              <div className="absolute top-4 right-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform rotate-12"></div></div>
+              <div className="absolute bottom-4 left-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform rotate-90"></div></div>
+              <div className="absolute bottom-4 right-4 w-3 h-3 rounded-full bg-zinc-600 shadow-inner flex items-center justify-center opacity-70"><div className="w-2 h-px bg-zinc-900 transform -rotate-45"></div></div>
+            </>
+          )}
+          
           <div className="flex justify-between items-center mb-6 relative z-10 block">
-            <h2 className="text-zinc-600 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-xs md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.8)] uppercase">SISYPHUS_OS_v3.1</h2>
+            
+            <div className="flex flex-col">
+              <h2 className="text-zinc-500 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1">RIVAD CORP ENTERTAINMENT SYSTEM</h2>
+              <h2 className="text-zinc-700 font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[0_0_10px_rgba(138,99,210,0.4)] uppercase">SISYPHUS_OS_v3.1</h2>
+            </div>
             
             <div className="flex gap-2 md:gap-4 items-center">
+              
               {isFullscreen && (
-                <select 
-                  value={activeGame || ''}
-                  onChange={(e) => handleInsertCartridge(e.target.value)}
-                  disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                  className="bg-zinc-800 text-zinc-300 font-mono text-[10px] md:text-xs border-2 border-zinc-700 rounded-md p-1 md:p-2 uppercase outline-none focus:border-brand-accent transition-colors"
-                >
-                  <option value="" disabled>{t('arc.select_floppy')}</option>
-                  {games.map(g => (
-                    <option key={g.id} value={g.id}>{g.label}</option>
-                  ))}
-                </select>
+                <div className="relative group">
+                  <button className="bg-[#1e1b4b] text-[#818cf8] border-2 border-[#4f46e5] font-mono text-[10px] md:text-xs rounded-md px-4 py-2 uppercase tracking-widest hover:bg-[#312e81] shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all">
+                    {activeGame ? games.find(g => g.id === activeGame)?.title : 'SELECT CARTRIDGE'}
+                  </button>
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-[#020617] border border-[#312e81] rounded-lg p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                     <p className="text-[#818cf8] text-[8px] uppercase tracking-[0.3em] font-bold mb-2 border-b border-[#1e1b4b] pb-1 px-2">CARTRIDGE INVENTORY</p>
+                     {games.map(g => (
+                       <button
+                         key={g.id}
+                         onClick={(e) => {
+                           e.currentTarget.blur();
+                           handleInsertCartridge(g.id);
+                         }}
+                         disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
+                         className="w-full text-left flex items-center gap-3 px-2 py-2 hover:bg-[#1e1b4b] rounded text-white font-mono text-xs uppercase disabled:opacity-50"
+                       >
+                         <span className="text-[#818cf8]">{g.icon}</span>
+                         {g.label}
+                       </button>
+                     ))}
+                  </div>
+                </div>
               )}
+
 
               {/* Fullscreen Button */}
               <button
@@ -308,6 +344,10 @@ export function Arcade() {
             <div className="absolute inset-0 z-[15] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.8)_100%)]" />
             
             {/* Screen Content */}
+            
+            <div className="absolute bottom-2 right-4 z-50 pointer-events-none opacity-40 mix-blend-screen text-[#4ade80] font-mono text-[8px] tracking-[0.3em] font-black drop-shadow-[0_0_4px_#22c55e]">
+               by Rivad
+            </div>
             <div id="arcade-screen-container" className="relative z-10 w-full h-full flex-grow flex flex-col items-center justify-center [&_*:focus-visible]:outline-2 [&_*:focus-visible]:outline-brand-accent [&_*:focus]:outline-offset-2">
               {powerState === 'off' && (
                 <div className="w-full h-full min-h-[400px] bg-black"></div>
@@ -359,7 +399,27 @@ export function Arcade() {
                       </motion.div>
                     ))}
                     {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 ml-1 translate-y-1"></motion.span>}
-                    {powerState === 'waiting' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 ml-1 translate-y-1"></motion.span>}
+                    {powerState === 'waiting' && (
+   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+      {games.map(g => (
+         <button
+            key={g.id}
+            onClick={() => handleInsertCartridge(g.id)}
+            className="border-2 border-green-500/50 bg-green-950/30 p-4 font-mono text-left hover:bg-green-500 hover:text-black transition-colors group flex items-center gap-4"
+         >
+            <div className="text-green-500 group-hover:text-black">{g.icon}</div>
+            <div>
+               <div className="font-bold text-sm">{g.label}</div>
+               <div className="text-[10px] opacity-75">{g.title}</div>
+            </div>
+         </button>
+      ))}
+      <div className="col-span-1 md:col-span-2 text-center mt-4">
+         <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 translate-y-1 mr-2"></motion.span>
+         <span className="text-[10px] uppercase tracking-widest break-all">A:\&gt; AWAITING SELECTION...</span>
+      </div>
+   </div>
+)}
                   </div>
                 </div>
               )}

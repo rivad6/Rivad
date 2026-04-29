@@ -599,7 +599,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              ctx.stroke();
              ctx.fillStyle = '#38bdf8';
              ctx.font = 'bold 12px monospace';
-             const brands = ['CYBER-COLA', 'SNEAKER CORP', 'SISYPHUS TECH', 'NEON GEAR'];
+             const brands = ['CYBER-COLA', 'SNEAKER CORP', 'SISYPHUS TECH', 'NEON GEAR', 'BY RIVAD'];
              const idx = Math.floor((p.y % 100) / 25) % brands.length;
              ctx.fillText(brands[idx], p.x + 10, p.y - 15);
              

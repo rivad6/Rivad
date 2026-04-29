@@ -1294,7 +1294,10 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
           <div className="absolute inset-0 flex flex-col bg-[#111]/90 backdrop-blur-md p-4 z-20 overflow-y-auto">
             <div className="flex flex-col items-center mb-4">
               <Car size={32} className="text-orange-500 mb-1" />
-              <h3 className="text-xl font-bold text-brand-accent leading-none uppercase tracking-widest">{t('game.arc.race')}</h3>
+              <h3 className="text-xl font-bold text-brand-accent leading-none uppercase tracking-widest relative inline-block">
+                 {t('game.arc.race')}
+                 <span className="absolute -top-3 -right-6 rotate-6 text-[8px] bg-red-600 text-white font-bold px-1 py-0.5 border border-red-500 shadow-md">BY RIVAD</span>
+              </h3>
             </div>
 
             <p className="text-[10px] text-zinc-500 mb-4 uppercase text-center max-w-[300px] mx-auto">

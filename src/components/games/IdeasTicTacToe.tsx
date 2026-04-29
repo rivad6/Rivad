@@ -194,8 +194,9 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="mb-1 text-center w-full">
-         <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase">{t('game.objective')}{t('game.ttt.goal')}</p>
+      <div className="mb-1 text-center w-full relative group">
+         <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase font-bold tracking-widest">{t('game.objective')}{t('game.ttt.goal')}</p>
+         <span className="absolute -top-4 right-0 rotate-12 text-[8px] bg-red-600 text-white font-bold px-2 py-0.5 shadow-md border border-red-400 opacity-80 group-hover:opacity-100 transition-opacity">BY RIVAD</span>
       </div>
       <div className="mb-2 text-center text-[10px] md:text-xs leading-tight w-full flex flex-col justify-center gap-1">
         {!winner && !isDraw && (

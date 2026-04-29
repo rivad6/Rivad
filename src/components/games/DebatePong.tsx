@@ -397,8 +397,9 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
         </AnimatePresence>
         {!isPlaying ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80">
-            <h3 className="text-white text-lg mb-2 text-center leading-loose">
+            <h3 className="text-white text-lg mb-2 text-center leading-loose relative inline-block">
               {playerScore >= 5 ? t('game.pong.win') : cpuScore >= 5 ? t('game.pong.lose') : t('game.pong.title')}
+              <span className="absolute -top-3 -right-6 rotate-12 text-[8px] bg-brand-accent text-white font-bold px-1 py-0.5 shadow-[0_0_5px_rgba(138,99,210,0.8)] border border-white">BY RIVAD</span>
             </h3>
             <p className="text-[8px] text-gray-400 mb-6 uppercase tracking-widest">{t('game.objective')}{t('game.pong.goal')}</p>
             <button 
