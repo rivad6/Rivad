@@ -68,22 +68,26 @@ const generatePathMapping = (p: string): Record<string, StoryNode> => {
       textKey: `game.rpg.${p}.q4b2`,
       choices: [
         { textKey: `game.rpg.${p}.q4b2.1`, next: `${p}.e7` },
-        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.final.4` }
+        { textKey: `game.rpg.${p}.q4b2.2`, next: `${p}.e8` }
       ]
     },
-    // The previous e1 through e4 were duplicated over the a/b branches. Let's redirect them to the bizarre layer.
+    // Expanding to 8 distinct bizarre endings per path for maximal hilacion
     [`${p}.e1`]: { textKey: `game.rpg.${p}.e1`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.1` }] },
     [`${p}.e2`]: { textKey: `game.rpg.${p}.e2`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.2` }] },
     [`${p}.e3`]: { textKey: `game.rpg.${p}.e3`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.3` }] },
     [`${p}.e4`]: { textKey: `game.rpg.${p}.e4`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.4` }] },
-    [`${p}.e5`]: { textKey: `game.rpg.${p}.e1`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.1` }] }, // reusing e1-e4 translations for simplicity
-    [`${p}.e6`]: { textKey: `game.rpg.${p}.e2`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.2` }] },
-    [`${p}.e7`]: { textKey: `game.rpg.${p}.e3`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.3` }] },
-    [`${p}.e8`]: { textKey: `game.rpg.${p}.e4`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.4` }] },
+    [`${p}.e5`]: { textKey: `game.rpg.${p}.e5`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.5` }] },
+    [`${p}.e6`]: { textKey: `game.rpg.${p}.e6`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.6` }] },
+    [`${p}.e7`]: { textKey: `game.rpg.${p}.e7`, choices: [{ textKey: 'game.rpg.continue1', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.7` }] },
+    [`${p}.e8`]: { textKey: `game.rpg.${p}.e8`, choices: [{ textKey: 'game.rpg.continue2', next: 'boss.q1' }, { textKey: 'game.rpg.acceptfate', next: `${p}.final.8` }] },
     [`${p}.final.1`]: { textKey: `game.rpg.${p}.e1`, choices: [], isEnding: true },
     [`${p}.final.2`]: { textKey: `game.rpg.${p}.e2`, choices: [], isEnding: true },
     [`${p}.final.3`]: { textKey: `game.rpg.${p}.e3`, choices: [], isEnding: true },
     [`${p}.final.4`]: { textKey: `game.rpg.${p}.e4`, choices: [], isEnding: true },
+    [`${p}.final.5`]: { textKey: `game.rpg.${p}.e5`, choices: [], isEnding: true },
+    [`${p}.final.6`]: { textKey: `game.rpg.${p}.e6`, choices: [], isEnding: true },
+    [`${p}.final.7`]: { textKey: `game.rpg.${p}.e7`, choices: [], isEnding: true },
+    [`${p}.final.8`]: { textKey: `game.rpg.${p}.e8`, choices: [], isEnding: true },
   };
 };
 

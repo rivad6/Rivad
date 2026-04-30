@@ -222,28 +222,44 @@ export function Arcade() {
           </AnimatePresence>
           {/* Physical Cartridges outside the machine */}
           {!isFullscreen && (
-            <div className="mb-8 relative z-20 w-full">
-              <p className="text-white/50 font-mono text-xs tracking-widest uppercase mb-4 flex items-center gap-2">
-                <ArrowDown size={14} className="animate-bounce" /> {t('arc.select_floppy')}
-              </p>
-              <div className="flex flex-wrap justify-center sm:justify-start gap-4">
+            <div className="mb-12 relative z-20 w-full max-w-[1000px] mx-auto">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-px bg-zinc-800 flex-1"></div>
+                <p className="text-white/40 font-mono text-[10px] tracking-widest uppercase flex items-center gap-2">
+                  <ArrowDown size={12} className="animate-bounce text-brand-accent/50" /> {t('arc.select_cartridge', 'SELECT CARTRIDGE')}
+                </p>
+                <div className="h-px bg-zinc-800 flex-1"></div>
+              </div>
+              
+              <div className="grid grid-cols-3 md:grid-cols-7 gap-3 sm:gap-4 md:gap-6 preserve-3d perspective-1000">
                 {games.map((g) => (
                   <motion.button
                     key={g.id}
                     onClick={() => handleInsertCartridge(g.id)}
-                    whileHover={{ y: -5, scale: 1.02 }}
-                    whileTap={{ y: 0, scale: 0.98 }}
+                    whileHover={{ y: -8, scale: 1.05, rotateX: 5 }}
+                    whileTap={{ y: 0, scale: 0.95 }}
                     disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                    className={`flex-shrink-0 relative w-24 h-24 md:w-32 md:h-32 rounded-sm border-2 border-zinc-700 bg-zinc-800 flex flex-col items-center justify-start p-1.5 md:p-2 shadow-[2px_2px_0_rgba(0,0,0,0.8)] transition-colors overflow-hidden ${activeGame === g.id ? 'border-brand-accent -translate-y-4 shadow-[0_10px_30px_rgba(242,74,41,0.5)]' : 'hover:border-zinc-500'} ${(powerState === 'off' || powerState === 'booting') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`flex-shrink-0 relative w-full aspect-[3/4] rounded-t-sm rounded-b flex flex-col items-center justify-start p-1.5 md:p-2 transition-all transition-colors duration-300 transform-style-3d overflow-hidden ${
+                      activeGame === g.id 
+                      ? 'bg-zinc-800 border-2 border-brand-accent -translate-y-4 shadow-[0_20px_40px_rgba(138,99,210,0.4),0_0_15px_rgba(138,99,210,0.6)] z-10' 
+                      : 'bg-zinc-900 border-2 border-zinc-700 hover:border-zinc-500 shadow-[0_8px_15px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] hover:shadow-[0_15px_25px_rgba(0,0,0,0.9)]'
+                    } ${(powerState === 'off' || powerState === 'booting') ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
                   >
-                    {/* Metal Slider */}
-                    <div className="absolute top-0 right-4 w-8 h-8 bg-zinc-300 border-x border-b border-zinc-500 rounded-b-sm flex justify-center py-1">
-                       <div className="w-3 h-5 bg-zinc-800 rounded-sm"></div>
+                    {/* Metal Slider / Cartridge top */}
+                    <div className="absolute top-0 inset-x-0 h-4 md:h-6 bg-gradient-to-b from-zinc-700 to-zinc-800 rounded-t-sm flex justify-center py-0.5 md:py-1 shadow-inner border-b border-zinc-900">
+                       <div className="w-8 md:w-12 h-1.5 md:h-2 bg-black rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]"></div>
                     </div>
+                    {/* Cartridge Ridges */}
+                    <div className="absolute bottom-2 inset-x-2 h-4 md:h-6 flex justify-between gap-1 opacity-50">
+                       <div className="w-1 md:w-1.5 h-full bg-black rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"></div>
+                       <div className="w-1 md:w-1.5 h-full bg-black rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"></div>
+                    </div>
+                    
                     {/* Label Area */}
-                    <div className={`w-full h-12 md:h-16 mt-6 border border-zinc-900 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 rounded-sm shadow-inner`}>
-                      <span className="text-white drop-shadow-md block scale-75 md:scale-100">{g.icon}</span>
-                      <span className="text-[7px] md:text-[9px] text-white font-mono font-black text-center z-10 leading-tight tracking-wider uppercase mt-1 drop-shadow-md">{g.label}</span>
+                    <div className={`w-full mt-5 md:mt-8 flex-1 mb-6 border border-zinc-950 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 md:p-2 rounded-sm shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')]`}>
+                      <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent"></div>
+                      <span className="text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] scale-75 md:scale-110 mb-1 z-10">{g.icon}</span>
+                      <span className="text-[6px] md:text-[8px] text-white font-mono font-black text-center z-10 leading-[1.1] tracking-widest uppercase mt-auto drop-shadow-[0_1px_1px_rgba(0,0,0,1)] line-clamp-2">{g.label}</span>
                     </div>
                   </motion.button>
                 ))}
@@ -254,7 +270,7 @@ export function Arcade() {
           {/* Arcade Machine Component */}
           <div className={cn(
             "relative bg-[#0d0d14] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#181822] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.9),inset_0_2px_10px_rgba(255,255,255,0.05)] rounded-3xl w-full transition-all duration-500",
-            isFullscreen ? "flex flex-col flex-grow min-h-0 h-screen max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-white/5"
+            isFullscreen ? "flex flex-col flex-grow min-h-0 h-full max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-white/5"
           )}>
 
           {/* Cabinet texture effect */}
@@ -281,7 +297,7 @@ export function Arcade() {
             </>
           )}
           
-          <div className="flex justify-between items-center mb-6 relative z-10 block">
+          <div className="flex justify-between items-center mb-6 relative z-50">
             
             <div className="flex flex-col bg-[#020205] p-3 md:p-4 rounded-xl border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
               <h2 className="text-zinc-500 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1 flex items-center gap-2">
@@ -295,11 +311,12 @@ export function Arcade() {
               
               {isFullscreen && (
                 <div className="relative group">
-                  <button className="bg-[#1e1b4b] text-[#818cf8] border-2 border-[#4f46e5] font-mono text-[10px] md:text-xs rounded-md px-4 py-2 uppercase tracking-widest hover:bg-[#312e81] shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all">
-                    {activeGame ? games.find(g => g.id === activeGame)?.title : 'SELECT CARTRIDGE'}
+                  <button className="bg-[#1e1b4b] text-[#818cf8] border-2 border-[#4f46e5] font-mono text-[10px] md:text-xs rounded-md px-4 py-2 uppercase tracking-widest hover:bg-[#312e81] shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all flex items-center gap-2">
+                    <Zap size={14} className="text-brand-accent animate-pulse" />
+                    {activeGame ? games.find(g => g.id === activeGame)?.title : t('arc.select_cartridge')}
                   </button>
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-[#020617] border border-[#312e81] rounded-lg p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                     <p className="text-[#818cf8] text-[8px] uppercase tracking-[0.3em] font-bold mb-2 border-b border-[#1e1b4b] pb-1 px-2">CARTRIDGE INVENTORY</p>
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-[#020617] border border-[#312e81] rounded-lg p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-50">
+                     <p className="text-[#818cf8] text-[8px] uppercase tracking-[0.3em] font-bold mb-2 border-b border-[#1e1b4b] pb-1 px-2">{t('arc.select_cartridge')}</p>
                      {games.map(g => (
                        <button
                          key={g.id}
@@ -341,7 +358,7 @@ export function Arcade() {
           {/* CRT Screen Frame */}
           <div className={cn(
             "bg-[#050505] border-[16px] md:border-[24px] border-[#0a0a0a] flex flex-col items-center justify-center relative shadow-[inset_0_0_100px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-3xl overflow-hidden p-0 md:p-4 transition-all duration-500 group/screen",
-            isFullscreen ? "flex-grow h-full border-none rounded-none p-0" : "min-h-[400px] md:min-h-[500px]"
+            isFullscreen ? "flex-grow min-h-0 border-none rounded-none p-0 w-full" : "w-full aspect-[4/3] max-h-[600px] md:max-h-[700px] min-h-[400px]"
           )}>
             
             {/* Glass reflection */}
@@ -461,7 +478,10 @@ export function Arcade() {
           </div>
           
           {/* Vintage PC Keyboard & Drive Area */}
-          <div className="mt-8 flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#121218] py-8 rounded-2xl border-t border-white/10 border-b-[12px] border-[#08080c] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-8">
+          <div className={cn(
+            "flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#121218] rounded-2xl border-t border-white/10 border-[#08080c] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-6 md:gap-8 flex-shrink-0 transition-all",
+            isFullscreen ? "mt-2 md:mt-4 py-4 md:py-6 border-b-4 md:border-b-8" : "mt-8 py-8 border-b-[12px]"
+          )}>
              {/* Decorative Floppy Drive */}
              <div className="flex flex-col gap-2 bg-[#1a1a24] p-3 rounded-lg border border-[#2a2a36] shadow-inner w-full md:w-64">
                 <div className="bg-[#111] h-3 w-full rounded-sm relative">
