@@ -19,10 +19,10 @@ interface Character {
 }
 
 const CHARACTERS: Character[] = [
-  { id: 'default', nameKey: 'CYBER-RUNNER', descKey: 'Standard model', price: 0, jumpForce: -12, speed: 11, color: '#6EE7B7', accent: '#f43f5e' },
-  { id: 'punk', nameKey: 'NEON-PUNK', descKey: 'Faster movement', price: 200, jumpForce: -13.5, speed: 14, color: '#f43f5e', accent: '#6EE7B7' },
-  { id: 'ghost', nameKey: 'GLITCH-GHOST', descKey: 'Spectral float', price: 500, jumpForce: -11, speed: 16, color: '#ffffff', accent: '#3b82f6' },
-  { id: 'cyber', nameKey: 'MECHA-SYS', descKey: 'Double jump active', price: 1000, jumpForce: -15, speed: 12.5, color: '#a855f7', accent: '#eab308', doubleJump: true },
+  { id: 'default', nameKey: 'CYBER-RUNNER', descKey: 'Standard model', price: 0, jumpForce: -13, speed: 12, color: '#6EE7B7', accent: '#f43f5e' },
+  { id: 'punk', nameKey: 'NEON-PUNK', descKey: 'Fast horizontal speed', price: 200, jumpForce: -13.5, speed: 16, color: '#f43f5e', accent: '#6EE7B7' },
+  { id: 'ghost', nameKey: 'GLITCH-GHOST', descKey: 'Heavy but high jumps', price: 500, jumpForce: -18, speed: 9, color: '#ffffff', accent: '#3b82f6' },
+  { id: 'cyber', nameKey: 'MECHA-SYS', descKey: 'Double jump active', price: 1000, jumpForce: -14, speed: 13, color: '#a855f7', accent: '#eab308', doubleJump: true },
 ];
 
 export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }) {
@@ -115,11 +115,22 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       return t;
     };
 
+    
+    let bgStars = Array.from({ length: 60 }, () => ({
+      x: Math.random() * 360,
+      y: Math.random() * 640,
+      s: Math.random() * 2 + 1,
+      speed: Math.random() * 0.15 + 0.05
+    }));
+    let lastZone = 'Neon City';
+    let zoneBannerTimer = 0;
+
     let animationFrameId: number;
     let particles: {x: number, y: number, vx: number, vy: number, life: number, color: string, size: number}[] = [];
     let trails: {x: number, y: number, life: number, color: string}[] = [];
     let powerups: {x: number, y: number, type: 'vip' | 'merch' | 'glowstick' | 'beer' | 'magnet'}[] = [];
     let enemies: {x: number, y: number, speed: number, width: number, isBouncer?: boolean, minX?: number, maxX?: number}[] = [];
+    let sessionCoins = 0;
     let floatingTexts: {x: number, y: number, text: string, alpha: number, color: string, color2: string}[] = [];
     let bullets: {x: number, y: number, vy: number}[] = [];
     
@@ -129,9 +140,9 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     let cameraShake = 0;
     let screenFlash = 0;
 
-    const PLATFORM_WIDTH = 60;
+    const PLATFORM_WIDTH = 70;
     const PLATFORM_HEIGHT = 12;
-    const GRAVITY = 0.5;
+    const GRAVITY = 0.45;
     
     let player = {
       x: canvas.width / 2,
@@ -353,6 +364,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         ctx.shadowColor = '#3b82f6';
         ctx.arc(x + player.width/2, y + player.height/2, 22 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
         ctx.stroke();
+
+      
         ctx.shadowBlur = 0;
       }
 
@@ -380,373 +393,330 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
       
       if (cameraShake > 0) cameraShake *= Math.pow(0.9, normalDt);
-      if (screenFlash > 0) screenFlash *= Math.pow(0.8, normalDt);
+
+      const currentTheme = getTheme(maxScore);
+      if (currentTheme.name !== lastZone) {
+         lastZone = currentTheme.name;
+         zoneBannerTimer = 200; // frames
+         playSound('win');
+      }
+      if (zoneBannerTimer > 0) zoneBannerTimer -= normalDt;
+
+      
+      // -= NEW UPDATE LOGIC =-
       if (adBreakTimer > 0) {
          adBreakTimer -= normalDt;
-         if (Math.random() < 0.1) {
-            setFestCoins(prev => prev + 1);
-            bonusScore += 100;
+         if (Math.random() < 0.05) {
+            sessionCoins += 1; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+            bonusScore += 50;
             addFloatingText(player.x + (Math.random()-0.5)*200, player.y - Math.random()*200, t('game.fest.text.sponsor_reward'), '#10b981');
          }
       }
 
-      if (isShooting && Date.now() - player.lastShot > 300) {
-         player.lastShot = Date.now();
-         bullets.push({ x: player.x + player.width / 2, y: player.y, vy: -15 });
-         playSound('score'); 
-      }
-
-      bullets.forEach(b => b.y += b.vy * normalDt);
-      bullets = bullets.filter(b => b.y > -50);
-
-      if (touchTargetX !== null) {
-         const diff = touchTargetX - player.x;
-         player.vx = diff * 0.15; // Smooth tracking
-         player.vx = Math.max(-selectedChar.speed * 1.5, Math.min(selectedChar.speed * 1.5, player.vx));
-      } else {
-         if (keys.left) player.vx -= 1.5 * normalDt;
-         else if (keys.right) player.vx += 1.5 * normalDt;
-         else player.vx *= Math.pow(0.8, normalDt);
-         player.vx = Math.max(-selectedChar.speed, Math.min(selectedChar.speed, player.vx));
-      }
-
+      // Physics
+      const prevY = player.y;
+      player.vy += GRAVITY * normalDt;
       player.x += player.vx * normalDt;
-      
-      if (player.jetpack > 0) {
-        player.vy = -18;
-        player.jetpack -= normalDt;
-      } else {
-        player.vy += GRAVITY * normalDt;
-      }
       player.y += player.vy * normalDt;
-
-      if (player.x < 0) player.x += canvas.width;
-      if (player.x >= canvas.width) player.x -= canvas.width;
-
-      let vDiff = 0;
-      if (player.y < canvas.height * 0.4) {
-        vDiff = canvas.height * 0.4 - player.y;
-        cameraY += vDiff;
-        player.y = canvas.height * 0.4;
-        maxScore = Math.floor(cameraY);
+      
+      // Screen Wrap
+      if (player.x < -player.width) player.x = canvas.width;
+      if (player.x > canvas.width) player.x = -player.width;
+      
+            // Jetpack & Controls
+      if (player.jetpack > 0) {
+         player.jetpack -= normalDt;
+         player.vy = -18 - upgrades.jump * 1.5;
+         createParticles(player.x + player.width/2, player.y + player.height, '#f43f5e');
+         setHudJetpack(Math.floor(player.jetpack));
+      } else {
+         player.vx *= Math.pow(0.75, normalDt);
+         
+         // Allow touch/mouse dragging to influence movement securely
+         if (touchTargetX !== null) {
+            const diff = touchTargetX - (player.x + player.width/2);
+            player.vx += Math.max(-selectedChar.speed, Math.min(selectedChar.speed, diff * 0.15)) * normalDt;
+         } else {
+            if (keys.left) player.vx -= selectedChar.speed * 0.25 * normalDt;
+            if (keys.right) player.vx += selectedChar.speed * 0.25 * normalDt;
+         }
+         
+         // Hard cap speed to maintain control
+         const maxSpeed = selectedChar.speed;
+         if (player.vx > maxSpeed) player.vx = maxSpeed;
+         if (player.vx < -maxSpeed) player.vx = -maxSpeed;
       }
       
-      if (vDiff > 0) {
-        platforms.forEach((p) => {
-          p.y += vDiff;
-          if (p.y > canvas.height) {
-            let sortedPlatforms = [...platforms].sort((a,b) => a.y - b.y);
-            let topP = sortedPlatforms[0];
-            let spacing = 60 + Math.random() * 40; // 60 to 100 spacing
-            p.y = topP.y - spacing;
-            
-            const rand = Math.random();
-            const progress = Math.min(1, maxScore / 30000);
-            
-            p.type = rand < 0.1 ? 'billboard' : 
-                     rand < 0.15 ? 'boost' : 
-                     rand < 0.2 + progress * 0.3 ? 'moving' : 
-                     rand < 0.25 + progress * 0.4 ? 'breaking' : 'normal';
-            
-            p.width = p.type === 'billboard' ? PLATFORM_WIDTH * 2.5 : PLATFORM_WIDTH;
-            
-            // Smarter X placement relative to the top platform
-            let offset = (Math.random() * 200 - 100);
-            let prevX = topP.x + topP.width / 2;
-            let newX = prevX + offset - p.width/2;
-            
-            // Screen wrapping constraint for spawning
-            if (newX < 10) newX = canvas.width - p.width - 10;
-            if (newX > canvas.width - p.width - 10) newX = 10;
-            
-            // Avoid spawning directly on top of another platform vertically
-            let overlaps = sortedPlatforms.some(op => op !== p && Math.abs(op.y - p.y) < 30 && Math.abs(op.x - newX) < p.width);
-            if (overlaps) {
-                newX = (newX + 150) % (canvas.width - p.width);
-            }
+      // Camera Follow
+      if (player.y < canvas.height / 2) {
+         const diff = (canvas.height / 2) - player.y;
+         cameraY += diff;
+         player.y = canvas.height / 2;
+         maxScore += diff * 0.1;
+         
+         
+         platforms.forEach(p => p.y += diff);
+         enemies.forEach(e => e.y += diff);
+         powerups.forEach(pw => pw.y += diff);
+         floatingTexts.forEach(ft => ft.y += diff);
+         bullets.forEach(b => b.y += diff);
+         bgStars.forEach(s => {
+            s.y += diff * s.speed;
+            if (s.y > canvas.height) { s.y -= canvas.height; s.x = Math.random() * canvas.width; }
+         });
 
-            p.x = Math.max(0, Math.min(canvas.width - p.width, newX));
-            
-            p.vx = p.type === 'moving' ? (Math.random() * 1.5 + 1 + progress * 1.5) * (Math.random() > 0.5 ? 1 : -1) : 0;
-            p.broken = false;
-            p.crackValue = 0;
-            p.isStepped = false;
-            p.hasSpring = Math.random() > 0.9;
-            
-            if (p.type !== 'breaking' && p.type !== 'boost') {
-              spawnEntity(p);
-            }
-          }
-        });
-        enemies.forEach(e => e.y += vDiff);
-        powerups.forEach(pw => pw.y += vDiff);
-        bullets.forEach(b => b.y += vDiff);
       }
-
-      if (player.vy > 0) {
-        const pRects = [{x: player.x, w: player.width}, {x: player.x + canvas.width, w: player.width}, {x: player.x - canvas.width, w: player.width}];
-        
-        platforms.forEach(p => {
-          if (p.broken) return;
-          if (p.type === 'moving') {
-             p.x += p.vx * normalDt;
-             if (p.x < -p.width) p.x += canvas.width + p.width;
-             if (p.x > canvas.width) p.x -= canvas.width + p.width;
-          }
-
-          let hit = false;
-          for(const pr of pRects) {
-            if (pr.x + 4 < p.x + p.width && pr.x + pr.w - 4 > p.x && player.y + player.height >= p.y && player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy * normalDt) {
-              hit = true; break;
-            }
-          }
-
-          if (hit) {
-             const distCenter = Math.abs((player.x + player.width/2) - (p.x + p.width/2));
-             const isPerfect = distCenter < 10;
-
-             if (p.type === 'billboard' && comboTimer <= 0) {
-                 addFloatingText(player.x, player.y - 30, t('game.fest.text.sponsor_engaged'), '#0ea5e9');
-                 setFestCoins(prev => prev + 5);
-                 playSound('powerup');
-                 comboTimer = 120;
-             } else if (p.type === 'boost') {
-                 player.vy = -25;
-                 playSound('powerup');
-                 cameraShake = 20;
-                 screenFlash = 0.6;
-                 addFloatingText(player.x, player.y, t('game.fest.text.mega_boost'), '#facc15');
-                 comboMultiplier += 2;
-                 comboTimer = 180 + upgrades.luck * 60;
-                 return;
-             }
-
-             if (comboTimer > 0) {
-               bonusScore += 10 * comboMultiplier;
-             } else comboMultiplier = 1;
-
-             if (isPerfect) {
-               bonusScore += 50 * comboMultiplier;
-               setFestCoins(prev => prev + 2);
-               createParticles(p.x + p.width/2, p.y, '#ffffff'); // Base particles
-               createParticles(p.x + p.width/2, p.y, selectedChar.accent); // Accent particles
-               cameraShake = 10;
-               comboMultiplier++;
-               comboTimer = 180 + upgrades.luck * 60;
-               addFloatingText(player.x, player.y - 20, `${t('game.fest.text.perfect')} X${comboMultiplier}`, '#ec4899');
-               playSound('powerup');
-             }
-
-             player.vy = (p.hasSpring ? selectedChar.jumpForce * 1.85 : selectedChar.jumpForce) - JUMP_BOOST;
-             player.jumps = 1;
-             
-             if (p.type === 'breaking') {
-               p.broken = true;
-               playSound('hit');
-             } else {
-               playSound('click');
-             }
-          }
-        });
-      }
-
-      if (comboTimer > 0) comboTimer -= normalDt;
-      else comboMultiplier = 1;
-
-      powerups.forEach((pw, idx) => {
-        if (player.magnet > 0 && pw.type !== 'vip') {
-          const dx = player.x + player.width / 2 - (pw.x + 10);
-          const dy = player.y + player.height / 2 - (pw.y + 10);
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < MAGNET_RANGE) {
-             pw.x += (dx / dist) * 12 * normalDt;
-             pw.y += (dy / dist) * 12 * normalDt;
-          }
-        }
-        if (player.x < pw.x + 20 && player.x + player.width > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y) {
-           if (pw.type === 'vip') {
-             setFestCoins(prev => prev + 50);
-             bonusScore += 500;
-             playSound('win');
-             addFloatingText(pw.x, pw.y, t('game.fest.text.vip'), '#f59e0b', '#78350f');
-             adBreakTimer = 400; 
-             cameraShake = 20;
-             screenFlash = 0.8;
-           } else if (pw.type === 'merch') {
-             player.shield = 1;
-             playSound('powerup');
-             addFloatingText(pw.x, pw.y, t('game.fest.powerup.shield'), '#3b82f6');
-           } else if (pw.type === 'glowstick') {
-             setFestCoins(prev => prev + 5);
-             playSound('score');
-           } else if (pw.type === 'beer') {
-             player.jetpack = 200;
-             playSound('start');
-             screenFlash = 0.5;
-           } else if (pw.type === 'magnet') {
-             player.magnet = 600;
-             playSound('powerup');
-             addFloatingText(pw.x, pw.y, t('game.fest.text.magnet'), '#a855f7');
-           }
-           powerups.splice(idx, 1);
-        }
-      });
-
-      enemies.forEach((e, idx) => {
-        e.x += e.speed * normalDt;
-        if (e.isBouncer && e.minX !== undefined && e.maxX !== undefined) {
-           if (e.x < e.minX || e.x > e.maxX) e.speed *= -1;
-        } else {
-           if (e.x < -50 || e.x > canvas.width + 50) e.speed *= -1;
-        }
-
-        let shot = false;
-        bullets.forEach((b, bIdx) => {
-           if (b.x > e.x && b.x < e.x + e.width && b.y > e.y && b.y < e.y + e.width) {
-              shot = true;
-              bullets.splice(bIdx, 1);
-           }
-        });
-
-        if (shot) {
-            enemies.splice(idx, 1);
-            bonusScore += 200;
-            createParticles(e.x + e.width/2, e.y, '#ef4444');
-            playSound('score');
-            return;
-        }
-
-        if (player.x < e.x + e.width - 4 && player.x + player.width > e.x + 4 && player.y < e.y + e.width - 4 && player.y + player.height > e.y + 4) {
-          if (player.vy > 0 && player.y + player.height < e.y + 15) {
-             enemies.splice(idx, 1);
-             player.vy = selectedChar.jumpForce; 
-             bonusScore += 200;
-             playSound('score');
-          } else if (player.shield > 0) {
-             player.shield = 0;
-             enemies.splice(idx, 1);
-             cameraShake = 20;
-             screenFlash = 1;
-             playSound('alert');
-          } else if (player.jetpack > 0) {
-             enemies.splice(idx, 1);
-             playSound('score');
-          } else {
-             createParticles(player.x + player.width/2, player.y + player.height/2, '#f43f5e');
-             createParticles(player.x + player.width/2, player.y + player.height/2, '#ffffff');
-             playSound('lose');
-             setIsPlaying(false);
-          }
-        }
-      });
-
-      floatingTexts.forEach(ft => { ft.y -= 1.2 * normalDt; ft.alpha -= 0.02 * normalDt; });
-      floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
-      particles.forEach(p => { 
-          p.life -= 0.04 * normalDt; 
-          p.vy += GRAVITY * 0.2 * normalDt; 
-          p.x += p.vx * normalDt; 
-          p.y += p.vy * normalDt; 
-      });
-      particles = particles.filter(p => p.life > 0);
       
-      trails.forEach(t => { t.life -= 0.1 * normalDt; });
-      trails = trails.filter(t => t.life > 0);
-      
-      if (Math.abs(player.vx) > 3 || Math.abs(player.vy) > 8 || player.jetpack > 0) {
-         if (Math.random() > 0.5) {
-             trails.push({ x: player.x, y: player.y, life: 0.5, color: selectedChar.accent });
+      // Platform Generation
+      const highestPlat = platforms.reduce((min, p) => p.y < min ? p.y : min, canvas.height);
+      if (highestPlat > 50) {
+         const numPlats = Math.floor(Math.random() * 2) + 1;
+         for(let i=0; i<numPlats; i++) {
+             const newP = {
+                 x: Math.random() * (canvas.width - PLATFORM_WIDTH),
+                 y: highestPlat - (70 + Math.random()*60),
+                 width: PLATFORM_WIDTH,
+                 hasSpring: Math.random() > 0.9,
+                 type: Math.random() > 0.8 ? 'moving' : (Math.random() > 0.85 ? 'breaking' : 'normal'),
+                 vx: Math.random() > 0.5 ? 2 + Math.random()*3 : -2 - Math.random()*3,
+                 broken: false,
+                 isStepped: false,
+                 crackValue: 0,
+                 opacity: 1
+             };
+             if (adBreakTimer > 0) {
+                 newP.type = 'normal';
+                 newP.width = PLATFORM_WIDTH * 2;
+             } else if (Math.random() > 0.95 && maxScore > 1000) {
+                 newP.type = 'billboard';
+                 newP.width = 120;
+             } else if (Math.random() > 0.96) {
+                 newP.type = 'boost';
+             }
+             platforms.push(newP);
+             if (newP.type !== 'breaking' && newP.type !== 'billboard') spawnEntity(newP);
          }
       }
-
-      if (player.y > canvas.height) {
-        playSound('lose');
-        setIsPlaying(false);
+      
+      // Manage Platforms
+      let steppedCount = 0;
+      platforms.forEach((p, i) => {
+         if (p.broken) {
+            p.opacity -= 0.1 * normalDt;
+            if (p.opacity <= 0) platforms.splice(i, 1);
+            return;
+         }
+         
+         if (p.type === 'moving') {
+            p.x += p.vx * normalDt;
+            if (p.x < 0 || p.x + p.width > canvas.width) p.vx *= -1;
+         }
+         
+         // Collision
+         if (player.vy > 0 && player.vy < 30 && prevY + player.height - 10 <= p.y) {
+            // Check bounding box + tolerance
+            if (player.x + player.width > p.x - 5 && player.x < p.x + p.width + 5 && player.y + player.height >= p.y && player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy + 5) {
+                if (p.type === 'breaking') {
+                    p.crackValue += normalDt;
+                    if (p.crackValue > 5) {
+                       p.broken = true;
+                       playSound('hit');
+                    }
+                } else if (p.type === 'boost') {
+                    player.vy = selectedChar.jumpForce * 1.5 - upgrades.jump;
+                    player.jumps = 1;
+                    playSound('bounce');
+                    createParticles(p.x + p.width/2, p.y, '#eab308');
+                    cameraShake = 15;
+                } else {
+                    player.vy = selectedChar.jumpForce - upgrades.jump * 0.5;
+                    player.jumps = 1;
+                    if (p.hasSpring) {
+                       player.vy *= 1.5;
+                       playSound('bounce');
+                       createParticles(p.x + p.width/2, p.y, '#f43f5e');
+                    } else {
+                       playSound('jump');
+                    }
+                }
+                
+                if (!p.isStepped && !p.broken) {
+                   p.isStepped = true;
+                   if (p.type === 'billboard' && comboTimer <= 0) {
+                      comboTimer = 180;
+                      comboMultiplier = 2;
+                      sessionCoins += 5; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+                      addFloatingText(p.x, p.y - 20, 'SPONSOR HIT!', '#3b82f6');
+                   } else if (p.type !== 'breaking') {
+                      bonusScore += 10 * comboMultiplier;
+                   }
+                }
+            }
+         }
+         
+         if (p.y > canvas.height + 50) platforms.splice(i, 1);
+      });
+      
+      // Enemies
+      enemies.forEach((en, i) => {
+         en.x += en.speed * normalDt;
+         if (en.isBouncer) {
+            if (en.x < (en.minX || 0) || en.x > (en.maxX || canvas.width)) en.speed *= -1;
+         } else {
+            if (en.x < -en.width) en.x = canvas.width;
+            if (en.x > canvas.width) en.x = -en.width;
+         }
+         
+         if (en.y > canvas.height + 50) { enemies.splice(i, 1); return; }
+         
+         // Touch enemy
+         if (player.x < en.x + en.width && player.x + player.width > en.x && player.y < en.y + 20 && player.y + player.height > en.y) {
+            if (player.vy > 0 && player.y + player.height < en.y + 15) {
+                enemies.splice(i, 1);
+                player.vy = selectedChar.jumpForce;
+                bonusScore += 200;
+                sessionCoins += 2; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+                playSound('score');
+                createParticles(en.x + en.width/2, en.y, '#10b981');
+                addFloatingText(en.x, en.y, '+200', '#10b981');
+            } else if (!player.jetpack) {
+                if (player.shield > 0) {
+                    player.shield = 0;
+                    setHudShield(0);
+                    enemies.splice(i, 1);
+                    playSound('alert');
+                    screenFlash = 1;
+                    cameraShake = 20;
+                } else {
+                    playSound('lose');
+                    const finalScore = Math.floor(maxScore) + bonusScore;
+                    setScore(finalScore);
+                    setFestCoins(prev => prev + sessionCoins + Math.floor(finalScore / 50));
+                    if (finalScore > highScore) setHighScore(finalScore);
+                    setIsPlaying(false);
+                }
+            }
+         }
+      });
+      
+      // Powerups
+      powerups.forEach((pw, i) => {
+         if (pw.y > canvas.height + 50) { powerups.splice(i, 1); return; }
+         
+         if (pw.type === 'magnet' || upgrades.magnet > 0) {
+            const dist = Math.hypot(player.x - pw.x, player.y - pw.y);
+            if (dist < MAGNET_RANGE) {
+               pw.x += (player.x - pw.x) / dist * 10 * normalDt;
+               pw.y += (player.y - pw.y) / dist * 10 * normalDt;
+            }
+         }
+         
+         // Collect
+         if (player.x < pw.x + 20 && player.x + player.width > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y) {
+            powerups.splice(i, 1);
+            if (pw.type === 'vip') {
+               sessionCoins += 50; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+               bonusScore += 500;
+               playSound('win');
+               adBreakTimer = 400; 
+               cameraShake = 20;
+               screenFlash = 0.5;
+            } else if (pw.type === 'merch') {
+               player.shield = 1;
+               setHudShield(1);
+               playSound('powerup');
+               addFloatingText(pw.x, pw.y, 'SHIELD', '#3b82f6');
+            } else if (pw.type === 'glowstick') {
+               sessionCoins += 5; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+               playSound('score');
+            } else if (pw.type === 'beer') {
+               player.jetpack = 200;
+               playSound('start');
+               cameraShake = 10;
+            } else if (pw.type === 'magnet') {
+               player.magnet = 300;
+               playSound('powerup');
+            }
+         }
+      });
+      
+      // Combo & HUD Updates
+      if (comboTimer > 0) {
+         comboTimer -= normalDt;
+         if (comboTimer <= 0) comboMultiplier = 1;
       }
-
-      if (scoreRefDOM.current) scoreRefDOM.current.innerText = (Math.floor(maxScore) + bonusScore).toString();
+      
+      if (player.y > canvas.height) {
+         playSound('lose');
+         const finalScore = Math.floor(maxScore) + bonusScore;
+         setScore(finalScore);
+         setFestCoins(prev => {
+             const added = sessionCoins + Math.floor(finalScore / 50);
+             return prev + added;
+         });
+         if (finalScore > highScore) setHighScore(finalScore);
+         setIsPlaying(false);
+      }
+      
+      if (scoreRefDOM.current) scoreRefDOM.current.innerText = Math.floor(Math.floor(maxScore) + bonusScore).toString();
     };
 
-    const draw = (dt: number) => {
+        const draw = (dt) => {
+      const normalDt = dt / 16.666;
       const theme = getTheme(maxScore);
-      
-      ctx.fillStyle = theme.bgSolid; // Deep dark blue for synth grid
+
+      // --- NEW BACKGROUND LOGIC ---
+      ctx.fillStyle = theme.bgSolid;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Starfield parallax
-      for(let i=1; i<40; i++) {
-         let sy = (canvas.height - ((cameraY * (i%3 + 1) * 0.1) % canvas.height) + (i*17)) % canvas.height;
-         let sx = (i * 23) % canvas.width;
-         ctx.shadowBlur = i % 3 === 0 ? 5 : 0;
-         ctx.shadowColor = theme.star;
-         ctx.fillStyle = theme.star;
-         ctx.fillRect(sx, sy, i%3 === 0 ? 3 : 1.5, i%3 === 0 ? 3 : 1.5);
-      }
-      ctx.shadowBlur = 0;
-      
-      // Synthwave Sun
-      ctx.save();
-      const sunY = (canvas.height * 0.8) + (cameraY * 0.05) % 80;
-      ctx.translate(canvas.width / 2, sunY);
-      
-      const sunGradient = ctx.createLinearGradient(0, -100, 0, 100);
-      sunGradient.addColorStop(0, '#f97316'); // Orange
-      sunGradient.addColorStop(0.4, '#e11d48'); // Pink-red
-      sunGradient.addColorStop(0.8, '#7e22ce'); // Purple
-      
-      ctx.beginPath();
-      ctx.arc(0, 0, 100, 0, Math.PI * 2);
-      ctx.fillStyle = sunGradient;
-      ctx.shadowBlur = 40;
-      ctx.shadowColor = '#e11d48';
-      ctx.fill();
 
-      // Sun stripes (outrun style)
-      ctx.globalCompositeOperation = 'destination-out';
-      for(let i = 0; i < 7; i++) {
-         const stripeY = i * 18 - 20;
-         const stripeH = 3 + i * 2;
-         ctx.fillRect(-120, stripeY, 240, stripeH);
-      }
-      ctx.restore();
-
-      // Synthwave / Retro grid background
-      const gradientBg = ctx.createLinearGradient(0, canvas.height, 0, 0);
-      gradientBg.addColorStop(0, theme.bgTop); 
-      gradientBg.addColorStop(1, theme.bgBottom);
-
-      ctx.fillStyle = gradientBg;
-      ctx.fillRect(0, Math.max(0, canvas.height - 300), canvas.width, 300);
-
-      ctx.strokeStyle = theme.gridColor; 
+      const gridY = cameraY % 40;
+      ctx.strokeStyle = theme.gridColor;
       ctx.lineWidth = 1;
-      const gridSize = 50;
-      const yOffset = (cameraY * 0.3) % gridSize;
-      
-      // Add glowing grid effect at bottom
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = theme.gridColor;
       ctx.beginPath();
-      for(let y = yOffset; y < canvas.height; y += gridSize) {
-         ctx.moveTo(0, y);
-         ctx.lineTo(canvas.width, y);
+      for (let i = 0; i < canvas.width; i += 40) {
+         ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height);
       }
-      for(let x = 0; x < canvas.width; x += gridSize) {
-         ctx.moveTo(x, 0);
-         ctx.lineTo(x, canvas.height);
+      for (let j = 0; j < canvas.height + 40; j += 40) {
+         ctx.moveTo(0, j + gridY); ctx.lineTo(canvas.width, j + gridY);
       }
       ctx.stroke();
-      ctx.shadowBlur = 0;
+
+      const bgLayer = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgLayer.addColorStop(0, theme.bgTop);
+      bgLayer.addColorStop(1, theme.bgBottom);
+      ctx.fillStyle = bgLayer;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Background Stars (Parallax)
+      ctx.fillStyle = theme.star;
+      bgStars.forEach(s => {
+         ctx.beginPath();
+         ctx.arc(s.x, s.y, s.s, 0, Math.PI*2);
+         ctx.fill();
+      });
 
       if (adBreakTimer > 0) {
-         ctx.fillStyle = `rgba(16, 185, 129, ${adBreakTimer / 400})`;
+         ctx.fillStyle = `rgba(16, 185, 129, ${(adBreakTimer / 400) * 0.1})`;
          ctx.fillRect(0, 0, canvas.width, canvas.height);
-         ctx.fillStyle = `rgba(255, 255, 255, ${(adBreakTimer / 400)*0.5})`;
-         ctx.font = '900 30px monospace';
+         ctx.save();
+         ctx.fillStyle = 'rgba(0,0,0,0.5)';
+         ctx.fillRect(0, 20, canvas.width, 30);
+         ctx.fillStyle = `rgba(16, 185, 129, ${(adBreakTimer / 400)})`;
+         ctx.font = 'bold 16px monospace';
          ctx.textAlign = 'center';
-         ctx.fillText(t('game.fest.text.sponsor_rain'), canvas.width/2, 100);
-         ctx.textAlign = 'left';
+         const flash = Math.floor(Date.now() / 150) % 2 === 0;
+         if (flash) ctx.fillText('⚡ EVENT TAKEOVER ⚡', canvas.width/2, 40);
+         const tOffset = Date.now() * 0.003;
+         for(let k=0; k<12; k++) {
+            const bx = (canvas.width / 2) + Math.sin(tOffset + k * 1.5) * canvas.width*0.4 * Math.cos(k);
+            const by = (cameraY % canvas.height) + Math.cos(tOffset * 0.5 + k * 2) * canvas.height*2;
+            const actualY = ((by % canvas.height) + canvas.height) % canvas.height;
+            ctx.fillStyle = k%2==0 ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.2)';
+            ctx.fillRect(bx, actualY, 4, 12);
+         }
+         ctx.restore();
       }
+      // -----------------------------
 
       platforms.forEach(p => {
         if (p.broken) return;
@@ -988,6 +958,24 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       });
       ctx.globalAlpha = 1;
 
+      
+      if (zoneBannerTimer > 0) {
+         ctx.save();
+         const yOffset = -50 + Math.min(100, zoneBannerTimer)*0.5;
+         ctx.fillStyle = 'rgba(0,0,0,0.7)';
+         ctx.fillRect(0, canvas.height/2 + yOffset - 30, canvas.width, 60);
+         ctx.fillStyle = theme.platMov;
+         ctx.font = 'bold 24px monospace';
+         ctx.textAlign = 'center';
+         ctx.shadowBlur = 10;
+         ctx.shadowColor = theme.platMov;
+         ctx.fillText('ENTERING:', canvas.width/2, canvas.height/2 + yOffset - 5);
+         ctx.font = '900 32px monospace';
+         ctx.fillStyle = '#ffffff';
+         ctx.fillText(lastZone.toUpperCase(), canvas.width/2, canvas.height/2 + yOffset + 25);
+         ctx.restore();
+      }
+
       if (comboTimer > 0 && comboMultiplier > 1) {
          ctx.fillStyle = `rgba(236, 72, 153, ${comboTimer / 180})`;
          ctx.font = 'bold 24px monospace';
@@ -1000,6 +988,22 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         ctx.fillStyle = `rgba(255, 255, 255, ${screenFlash * 0.4})`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
+
+      
+      if (gameState === 'ready') {
+         ctx.save();
+         ctx.fillStyle = 'rgba(0,0,0,0.6)';
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+         ctx.fillStyle = '#f43f5e';
+         ctx.font = '900 64px monospace';
+         ctx.textAlign = 'center';
+         ctx.shadowBlur = 20;
+         ctx.shadowColor = '#f43f5e';
+         const text = Math.ceil(readyTimer / 60).toString();
+         ctx.fillText(readyTimer > 10 ? text : 'JUMP!', canvas.width/2, canvas.height/2);
+         ctx.restore();
+      }
+
 
       update(dt);
     };
@@ -1016,14 +1020,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     return () => cancelAnimationFrame(animationFrameId);
   }, [isPlaying, selectedChar, upgrades]);
 
-  const handleGameOver = () => {
-     setFestCoins(prev => prev + Math.floor(score / 50));
-     if (score > highScore) setHighScore(score);
-  };
-
-  useEffect(() => {
-    if (!isPlaying && score > 0) handleGameOver();
-  }, [isPlaying]);
+  
 
   const [shopTab, setShopTab] = useState<'chars' | 'upgrades' | 'rewards'>('chars');
   const [ownedRewards, setOwnedRewards] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_rewards') || '[]'));
@@ -1040,21 +1037,27 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       <div className={isPlaying ? "w-full max-w-2xl h-full max-h-screen mx-auto flex flex-col" : "w-full h-full max-w-2xl mx-auto flex flex-col"}>
       
       {/* Top HUD */}
-      <div className="flex justify-between items-center w-full px-4 py-3 mb-2 bg-black/60 backdrop-blur-md rounded-t-xl border border-pink-500/20 shrink-0 z-10 shadow-[0_4px_20px_rgba(236,72,153,0.1)]">
+      <div className="flex justify-between items-center w-full px-4 py-3 mb-2 bg-gradient-to-r from-black/80 via-black/40 to-black/80 backdrop-blur-xl rounded-t-xl border border-white/10 shrink-0 z-10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
         <div className="flex flex-col gap-1">
-          <p className="text-pink-400 flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]">
-            <User className="w-3 h-3" /> <span>{t(selectedChar.nameKey)}</span>
+          <p className="text-white/80 flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest px-2 py-1 bg-white/5 rounded">
+            <User className="w-3 h-3 text-pink-400" /> <span style={{color: selectedChar.color}} className="drop-shadow-lg">{t(selectedChar.nameKey)}</span>
           </p>
-          <div className="flex items-center gap-2 text-yellow-400 text-[10px] font-black italic tracking-widest">
-            <Zap className="w-3 h-3 fill-yellow-400" />
+          <div className="flex items-center gap-2 text-yellow-400 text-[11px] font-black italic tracking-widest px-2 group cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowShop(true)}>
+            <div className="relative">
+              <Zap className="w-4 h-4 fill-yellow-400 animate-pulse" />
+              <div className="absolute inset-0 bg-yellow-400 blur-sm opacity-50"></div>
+            </div>
             <span ref={coinsRefDOM} className="drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">{festCoins} KARMAS</span>
           </div>
         </div>
         
         <div className="flex flex-col items-end">
-          <div className="flex items-baseline gap-2 bg-blue-500/10 px-4 py-1.5 rounded border border-blue-400/30 shadow-[inset_0_0_10px_rgba(59,130,246,0.2)]">
-            <p ref={scoreRefDOM} className="text-2xl font-black italic tracking-tighter text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">{score}</p>
-            <span className="text-[10px] text-blue-300/60 font-mono font-bold tracking-widest uppercase">/ {highScore} PEAK</span>
+          <div className="flex items-baseline gap-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 px-5 py-2 rounded-lg border border-blue-400/20 shadow-[inset_0_0_15px_rgba(59,130,246,0.2)]">
+            <p ref={scoreRefDOM} className="text-3xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-blue-300 to-purple-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">{score}</p>
+            <span className="text-[10px] text-blue-200/50 font-mono font-bold tracking-[0.2em] flex flex-col items-end">
+              <span className="text-[8px] text-purple-300/40">HIGH SCORE</span>
+              {highScore}
+            </span>
           </div>
         </div>
       </div>
@@ -1096,6 +1099,13 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                     <button onClick={() => setShopTab('rewards')} className={`flex-1 py-3 text-[10px] font-black tracking-widest uppercase transition-all border-b-2 ${shopTab === 'rewards' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10 shadow-[inset_0_0_10px_rgba(234,179,8,0.2)]' : 'border-white/10 text-white/40 hover:bg-white/5 hover:text-white/70'}`}>Rewards</button>
                   </div>
 
+                  <div className="flex w-full px-4 mb-4 justify-between items-center bg-white/5 p-3 rounded-lg border border-white/10">
+                     <span className="text-white/60 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2"><Settings size={14}/> Touch Buttons</span>
+                     <button onClick={() => setShowMobileControls(!showMobileControls)} className={`w-12 h-6 rounded-full transition-colors relative ${showMobileControls ? 'bg-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)]' : 'bg-white/20'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all ${showMobileControls ? 'left-6' : 'left-0.5'}`}></div>
+                     </button>
+                  </div>
+
                   <div className="flex-1 w-full overflow-y-auto px-2 custom-scrollbar flex flex-col gap-3">
                     {shopTab === 'rewards' ? MARKETING_REWARDS.map((reward, i) => (
                       <div key={'reward_' + reward.id + '_' + i} className="bg-black/50 p-4 border border-yellow-500/30 rounded-xl flex justify-between items-center text-left hover:border-yellow-500/60 transition-colors">
@@ -1111,7 +1121,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                                   setFestCoins(prev => prev - reward.cost);
                                   setOwnedRewards(prev => [...prev, reward.id]);
                                   showMsg('REDEEMED', 'success');
-                               } else showMsg('INSUFFICIENT KOINS', 'error');
+                               } else showMsg('INSUFFICIENT KARMAS', 'error');
                             }} className="bg-yellow-500/10 border border-yellow-500/50 px-3 py-2 rounded text-[10px] font-bold text-yellow-400 flex items-center gap-2 hover:bg-yellow-500/30 transition-colors"><Zap className="w-4 h-4"/> {reward.cost}</button>
                          )}
                       </div>
@@ -1129,7 +1139,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                                   setFestCoins(prev => prev - char.price);
                                   setUnlockedChars(prev => [...prev, char.id]);
                                   showMsg('UNLOCKED', 'success');
-                               } else showMsg('INSUFFICIENT KOINS', 'error');
+                               } else showMsg('INSUFFICIENT KARMAS', 'error');
                             }} className="bg-pink-500/10 border border-pink-500/50 px-3 py-2 rounded text-[10px] font-bold text-pink-400 flex items-center gap-2 hover:bg-pink-500/30 transition-colors"><Zap className="w-4 h-4"/> {char.price}</button>
                          )}
                       </div>
@@ -1149,7 +1159,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                                   setFestCoins(prev => prev - cost);
                                   setUpgrades(prev => ({ ...prev, [type]: prev[type as keyof typeof upgrades] + 1 }));
                                   showMsg('SYSTEM UPGRADED', 'success');
-                               } else showMsg('INSUFFICIENT KOINS', 'error');
+                               } else showMsg('INSUFFICIENT KARMAS', 'error');
                             }} className="bg-blue-500/10 border border-blue-500/50 px-3 py-2 rounded text-[10px] font-bold text-blue-400 flex items-center gap-2 hover:bg-blue-500/30 transition-colors">{upgrades[type as keyof typeof upgrades] >= 5 ? 'MAX_LVL' : <><Zap className="w-4 h-4"/> {(upgrades[type as keyof typeof upgrades] + 1) * 300}</>}</button>
                          </div>
                       ))
@@ -1189,12 +1199,12 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       </div>
 
       {isPlaying && showMobileControls && (
-        <div className="relative z-50 w-full mt-4 px-4 flex justify-between md:hidden gap-4">
-          <div className="flex gap-2 w-1/2">
-            <button onTouchStart={(e) => { e.preventDefault(); keysRef.current.left = true; }} onTouchEnd={(e) => { e.preventDefault(); keysRef.current.left = false; }} className="flex-1 h-16 bg-[#ced0c8] rounded shadow-[0_5px_0_#9a9b95] active:translate-y-1 active:shadow-none flex items-center justify-center text-zinc-500 font-bold border-2 border-white/50"><ChevronLeft size={24} /></button>
-            <button onTouchStart={(e) => { e.preventDefault(); keysRef.current.right = true; }} onTouchEnd={(e) => { e.preventDefault(); keysRef.current.right = false; }} className="flex-1 h-16 bg-[#ced0c8] rounded shadow-[0_5px_0_#9a9b95] active:translate-y-1 active:shadow-none flex items-center justify-center text-zinc-500 font-bold border-2 border-white/50"><ChevronRight size={24} /></button>
+        <div className="relative z-50 w-full mt-4 px-4 flex justify-between md:hidden gap-4 pointer-events-auto">
+          <div className="flex gap-4 w-2/3">
+            <button onPointerDown={(e) => { e.preventDefault(); keysRef.current.left = true; }} onPointerUp={(e) => { e.preventDefault(); keysRef.current.left = false; }} onPointerLeave={(e) => { e.preventDefault(); keysRef.current.left = false; }} className="flex-1 h-20 bg-gradient-to-t from-gray-900 to-gray-800 rounded-2xl shadow-[0_8px_0_#111827,0_15px_20px_rgba(0,0,0,0.5)] active:translate-y-2 active:shadow-[0_0px_0_#111827,0_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center text-white/50 border border-white/10 touch-none"><ChevronLeft size={36} /></button>
+            <button onPointerDown={(e) => { e.preventDefault(); keysRef.current.right = true; }} onPointerUp={(e) => { e.preventDefault(); keysRef.current.right = false; }} onPointerLeave={(e) => { e.preventDefault(); keysRef.current.right = false; }} className="flex-1 h-20 bg-gradient-to-t from-gray-900 to-gray-800 rounded-2xl shadow-[0_8px_0_#111827,0_15px_20px_rgba(0,0,0,0.5)] active:translate-y-2 active:shadow-[0_0px_0_#111827,0_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center text-white/50 border border-white/10 touch-none"><ChevronRight size={36} /></button>
           </div>
-          <button onTouchStart={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' })); }} className="w-20 h-16 bg-brand-accent rounded shadow-[0_5px_0_#7f1d1d] active:translate-y-1 active:shadow-none flex items-center justify-center text-white border-2 border-red-400"><Rocket size={24} /></button>
+          <button onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' })); }} onPointerUp={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' })); }} className="w-1/3 h-20 bg-gradient-to-t from-pink-700 to-pink-500 rounded-2xl shadow-[0_8px_0_#831843,0_15px_30px_rgba(236,72,153,0.4)] active:translate-y-2 active:shadow-none flex items-center justify-center text-white border border-pink-400 touch-none"><Rocket size={32} className="animate-pulse" /></button>
         </div>
       )}
       </div>

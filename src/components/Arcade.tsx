@@ -65,13 +65,14 @@ export function Arcade() {
       setBootLog([]);
       
       const lines = [
-        "BIOS DATE 04/23/94 14:32:00 VER 1.0",
-        "CPU: Intel 486 DX2-66 MHz",
-        "Memory Test: 8192K OK",
-        "Loading Sisyphus OS...",
-        "Device Drivers Loaded.",
-        "Sound Blaster Compatible Audio Base 220 IRQ 5.",
-        "CD-ROM DEVICE DRIVER INSTALLED.",
+        "BIOS DATE 04/23/88 15:23:44 VER 2.11 RIVAD-ENTERTAINMENT",
+        "CPU: RIVAD Custom Silicon @ 8.2 MHz",
+        "Memory Test: 4096K OK",
+        "Initializing Video Subsystem...",
+        "Loading Sisyphus OS v3.1...",
+        "Device Drivers Loaded. Vector unit online.",
+        "Sound Subsystem: SYNC-OK. Output: STEREO 8-BIT.",
+        "Network: NO CARRIER.",
         "",
         "A:\\> WAIT FOR INPUT..."
       ];
@@ -82,7 +83,7 @@ export function Arcade() {
           if (index === lines.length - 1) {
             setPowerState('waiting');
           }
-        }, index * 400 + 500);
+        }, index * 300 + 400);
       });
 
     } else {
@@ -163,7 +164,7 @@ export function Arcade() {
   }, []);
 
   return (
-    <div className="w-full bg-[#06060c] border-y border-[#3a2d59]/50 py-24 pb-48 relative overflow-hidden">
+    <div className="w-full bg-transparent border-y border-brand-accent/20 py-24 pb-48 relative overflow-hidden">
       <div className="w-full max-w-5xl mx-auto px-6 md:px-0">
         {/* Background glow around the arcade */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-accent/20 rounded-full blur-[150px] opacity-30 pointer-events-none" />
@@ -173,17 +174,17 @@ export function Arcade() {
             <h2 className="text-sm font-mono tracking-[0.2em] text-brand-accent uppercase mb-4 border-b border-brand-accent/30 pb-2 inline-block">
               {t('arc.restricted')}
             </h2>
-            <h3 className="text-6xl md:text-8xl font-display uppercase tracking-tighter text-brand-ink leading-none">
+            <h3 className="text-6xl md:text-8xl font-display uppercase tracking-tighter text-gray-100 leading-none">
               Arcade <br className="hidden md:block" />
-              <span className="font-display text-brand-ink lowercase font-medium tracking-normal ml-0 md:ml-12">{t('arc.sisyphus')}</span>
+              <span className="font-display text-gray-100 lowercase font-medium tracking-normal ml-0 md:ml-12">{t('arc.sisyphus')}</span>
             </h3>
           </div>
-          <p className="text-brand-ink/80 font-sans font-light max-w-sm text-sm md:text-base leading-relaxed border-l border-brand-accent/30 pl-4 py-2">
+          <p className="text-gray-400 font-sans font-light max-w-sm text-sm md:text-base leading-relaxed border-l border-brand-accent/30 pl-4 py-2">
             {t('arc.desc')}
           </p>
         </div>
 
-        <div ref={arcadeCabinetRef} className={`flex flex-col items-center relative ${isFullscreen ? 'h-screen w-screen bg-[#110f1c] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
+        <div ref={arcadeCabinetRef} className={`flex flex-col items-center relative ${isFullscreen ? 'h-screen w-screen bg-[#050505] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
           {/* 60s Interruption Popup - Moved inside the machine container */}
           <AnimatePresence>
             {showPopup && (
@@ -193,7 +194,7 @@ export function Arcade() {
                   initial={{ scale: 0.9, opacity: 0, y: 20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                  className="bg-zinc-950 border border-brand-accent/30 p-8 rounded-3xl max-w-sm w-full shadow-[0_0_50px_rgba(138,99,210,0.4)] flex flex-col items-center text-center gap-6 relative z-10"
+                  className="bg-zinc-950 border border-brand-accent/30 p-8 rounded-3xl max-w-sm w-full shadow-[0_0_50px_rgba(242,74,41,0.4)] flex flex-col items-center text-center gap-6 relative z-10"
                 >
                   <div className="w-16 h-16 bg-brand-accent/10 rounded-full flex items-center justify-center text-brand-accent border border-brand-accent/20">
                     <MessageCircle size={32} className="animate-pulse" />
@@ -212,7 +213,7 @@ export function Arcade() {
                       setShowPopup(false);
                       playSound('powerup');
                     }}
-                    className="w-full bg-brand-accent text-white py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all font-mono text-xs shadow-[0_4px_0_#6b21a8] active:translate-y-1 active:shadow-none"
+                    className="w-full bg-brand-accent text-white py-4 rounded-full font-black uppercase tracking-[0.3em] hover:bg-brand-accent/80 transition-all font-mono text-xs shadow-[0_4px_0_#9a2b16] active:translate-y-1 active:shadow-none"
                   >
                     {t('arc.popup.btn', 'CONTINUAR')}
                   </button>
@@ -241,7 +242,7 @@ export function Arcade() {
                     disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
                     className={`flex-shrink-0 relative w-full aspect-[3/4] rounded-t-sm rounded-b flex flex-col items-center justify-start p-1.5 md:p-2 transition-all transition-colors duration-300 transform-style-3d overflow-hidden ${
                       activeGame === g.id 
-                      ? 'bg-zinc-800 border-2 border-brand-accent -translate-y-4 shadow-[0_20px_40px_rgba(138,99,210,0.4),0_0_15px_rgba(138,99,210,0.6)] z-10' 
+                      ? 'bg-zinc-800 border-2 border-brand-accent -translate-y-4 shadow-[0_20px_40px_rgba(242,74,41,0.4),0_0_15px_rgba(242,74,41,0.6)] z-10' 
                       : 'bg-zinc-900 border-2 border-zinc-700 hover:border-zinc-500 shadow-[0_8px_15px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] hover:shadow-[0_15px_25px_rgba(0,0,0,0.9)]'
                     } ${(powerState === 'off' || powerState === 'booting') ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
                   >
@@ -269,7 +270,7 @@ export function Arcade() {
 
           {/* Arcade Machine Component */}
           <div className={cn(
-            "relative bg-[#0d0d14] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#181822] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.9),inset_0_2px_10px_rgba(255,255,255,0.05)] rounded-3xl w-full transition-all duration-500",
+            "relative bg-[#0a0a0a] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#111] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.9),inset_0_2px_10px_rgba(255,255,255,0.05)] rounded-3xl w-full transition-all duration-500",
             isFullscreen ? "flex flex-col flex-grow min-h-0 h-full max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-white/5"
           )}>
 
@@ -311,12 +312,12 @@ export function Arcade() {
               
               {isFullscreen && (
                 <div className="relative group">
-                  <button className="bg-[#1e1b4b] text-[#818cf8] border-2 border-[#4f46e5] font-mono text-[10px] md:text-xs rounded-md px-4 py-2 uppercase tracking-widest hover:bg-[#312e81] shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all flex items-center gap-2">
+                  <button className="bg-brand-accent/10 text-brand-accent border-2 border-brand-accent/40 font-mono text-[10px] md:text-xs rounded-md px-4 py-2 uppercase tracking-widest hover:bg-brand-accent/20 shadow-[0_0_15px_rgba(242,74,41,0.4)] transition-all flex items-center gap-2">
                     <Zap size={14} className="text-brand-accent animate-pulse" />
                     {activeGame ? games.find(g => g.id === activeGame)?.title : t('arc.select_cartridge')}
                   </button>
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-[#020617] border border-[#312e81] rounded-lg p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-50">
-                     <p className="text-[#818cf8] text-[8px] uppercase tracking-[0.3em] font-bold mb-2 border-b border-[#1e1b4b] pb-1 px-2">{t('arc.select_cartridge')}</p>
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-[#050505] border border-brand-accent/30 rounded-lg p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-50">
+                     <p className="text-brand-accent text-[8px] uppercase tracking-[0.3em] font-bold mb-2 border-b border-brand-accent/30 pb-1 px-2">{t('arc.select_cartridge')}</p>
                      {games.map(g => (
                        <button
                          key={g.id}
@@ -325,9 +326,9 @@ export function Arcade() {
                            handleInsertCartridge(g.id);
                          }}
                          disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                         className="w-full text-left flex items-center gap-3 px-2 py-2 hover:bg-[#1e1b4b] rounded text-white font-mono text-xs uppercase disabled:opacity-50"
+                         className="w-full text-left flex items-center gap-3 px-2 py-2 hover:bg-brand-accent/10 rounded text-white font-mono text-xs uppercase disabled:opacity-50"
                        >
-                         <span className="text-[#818cf8]">{g.icon}</span>
+                         <span className="text-brand-accent">{g.icon}</span>
                          {g.label}
                        </button>
                      ))}
@@ -372,7 +373,7 @@ export function Arcade() {
             
             {/* Screen Content */}
             
-            <div className="absolute bottom-2 right-4 z-50 pointer-events-none opacity-40 mix-blend-screen text-[#4ade80] font-mono text-[8px] tracking-[0.3em] font-black drop-shadow-[0_0_4px_#22c55e]">
+            <div className="absolute bottom-2 right-4 z-50 pointer-events-none opacity-40 mix-blend-screen text-brand-accent font-mono text-[8px] tracking-[0.3em] font-black drop-shadow-[0_0_4px_#22c55e]">
                by Rivad
             </div>
             <div id="arcade-screen-container" className="relative z-10 w-full h-full flex-grow flex flex-col items-center justify-center [&_*:focus-visible]:outline-2 [&_*:focus-visible]:outline-brand-accent [&_*:focus]:outline-offset-2">
@@ -417,7 +418,7 @@ export function Arcade() {
                     </div>
                   )}
 
-                  <div className="text-green-500 font-mono text-xs md:text-sm leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(34,197,94,0.8)] z-0">
+                  <div className="text-brand-accent font-[var(--font-pixel)] text-[10px] md:text-xs leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.8)] z-0">
                     {bootLog.map((line, i) => (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }} 
@@ -428,16 +429,16 @@ export function Arcade() {
                         {line}
                       </motion.div>
                     ))}
-                    {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 ml-1 translate-y-1"></motion.span>}
+                    {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent ml-1 translate-y-1"></motion.span>}
                     {powerState === 'waiting' && (
    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
       {games.map(g => (
          <button
             key={g.id}
             onClick={() => handleInsertCartridge(g.id)}
-            className="border-2 border-green-500/50 bg-green-950/30 p-4 font-mono text-left hover:bg-green-500 hover:text-black transition-colors group flex items-center gap-4"
+            className="border-2 border-brand-accent/50 bg-brand-accent/5 p-4 font-mono text-left hover:bg-brand-accent hover:text-black transition-colors group flex items-center gap-4"
          >
-            <div className="text-green-500 group-hover:text-black">{g.icon}</div>
+            <div className="text-brand-accent group-hover:text-black">{g.icon}</div>
             <div>
                <div className="font-bold text-sm">{g.label}</div>
                <div className="text-[10px] opacity-75">{g.title}</div>
@@ -445,7 +446,7 @@ export function Arcade() {
          </button>
       ))}
       <div className="col-span-1 md:col-span-2 text-center mt-4">
-         <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-green-500 translate-y-1 mr-2"></motion.span>
+         <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent translate-y-1 mr-2"></motion.span>
          <span className="text-[10px] uppercase tracking-widest break-all">A:\&gt; AWAITING SELECTION...</span>
       </div>
    </div>
@@ -479,7 +480,7 @@ export function Arcade() {
           
           {/* Vintage PC Keyboard & Drive Area */}
           <div className={cn(
-            "flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#121218] rounded-2xl border-t border-white/10 border-[#08080c] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-6 md:gap-8 flex-shrink-0 transition-all",
+            "flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#080808] rounded-2xl border-t border-white/10 border-[#000] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-6 md:gap-8 flex-shrink-0 transition-all",
             isFullscreen ? "mt-2 md:mt-4 py-4 md:py-6 border-b-4 md:border-b-8" : "mt-8 py-8 border-b-[12px]"
           )}>
              {/* Decorative Floppy Drive */}

@@ -119,9 +119,9 @@ export function Hero() {
             
             <a 
               href="#servicios"
-              className="group flex-nowrap w-full max-w-[320px] sm:max-w-md inline-flex items-center justify-center px-6 py-4 md:py-5 bg-[#1d3146] border border-[#e6d5d5] text-[#ffffff] transition-all duration-500 rounded-2xl backdrop-blur-sm"
+              className="group flex-nowrap w-full max-w-[320px] sm:max-w-md inline-flex items-center justify-center px-6 py-4 md:py-5 border border-white/10 hover:border-brand-accent hover:bg-brand-accent/5 focus:outline-none transition-all duration-500 rounded-2xl backdrop-blur-sm"
             >
-              <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-[#e8e8e8] transition-colors">
+              <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-white/50 group-hover:text-brand-accent transition-colors">
                 {t('hero.services')}
               </span>
             </a>
