@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle, ChevronLeft, ChevronRight, Settings, Music, Target } from 'lucide-react';
+import { ShoppingCart, User, Key, Shield, Zap, Rocket, AlertCircle, ChevronLeft, ChevronRight, Settings, Music, Target, Pause } from 'lucide-react';
 import { FullscreenButton } from '../ui/FullscreenButton';
 
 interface Character {
@@ -19,10 +19,10 @@ interface Character {
 }
 
 const CHARACTERS: Character[] = [
-  { id: 'default', nameKey: 'RAVER', descKey: 'Standard attendee', price: 0, jumpForce: -14.5, speed: 24, color: '#10b981', accent: '#ec4899' },
-  { id: 'punk', nameKey: 'BASSHEAD', descKey: 'Fast horizontal speed', price: 200, jumpForce: -15, speed: 30, color: '#f43f5e', accent: '#fbbf24' },
-  { id: 'ghost', nameKey: 'SHUFFLER', descKey: 'Heavy but high jumps', price: 500, jumpForce: -20, speed: 16, color: '#f8fafc', accent: '#8b5cf6' },
-  { id: 'cyber', nameKey: 'MAIN-DJ', descKey: 'Double jump active', price: 1000, jumpForce: -15.5, speed: 20, color: '#0ea5e9', accent: '#10b981', doubleJump: true },
+  { id: 'default', nameKey: 'RAVER', descKey: 'Standard attendee', price: 0, jumpForce: -19, speed: 28, color: '#10b981', accent: '#ec4899' },
+  { id: 'punk', nameKey: 'BASSHEAD', descKey: 'Fast horizontal speed', price: 200, jumpForce: -20, speed: 38, color: '#f43f5e', accent: '#fbbf24' },
+  { id: 'ghost', nameKey: 'SHUFFLER', descKey: 'Heavy but high jumps', price: 500, jumpForce: -26, speed: 20, color: '#f8fafc', accent: '#8b5cf6' },
+  { id: 'cyber', nameKey: 'MAIN-DJ', descKey: 'Double jump active', price: 1000, jumpForce: -20, speed: 24, color: '#0ea5e9', accent: '#10b981', doubleJump: true },
 ];
 
 export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }) {
@@ -39,6 +39,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
   const coinsRefDOM = useRef<HTMLSpanElement>(null);
   const [hudShield, setHudShield] = useState(0);
   const [hudJetpack, setHudJetpack] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const [festCoins, setFestCoins] = useState(() => Number(localStorage.getItem('fest_coins') || 0));
   const [unlockedChars, setUnlockedChars] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_chars') || '["default"]'));
   const [selectedCharId, setSelectedCharId] = useState(() => localStorage.getItem('fest_selected_char') || 'default');
@@ -49,13 +50,15 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
   });
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
   const [gameStats, setGameStats] = useState<{earned: number, total: number, enemies: number, items: number} | null>(null);
-  const keysRef = useRef({ left: false, right: false });
+  const keysRef = useRef({ left: false, right: false, up: false });
   const pausedRef = useRef(false);
+  const isPausedRef = useRef(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
-    pausedRef.current = isPausedGlobal;
-  }, [isPausedGlobal]);
+    pausedRef.current = isPausedGlobal || isPaused;
+    isPausedRef.current = isPausedGlobal || isPaused;
+  }, [isPausedGlobal, isPaused]);
 
   const selectedChar = useMemo(() => CHARACTERS.find(c => c.id === selectedCharId) || CHARACTERS[0], [selectedCharId]);
 
@@ -142,7 +145,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     let particles: {x: number, y: number, vx: number, vy: number, life: number, color: string, size: number}[] = [];
     let trails: {x: number, y: number, life: number, color: string}[] = [];
     let powerups: {x: number, y: number, type: 'vip' | 'merch' | 'glowstick' | 'beer' | 'magnet'}[] = [];
-    let enemies: {x: number, y: number, speed: number, width: number, isBouncer?: boolean, minX?: number, maxX?: number}[] = [];
+    let enemies: {x: number, y: number, speed: number, width: number, height: number, isBouncer?: boolean, minX?: number, maxX?: number}[] = [];
     let sessionCoins = 0;
     let floatingTexts: {x: number, y: number, text: string, alpha: number, color: string, color2: string}[] = [];
     let bullets: {x: number, y: number, vy: number}[] = [];
@@ -155,7 +158,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
     const PLATFORM_WIDTH = 70;
     const PLATFORM_HEIGHT = 12;
-    const GRAVITY = 0.55;
+    const GRAVITY = 0.42;
     
     let player = {
       x: canvas.width / 2,
@@ -205,9 +208,9 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
       
       if (e.key === 'ArrowUp' || e.key === ' ') {
-         // Variable Jump Height logic: only apply if moving upwards and button pressed
-         if (player.jumps > 0 && player.jumps < (selectedChar.doubleJump ? 2 : 1) && player.vy > -5 && player.vy < 10) {
-            player.vy = selectedChar.jumpForce * 0.8;
+         // Manual Jump / Double Jump logic
+         if (player.jumps > 0 && player.jumps < (selectedChar.doubleJump ? 2 : 1)) {
+            player.vy = (selectedChar.jumpForce - upgrades.jump * 0.6) * 0.85;
             player.jumps++;
             playSound('jump');
             createParticles(player.x + player.width/2, player.y + player.height, '#fff');
@@ -227,6 +230,16 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
     };
 
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (!e.gamma) return;
+      // Gamma is left-to-right tilt in degrees [-90, 90]
+      const tilt = e.gamma; 
+      const deadzone = 3;
+      if (Math.abs(tilt) > deadzone) {
+         player.vx += tilt * 0.15;
+      }
+    };
+
     const handlePointerMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -241,6 +254,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('deviceorientation', handleOrientation);
     canvas.addEventListener('mousemove', handlePointerMove);
     canvas.addEventListener('touchmove', handlePointerMove, { passive: true });
     canvas.addEventListener('mousedown', handlePointerDown);
@@ -279,17 +293,17 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
        if (maxScore > 6000 && Math.random() > 0.85) {
           // Void Core Enemy (Fast and unpredictable)
           enemies.push({
-             x: platform.x, y: platform.y - 32, speed: 2.5 * (Math.random() > 0.5 ? 1 : -1), width: 28, isBouncer: false
+             x: platform.x, y: platform.y - 32, speed: 2.5 * (Math.random() > 0.5 ? 1 : -1), width: 28, height: 28, isBouncer: false
           });
        } else if (maxScore > 3000 && Math.random() > 0.9) {
           // Crimson Zone Enemy (Bouncer)
           enemies.push({
-             x: platform.x, y: platform.y - 32, speed: 1.5 * (Math.random() > 0.5 ? 1 : -1), width: 32, isBouncer: true, minX: platform.x, maxX: platform.x + platform.width - 32
+             x: platform.x, y: platform.y - 32, speed: 1.5 * (Math.random() > 0.5 ? 1 : -1), width: 32, height: 32, isBouncer: true, minX: platform.x, maxX: platform.x + platform.width - 32
           });
        } else if (maxScore > 1000 && Math.random() > 0.93) {
           // Cyber Slums Enemy (Basic)
           enemies.push({
-             x: platform.x, y: platform.y - 32, speed: 1.0 * (Math.random() > 0.5 ? 1 : -1), width: 32, isBouncer: false
+             x: platform.x, y: platform.y - 32, speed: 1.0 * (Math.random() > 0.5 ? 1 : -1), width: 32, height: 32, isBouncer: false
           });
        } else {
           const rand = Math.random();
@@ -529,7 +543,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     const update = (dt: number) => {
-      if (isPausedGlobal || pausedRef.current) return;
+      if (isPausedGlobal || pausedRef.current || isPausedRef.current) return;
       const normalDt = dt / 16.666;
       
       if (shootTimer > 0) shootTimer -= normalDt;
@@ -587,7 +601,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          createParticles(player.x + player.width/2, player.y + player.height, '#f43f5e');
          setHudJetpack(Math.floor(player.jetpack));
       } else {
-         player.vx *= Math.pow(0.85, normalDt); 
+         player.vx *= Math.pow(0.92, normalDt);
+         const maxSpeed = selectedChar.speed * 1.6;
          
          if (touchTargetX !== null) {
             let diff = touchTargetX - (player.x + player.width/2);
@@ -596,15 +611,23 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             if (diff > canvas.width / 2) diff -= canvas.width;
             if (diff < -canvas.width / 2) diff += canvas.width;
 
-            const targetVx = diff * 0.6; // Snappier target
-            player.vx += (targetVx - player.vx) * 0.25 * normalDt;
+            // Improved sensitivity and deadzone for mouse control
+            const deadzone = 2;
+            if (Math.abs(diff) > deadzone) {
+               // Higher sensitivity but with a smoother speed cap transition
+               const speedScale = Math.min(1, Math.abs(diff) / 50);
+               const targetVx = Math.sign(diff) * maxSpeed * speedScale;
+               const responsiveness = 0.6; 
+               player.vx += (targetVx - player.vx) * responsiveness * normalDt;
+            } else {
+               player.vx *= Math.pow(0.5, normalDt); // Faster stop when on target
+            }
          } else {
             if (keys.left) player.vx -= selectedChar.speed * 2.5 * normalDt;
             if (keys.right) player.vx += selectedChar.speed * 2.5 * normalDt;
          }
          
          // Hard cap speed to maintain control
-         const maxSpeed = selectedChar.speed * 1.6;
          if (player.vx > maxSpeed) player.vx = maxSpeed;
          if (player.vx < -maxSpeed) player.vx = -maxSpeed;
       }
@@ -636,34 +659,53 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
       
       // Platform Generation
-      const highestPlat = platforms.reduce((min, p) => p.y < min ? p.y : min, canvas.height);
-      if (highestPlat > 50) {
-         const numPlats = Math.floor(Math.random() * 2) + 1;
-         for(let i=0; i<numPlats; i++) {
-             const newP = {
-                 x: Math.random() * (canvas.width - PLATFORM_WIDTH),
-                 y: highestPlat - (80 + Math.random()*70),
-                 width: PLATFORM_WIDTH,
-                 hasSpring: Math.random() > 0.9,
-                 type: Math.random() > 0.8 ? 'moving' : (Math.random() > 0.85 ? 'breaking' : 'normal'),
-                 vx: Math.random() > 0.5 ? 2 + Math.random()*3 : -2 - Math.random()*3,
-                 broken: false,
-                 isStepped: false,
-                 crackValue: 0,
-                 opacity: 1
-             };
-             if (adBreakTimer > 0) {
-                 newP.type = 'normal';
-                 newP.width = PLATFORM_WIDTH * 2;
-             } else if (Math.random() > 0.95 && maxScore > 1000) {
-                 newP.type = 'billboard';
-                 newP.width = 120;
-             } else if (Math.random() > 0.96) {
-                 newP.type = 'boost';
-             }
-             platforms.push(newP);
-             if (newP.type !== 'breaking' && newP.type !== 'billboard') spawnEntity(newP);
-         }
+      let highestPlatY = platforms.reduce((min, p) => p.y < min ? p.y : min, canvas.height);
+      
+      while (highestPlatY > -50) {
+          const jumpBonus = upgrades.jump * 0.8;
+          const jumpF = Math.abs(selectedChar.jumpForce - jumpBonus);
+          const maxHeight = (jumpF * jumpF) / (2 * GRAVITY);
+          const safeDistY = Math.min(maxHeight * 0.58, 170); // Very safe margin
+          
+          const gapY = 50 + Math.random() * (safeDistY - 50);
+          highestPlatY -= gapY;
+          
+          const lastPlat = platforms[platforms.length - 1];
+          let newX = Math.random() * (canvas.width - PLATFORM_WIDTH);
+          
+          // Ensure horizontal reachability
+          if (lastPlat) {
+             const maxHorizontal = 180;
+             const minX = Math.max(10, lastPlat.x - maxHorizontal);
+             const maxX = Math.min(canvas.width - PLATFORM_WIDTH - 10, lastPlat.x + maxHorizontal);
+             newX = minX + Math.random() * (maxX - minX);
+          }
+
+          const newP = {
+              x: newX,
+              y: highestPlatY,
+              width: PLATFORM_WIDTH,
+              hasSpring: Math.random() > 0.92,
+              type: Math.random() > 0.88 ? 'moving' : (Math.random() > 0.92 ? 'breaking' : 'normal'),
+              vx: Math.random() > 0.5 ? 2 + Math.random()*2 : -2 - Math.random()*2,
+              broken: false,
+              isStepped: false,
+              crackValue: 0,
+              opacity: 1
+          };
+          
+          if (adBreakTimer > 0) {
+              newP.type = 'normal';
+              newP.width = PLATFORM_WIDTH * 1.8;
+          } else if (Math.random() > 0.96 && maxScore > 1000) {
+              newP.type = 'billboard';
+              newP.width = 110;
+          } else if (Math.random() > 0.97) {
+              newP.type = 'boost';
+          }
+          
+          platforms.push(newP);
+          if (newP.type !== 'breaking' && newP.type !== 'billboard') spawnEntity(newP);
       }
       
       // Manage Platforms
@@ -1053,9 +1095,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              ctx.fillStyle = '#1e293b';
              ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
         } else {
-            const pTheme = ZONE_THEMES[currentZone];
-            const pColor = p.type === 'moving' ? pTheme.platMov : (p.type === 'breaking' ? '#f43f5e' : (p.type === 'boost' ? '#facc15' : pTheme.platform));
-            const pLight = p.type === 'moving' ? '#60a5fa' : (p.type === 'breaking' ? '#f87171' : (p.type === 'boost' ? '#fef9c3' : pTheme.star));
+            const pColor = p.type === 'moving' ? theme.platMov : (p.type === 'breaking' ? '#f43f5e' : (p.type === 'boost' ? '#facc15' : theme.platNorm));
 
             // High-Tech Cyber-Glass Platform
             ctx.save();
@@ -1277,15 +1317,19 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
       if (comboMultiplier >= 5) {
          ctx.save();
-         ctx.globalAlpha = 0.1 + Math.sin(Date.now()*0.01)*0.05;
+         const feverPulse = Math.sin(Date.now() * 0.01) * 0.05;
+         ctx.globalAlpha = 0.1 + feverPulse;
          ctx.fillStyle = (theme as any).fever || '#fff';
          ctx.fillRect(0, 0, canvas.width, canvas.height);
          ctx.restore();
          
          ctx.fillStyle = '#fff';
-         ctx.font = '900 16px monospace';
+         ctx.font = '900 24px monospace';
          ctx.textAlign = 'center';
-         ctx.fillText('FEVER MODE ACTIVE', canvas.width/2, 100);
+         ctx.shadowBlur = 15;
+         ctx.shadowColor = (theme as any).fever || '#fff';
+         ctx.fillText(t('game.fest.fever_mode'), canvas.width/2, 100);
+         ctx.shadowBlur = 0;
       }
 
       if (screenFlash > 0) {
@@ -1333,7 +1377,19 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     animationFrameId = requestAnimationFrame(gameLoop);
-    return () => cancelAnimationFrame(animationFrameId);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('deviceorientation', handleOrientation);
+      canvas.removeEventListener('mousemove', handlePointerMove);
+      canvas.removeEventListener('touchmove', handlePointerMove);
+      canvas.removeEventListener('mousedown', handlePointerDown);
+      canvas.removeEventListener('mouseup', handlePointerUp);
+      canvas.removeEventListener('touchstart', handlePointerDown);
+      canvas.removeEventListener('touchend', handlePointerUp);
+      canvas.removeEventListener('mouseleave', handlePointerUp);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, [isPlaying, selectedChar, upgrades]);
 
   
@@ -1363,6 +1419,15 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                     <span ref={coinsRefDOM} className="text-sm font-black text-white">{festCoins}</span>
                  </div>
               </div>
+              
+              {isPlaying && (
+                <button 
+                  onClick={() => setIsPaused(true)}
+                  className="bg-zinc-900/80 text-white p-2.5 rounded-lg border border-white/10 hover:bg-zinc-800 hover:border-pink-500/50 transition-all shadow-lg active:scale-95 flex items-center justify-center"
+                >
+                  <Pause size={18} className="text-pink-500" />
+                </button>
+              )}
            </div>
            
            {/* Active Powerup Gauges */}
@@ -1403,7 +1468,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                initial={{ opacity: 0 }} 
                animate={{ opacity: 1 }} 
                exit={{ opacity: 0 }}
-               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#050510]/95 backdrop-blur-xl p-8 text-center"
+               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#050510]/95 backdrop-blur-xl p-8 text-center pointer-events-auto"
             >
               <div className="w-full max-w-sm space-y-12">
                  <div className="relative">
@@ -1423,27 +1488,27 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                       className="group relative w-full py-7 bg-white text-black font-black text-2xl uppercase skew-x-[-10deg] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
                     >
                        <div className="absolute inset-0 bg-pink-500 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
-                       <span className="relative z-10">INITIALIZE LAUNCH</span>
+                       <span className="relative z-10">{t('game.fest.start')}</span>
                     </button>
                     
                     <button 
                       onClick={() => setShowShop(true)}
                       className="w-full py-5 bg-zinc-900 border border-white/10 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-zinc-800 transition-colors"
                     >
-                       <ShoppingCart size={20} /> CUSTOMIZE.AVATAR
+                       <ShoppingCart size={20} /> {t('game.fest.customize')}
                     </button>
                     
                     <button 
                       onClick={() => setShowCodeInput(true)}
                       className="text-[10px] text-white/20 uppercase tracking-[0.4em] pt-4 hover:text-white transition-colors"
                     >
-                       Enter Override Code
+                       {t('game.fest.promo.enter')}
                     </button>
                  </div>
 
                  <div className="space-y-4 pt-12 border-t border-white/5">
                     <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10">
-                       <span className="text-white/40 text-xs font-bold uppercase tracking-widest">Global Record</span>
+                       <span className="text-white/40 text-xs font-bold uppercase tracking-widest">{t('game.fest.best')}</span>
                        <span className="text-white text-xl font-black">{highScore}</span>
                     </div>
                  </div>
@@ -1474,7 +1539,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                 initial={{ opacity: 0, x: 100 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 exit={{ opacity: 0, x: 100 }}
-                className="absolute inset-0 z-[80] bg-[#0a0a0f] flex flex-col p-6 overflow-hidden"
+                className="absolute inset-0 z-[80] bg-[#0a0a0f] flex flex-col p-6 overflow-hidden pointer-events-auto"
              >
                 <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500 pb-4">
                    <h2 className="text-4xl font-black italic text-white tracking-tighter uppercase">the.vault</h2>
@@ -1489,7 +1554,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                            onClick={() => setShopTab(tab as any)}
                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${shopTab === tab ? 'bg-pink-500 border-pink-500 text-black' : 'bg-white/5 border-white/10 text-white/50'}`}
                          >
-                            {tab}
+                            {t(`game.fest.shop.tab.${tab}`)}
                          </button>
                       ))}
                    </div>
@@ -1525,7 +1590,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                       <div className="grid grid-cols-2 gap-4">
                          {['magnet', 'jump', 'shield', 'luck'].map(upg => (
                             <div key={upg} className="bg-zinc-900 p-4 border border-white/5 rounded-xl flex flex-col items-center gap-3">
-                               <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">{upg}</span>
+                               <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">{(t as any)(`game.fest.item_name.${upg}`)}</span>
                                <span className="text-xl font-black text-white">LV.{upgrades[upg as keyof typeof upgrades]}</span>
                                <button 
                                  onClick={() => {
@@ -1535,12 +1600,54 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                                  }}
                                  className="w-full bg-blue-500 text-black text-[10px] font-black py-2.5 rounded uppercase tracking-tighter hover:bg-blue-400 transition-colors"
                                >
-                                  BUY / {(upgrades[upg as keyof typeof upgrades] + 1) * 300}
+                                  {t('game.fest.buy')} / {(upgrades[upg as keyof typeof upgrades] + 1) * 300}
                                </button>
                             </div>
                          ))}
                       </div>
                    )}
+                </div>
+             </motion.div>
+          )}
+
+          {isPaused && (
+             <motion.div 
+               initial={{ opacity: 0 }} 
+               animate={{ opacity: 1 }} 
+               exit={{ opacity: 0 }}
+               className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-8 pointer-events-auto"
+             >
+                <div className="w-full max-w-sm bg-zinc-900 border-2 border-pink-500 rounded-3xl p-8 flex flex-col items-center space-y-6 shadow-[0_0_50px_rgba(236,72,153,0.3)]">
+                   <h2 className="text-5xl font-black italic text-white tracking-tighter mb-4">{t('game.fest.pause')}</h2>
+                   
+                   <button 
+                     onClick={() => setIsPaused(false)}
+                     className="w-full py-5 bg-pink-500 text-black font-black text-xl uppercase skew-x-[-10deg] shadow-[0_10px_20px_rgba(236,72,153,0.2)] hover:scale-105 active:scale-95 transition-all"
+                   >
+                      {t('game.fest.resume')}
+                   </button>
+                   
+                   <button 
+                     onClick={() => { 
+                        setIsPaused(false); 
+                        setIsPlaying(false);
+                        setScore(0);
+                        setTimeout(() => {
+                           playSound('start');
+                           setIsPlaying(true);
+                        }, 50);
+                     }}
+                     className="w-full py-4 bg-zinc-800 border border-white/20 text-white font-black uppercase tracking-widest hover:bg-zinc-700 transition-colors"
+                   >
+                      {t('game.fest.restart')}
+                   </button>
+                   
+                   <button 
+                     onClick={() => { setIsPaused(false); setIsPlaying(false); }}
+                     className="w-full py-4 text-white/40 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
+                   >
+                      {t('game.fest.quit')}
+                   </button>
                 </div>
              </motion.div>
           )}
