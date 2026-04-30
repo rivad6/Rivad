@@ -19,10 +19,10 @@ interface Character {
 }
 
 const CHARACTERS: Character[] = [
-  { id: 'default', nameKey: 'RAVER', descKey: 'Standard attendee', price: 0, jumpForce: -19, speed: 28, color: '#10b981', accent: '#ec4899' },
-  { id: 'punk', nameKey: 'BASSHEAD', descKey: 'Fast horizontal speed', price: 200, jumpForce: -20, speed: 38, color: '#f43f5e', accent: '#fbbf24' },
-  { id: 'ghost', nameKey: 'SHUFFLER', descKey: 'Heavy but high jumps', price: 500, jumpForce: -26, speed: 20, color: '#f8fafc', accent: '#8b5cf6' },
-  { id: 'cyber', nameKey: 'MAIN-DJ', descKey: 'Double jump active', price: 1000, jumpForce: -20, speed: 24, color: '#0ea5e9', accent: '#10b981', doubleJump: true },
+  { id: 'default', nameKey: 'RAVER', descKey: 'Standard attendee', price: 0, jumpForce: -16, speed: 25, color: '#10b981', accent: '#ec4899' },
+  { id: 'punk', nameKey: 'BASSHEAD', descKey: 'Fast horizontal speed', price: 200, jumpForce: -17, speed: 35, color: '#f43f5e', accent: '#fbbf24' },
+  { id: 'ghost', nameKey: 'SHUFFLER', descKey: 'Heavy but high jumps', price: 500, jumpForce: -22, speed: 20, color: '#f8fafc', accent: '#8b5cf6' },
+  { id: 'cyber', nameKey: 'MAIN-DJ', descKey: 'Double jump active', price: 1000, jumpForce: -16, speed: 22, color: '#0ea5e9', accent: '#10b981', doubleJump: true },
 ];
 
 export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }) {
@@ -49,6 +49,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     return saved ? JSON.parse(saved) : { magnet: 0, jump: 0, shield: 0, luck: 0 };
   });
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
+  const [controlMode, setControlMode] = useState<'keyboard' | 'mouse' | null>(() => (localStorage.getItem('fest_control_mode') as any) || null);
   const [gameStats, setGameStats] = useState<{earned: number, total: number, enemies: number, items: number} | null>(null);
   const keysRef = useRef({ left: false, right: false, up: false });
   const pausedRef = useRef(false);
@@ -79,6 +80,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     localStorage.setItem('fest_selected_char', selectedCharId);
     localStorage.setItem('fest_highscore', highScore.toString());
     localStorage.setItem('fest_mobile_controls', showMobileControls.toString());
+    localStorage.setItem('fest_control_mode', controlMode || '');
     localStorage.setItem('fest_upgrades', JSON.stringify(upgrades));
   }, [festCoins, unlockedChars, selectedCharId, highScore, showMobileControls, upgrades]);
 
@@ -158,7 +160,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
     const PLATFORM_WIDTH = 70;
     const PLATFORM_HEIGHT = 12;
-    const GRAVITY = 0.42;
+    const GRAVITY = 0.38;
     
     let player = {
       x: canvas.width / 2,
@@ -172,6 +174,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       magnet: 0,
       lastShot: 0,
       jumps: 0,
+      tilt: 0,
     };
 
     const JUMP_BOOST = upgrades.jump * 0.5;
@@ -205,6 +208,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       let shootTimer = 0;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (controlMode !== 'keyboard') return;
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
       
       if (e.key === 'ArrowUp' || e.key === ' ') {
@@ -222,6 +226,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       if (e.key === 'ArrowRight') keys.right = true;
     };
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (controlMode !== 'keyboard') return;
       if (e.key === 'ArrowLeft') keys.left = false;
       if (e.key === 'ArrowRight') keys.right = false;
       if (e.key === ' ' || e.key === 'ArrowUp') {
@@ -231,7 +236,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (!e.gamma) return;
+      if (controlMode !== 'mouse' || !e.gamma) return;
       // Gamma is left-to-right tilt in degrees [-90, 90]
       const tilt = e.gamma; 
       const deadzone = 3;
@@ -241,16 +246,22 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     const handlePointerMove = (e: any) => {
+      if (controlMode !== 'mouse') return;
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       touchTargetX = ((clientX - rect.left) / rect.width) * canvas.width;
     };
 
     const handlePointerDown = (e: any) => {
+      if (controlMode !== 'mouse') return;
       isShooting = true;
       if (e) handlePointerMove(e);
     };
-    const handlePointerUp = () => { isShooting = false; touchTargetX = null; };
+    const handlePointerUp = () => { 
+      if (controlMode !== 'mouse') return;
+      isShooting = false; 
+      touchTargetX = null; 
+    };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -328,13 +339,17 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       const pHeight = player.height;
 
       // Professional Squash and Stretch (Subtle & Centered)
-      const stretch = Math.max(-0.15, Math.min(0.15, player.vy * 0.008));
+      const stretch = Math.max(-0.15, Math.min(0.15, player.vy * 0.006));
       const scaleX = 1 - stretch;
       const scaleY = 1 + stretch;
-      const tilt = Math.max(-0.06, Math.min(0.06, player.vx * 0.005)); // Heavily dampened tilt to fix "dancing"
+      
+      // Minimal tilt logic to prevent visual jitter
+      const targetTilt = 0; // Completely disable tilt for maximum stability perception
+      const tiltLerp = 0.1;
+      player.tilt = (player.tilt || 0) + (targetTilt - (player.tilt || 0)) * tiltLerp;
 
       ctx.translate(charX + pWidth/2, charY + pHeight/2);
-      ctx.rotate(tilt);
+      ctx.rotate(player.tilt);
       ctx.scale(scaleX, scaleY);
       ctx.translate(-(charX + pWidth/2), -(charY + pHeight/2));
 
@@ -601,35 +616,46 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          createParticles(player.x + player.width/2, player.y + player.height, '#f43f5e');
          setHudJetpack(Math.floor(player.jetpack));
       } else {
-         player.vx *= Math.pow(0.92, normalDt);
-         const maxSpeed = selectedChar.speed * 1.6;
+         const maxSpeed = selectedChar.speed + upgrades.luck * 0.2; 
          
-         if (touchTargetX !== null) {
+         // Only use mouse tracking if in mouse mode AND we have a target
+         if (controlMode === 'mouse' && touchTargetX !== null) {
             let diff = touchTargetX - (player.x + player.width/2);
             
             // Shortest path around screen wrap
             if (diff > canvas.width / 2) diff -= canvas.width;
             if (diff < -canvas.width / 2) diff += canvas.width;
-
-            // Improved sensitivity and deadzone for mouse control
-            const deadzone = 2;
+ 
+            // Stabilized Mouse/Touch movement
+            const deadzone = 10; 
             if (Math.abs(diff) > deadzone) {
-               // Higher sensitivity but with a smoother speed cap transition
                const speedScale = Math.min(1, Math.abs(diff) / 50);
                const targetVx = Math.sign(diff) * maxSpeed * speedScale;
-               const responsiveness = 0.6; 
+               const responsiveness = 0.35; 
                player.vx += (targetVx - player.vx) * responsiveness * normalDt;
             } else {
-               player.vx *= Math.pow(0.5, normalDt); // Faster stop when on target
+               player.vx *= Math.pow(0.15, normalDt); 
             }
+         } else if (controlMode === 'keyboard') {
+            // Smoother keyboard movement
+            let targetVx = 0;
+            if (keys.left) targetVx = -maxSpeed;
+            if (keys.right) targetVx = maxSpeed;
+            
+            const accel = targetVx !== 0 ? 0.35 : 0.12;
+            player.vx += (targetVx - player.vx) * accel * normalDt;
          } else {
-            if (keys.left) player.vx -= selectedChar.speed * 2.5 * normalDt;
-            if (keys.right) player.vx += selectedChar.speed * 2.5 * normalDt;
+            // Natural deceleration if no input/wrong mode
+            player.vx *= Math.pow(0.85, normalDt);
          }
          
-         // Hard cap speed to maintain control
-         if (player.vx > maxSpeed) player.vx = maxSpeed;
-         if (player.vx < -maxSpeed) player.vx = -maxSpeed;
+         // Global momentum friction to prevent jitter
+         player.vx *= Math.pow(0.99, normalDt);
+
+         // Hard cap speed
+         const hardCap = maxSpeed * 1.4;
+         if (player.vx > hardCap) player.vx = hardCap;
+         if (player.vx < -hardCap) player.vx = -hardCap;
       }
       
       // Camera Follow
@@ -665,9 +691,9 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           const jumpBonus = upgrades.jump * 0.8;
           const jumpF = Math.abs(selectedChar.jumpForce - jumpBonus);
           const maxHeight = (jumpF * jumpF) / (2 * GRAVITY);
-          const safeDistY = Math.min(maxHeight * 0.58, 170); // Very safe margin
+          const safeDistY = Math.min(maxHeight * 0.55, 150); 
           
-          const gapY = 50 + Math.random() * (safeDistY - 50);
+          const gapY = 40 + Math.random() * (safeDistY - 45);
           highestPlatY -= gapY;
           
           const lastPlat = platforms[platforms.length - 1];
@@ -675,7 +701,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           
           // Ensure horizontal reachability
           if (lastPlat) {
-             const maxHorizontal = 180;
+             const maxHorizontal = 160;
              const minX = Math.max(10, lastPlat.x - maxHorizontal);
              const maxX = Math.min(canvas.width - PLATFORM_WIDTH - 10, lastPlat.x + maxHorizontal);
              newX = minX + Math.random() * (maxX - minX);
@@ -709,12 +735,12 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
       
       // Manage Platforms
-      let steppedCount = 0;
-      platforms.forEach((p, i) => {
+      for (let i = platforms.length - 1; i >= 0; i--) {
+         const p = platforms[i];
          if (p.broken) {
             p.opacity -= 0.1 * normalDt;
-            if (p.opacity <= 0) platforms.splice(i, 1);
-            return;
+            if (p.opacity <= 0) { platforms.splice(i, 1); continue; }
+            continue;
          }
          
          if (p.type === 'moving') {
@@ -722,53 +748,77 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             if (p.x < 0 || p.x + p.width > canvas.width) p.vx *= -1;
          }
          
-         // Collision
-         if (player.vy > 0 && player.vy < 30 && prevY + player.height - 10 <= p.y) {
-            // Check bounding box + tolerance
-            if (player.x + player.width > p.x - 5 && player.x < p.x + p.width + 5 && player.y + player.height >= p.y && player.y + player.height <= p.y + PLATFORM_HEIGHT + player.vy + 5) {
-                if (p.type === 'breaking') {
-                    p.crackValue += normalDt;
-                    if (p.crackValue > 5) {
-                       p.broken = true;
-                       playSound('hit');
-                    }
-                } else if (p.type === 'boost') {
-                    player.vy = selectedChar.jumpForce * 1.5 - upgrades.jump;
-                    player.jumps = 1;
-                    playSound('bounce');
-                    createParticles(p.x + p.width/2, p.y, '#eab308');
-                    cameraShake = 15;
-                } else {
-                    player.vy = selectedChar.jumpForce - upgrades.jump * 0.5;
-                    player.jumps = 1;
-                    if (p.hasSpring) {
-                       player.vy *= 1.5;
-                       playSound('bounce');
-                       createParticles(p.x + p.width/2, p.y, '#f43f5e');
-                    } else {
-                       playSound('jump');
-                    }
-                }
-                
-                if (!p.isStepped && !p.broken) {
-                   p.isStepped = true;
-                   if (p.type === 'billboard' && comboTimer <= 0) {
-                      comboTimer = 180;
-                      comboMultiplier = 2;
-                      sessionCoins += 5; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
-                      addFloatingText(p.x, p.y - 20, 'SPONSOR HIT!', '#3b82f6');
-                   } else if (p.type !== 'breaking') {
-                      bonusScore += 10 * comboMultiplier;
-                   }
-                }
+         // ULTRA-ROBUST COLLISION CHECK
+         const collisionOffsets = [0, -canvas.width, canvas.width];
+         let collided = false;
+
+         // Check if player is falling. We use a generous vertical window based on falling speed.
+         if (player.vy > 0) {
+            const verticalTolerance = Math.max(15, player.vy * normalDt + 10);
+            if (prevY + player.height <= p.y + verticalTolerance) {
+               for (const offset of collisionOffsets) {
+                  const px = player.x + offset;
+                  // Extremely gracious horizontal match (12px extra on each side - nearly half player width)
+                  const horizontalMatch = px + player.width + 12 > p.x && px - 12 < p.x + p.width;
+                  
+                  const playerBottom = player.y + player.height;
+                  // Dynamic vertical window that scales with fall velocity to prevent tunneling
+                  const verticalMatch = playerBottom >= p.y - 5 && playerBottom <= p.y + PLATFORM_HEIGHT + (player.vy * normalDt) + 8;
+                  
+                  if (horizontalMatch && verticalMatch) {
+                      collided = true;
+                      break;
+                  }
+               }
             }
          }
          
-         if (p.y > canvas.height + 50) platforms.splice(i, 1);
-      });
+         if (collided) {
+            // Snap player precisely to top of platform
+            player.y = p.y - player.height;
+            if (p.type === 'breaking') {
+                p.crackValue += normalDt;
+                if (p.crackValue > 5) {
+                   p.broken = true;
+                   playSound('hit');
+                }
+            } else if (p.type === 'boost') {
+                player.vy = selectedChar.jumpForce * 1.5 - upgrades.jump;
+                player.jumps = 1;
+                playSound('bounce');
+                createParticles(p.x + p.width/2, p.y, '#eab308');
+                cameraShake = 15;
+            } else {
+                player.vy = selectedChar.jumpForce - upgrades.jump * 0.5;
+                player.jumps = 1;
+                if (p.hasSpring) {
+                   player.vy *= 1.5;
+                   playSound('bounce');
+                   createParticles(p.x + p.width/2, p.y, '#f43f5e');
+                } else {
+                   playSound('jump');
+                }
+            }
+            
+            if (!p.isStepped && !p.broken) {
+               p.isStepped = true;
+               if (p.type === 'billboard' && comboTimer <= 0) {
+                  comboTimer = 180;
+                  comboMultiplier = 2;
+                  sessionCoins += 5; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+                  addFloatingText(p.x, p.y - 20, 'SPONSOR HIT!', '#3b82f6');
+               } else if (p.type !== 'breaking') {
+                  bonusScore += 10 * comboMultiplier;
+               }
+            }
+         }
+         
+         if (p.y > canvas.height + 150) platforms.splice(i, 1);
+      }
       
       // Enemies
-      enemies.forEach((en, i) => {
+      for (let i = enemies.length - 1; i >= 0; i--) {
+         const en = enemies[i];
          en.x += en.speed * normalDt;
          if (en.isBouncer) {
             if (en.x < (en.minX || 0) || en.x > (en.maxX || canvas.width)) en.speed *= -1;
@@ -777,10 +827,19 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             if (en.x > canvas.width) en.x = -en.width;
          }
          
-         if (en.y > canvas.height + 50) { enemies.splice(i, 1); return; }
+         if (en.y > canvas.height + 150) { enemies.splice(i, 1); continue; }
          
-         // Touch enemy
-         if (player.x < en.x + en.width && player.x + player.width > en.x && player.y < en.y + 20 && player.y + player.height > en.y) {
+         // Touch enemy with Wrap Support
+         let hit = false;
+         for (const offset of [0, -canvas.width, canvas.width]) {
+            const px = player.x + offset;
+            if (px < en.x + en.width && px + player.width > en.x && player.y < en.y + 20 && player.y + player.height > en.y) {
+               hit = true;
+               break;
+            }
+         }
+
+         if (hit) {
             if (player.vy > 0 && player.y + player.height < en.y + 15) {
                 enemies.splice(i, 1);
                 player.vy = selectedChar.jumpForce;
@@ -804,14 +863,16 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                     setFestCoins(prev => prev + sessionCoins + Math.floor(finalScore / 50));
                     if (finalScore > highScore) setHighScore(finalScore);
                     setIsPlaying(false);
+                    return; // Exit loop since game ended
                 }
             }
          }
-      });
+      }
       
       // Powerups
-      powerups.forEach((pw, i) => {
-         if (pw.y > canvas.height + 50) { powerups.splice(i, 1); return; }
+      for (let i = powerups.length - 1; i >= 0; i--) {
+         const pw = powerups[i];
+         if (pw.y > canvas.height + 150) { powerups.splice(i, 1); continue; }
          
          if (pw.type === 'magnet' || upgrades.magnet > 0) {
             const dist = Math.hypot(player.x - pw.x, player.y - pw.y);
@@ -821,8 +882,17 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             }
          }
          
-         // Collect
-         if (player.x < pw.x + 20 && player.x + player.width > pw.x && player.y < pw.y + 20 && player.y + player.height > pw.y) {
+         // Collect with Wrap Support
+         let collected = false;
+         for (const offset of [0, -canvas.width, canvas.width]) {
+            const px = player.x + offset;
+            if (px < pw.x + 25 && px + player.width > pw.x - 5 && player.y < pw.y + 25 && player.y + player.height > pw.y - 5) {
+               collected = true;
+               break;
+            }
+         }
+
+         if (collected) {
             powerups.splice(i, 1);
             if (pw.type === 'vip') {
                sessionCoins += 50; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
@@ -848,7 +918,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                playSound('powerup');
             }
          }
-      });
+      }
       
       // Combo & HUD Updates
       if (comboTimer > 0) {
@@ -882,9 +952,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           tr.life -= 0.05 * normalDt;
           if (tr.life <= 0) trails.splice(i, 1);
       }
-      bullets.forEach((b, i) => {
+      for (let i = bullets.length - 1; i >= 0; i--) {
+         const b = bullets[i];
          b.y -= b.vy * normalDt;
-         if (b.y < -50) { bullets.splice(i, 1); return; }
+         if (b.y < -50) { bullets.splice(i, 1); continue; }
          for (let ei = enemies.length - 1; ei >= 0; ei--) {
              const en = enemies[ei];
              if (b.x > en.x && b.x < en.x + en.width && b.y > en.y && b.y < en.y + en.width) {
@@ -896,7 +967,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                  break;
              }
          }
-      });
+      }
       // ------------------------------------------
       
       if (scoreRefDOM.current) scoreRefDOM.current.innerText = Math.floor(Math.floor(maxScore) + bonusScore).toString();
@@ -1463,7 +1534,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             </motion.div>
           )}
 
-          {!isPlaying && !showCodeInput && (
+          {!isPlaying && !showCodeInput && !showShop && (
             <motion.div 
                initial={{ opacity: 0 }} 
                animate={{ opacity: 1 }} 
@@ -1482,29 +1553,69 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                     <div className="absolute -top-6 -right-6 bg-pink-500 text-black text-[10px] font-black px-3 py-1 rotate-12 uppercase border-2 border-white/50 shadow-lg">V.2.0.4</div>
                  </div>
 
-                 <div className="flex flex-col gap-4">
-                    <button 
-                      onClick={() => { setIsPlaying(true); playSound('start'); }}
-                      className="group relative w-full py-7 bg-white text-black font-black text-2xl uppercase skew-x-[-10deg] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
-                    >
-                       <div className="absolute inset-0 bg-pink-500 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
-                       <span className="relative z-10">{t('game.fest.start')}</span>
-                    </button>
-                    
-                    <button 
-                      onClick={() => setShowShop(true)}
-                      className="w-full py-5 bg-zinc-900 border border-white/10 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-zinc-800 transition-colors"
-                    >
-                       <ShoppingCart size={20} /> {t('game.fest.customize')}
-                    </button>
-                    
-                    <button 
-                      onClick={() => setShowCodeInput(true)}
-                      className="text-[10px] text-white/20 uppercase tracking-[0.4em] pt-4 hover:text-white transition-colors"
-                    >
-                       {t('game.fest.promo.enter')}
-                    </button>
-                 </div>
+                 {controlMode === null ? (
+                    <div className="flex flex-col gap-4">
+                       <h4 className="text-white/60 text-xs font-bold uppercase tracking-[0.3em] mb-4">Select Controls</h4>
+                       <button 
+                         onClick={() => { setControlMode('keyboard'); playSound('click'); }}
+                         className="flex items-center justify-between p-5 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-pink-500 group transition-all"
+                       >
+                          <div className="flex items-center gap-4">
+                             <div className="bg-zinc-800 p-2 rounded-lg group-hover:bg-pink-500/20 transition-colors">
+                                <Rocket className="text-pink-500" />
+                             </div>
+                             <div className="text-left">
+                                <p className="font-black uppercase text-sm">Keyboard</p>
+                                <p className="text-[10px] text-white/40 uppercase">Classic ARROWS + SPACE</p>
+                             </div>
+                          </div>
+                          <ChevronRight size={20} className="text-white/20 group-hover:text-pink-500 transition-colors" />
+                       </button>
+
+                       <button 
+                         onClick={() => { setControlMode('mouse'); playSound('click'); }}
+                         className="flex items-center justify-between p-5 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-blue-500 group transition-all"
+                       >
+                          <div className="flex items-center gap-4">
+                             <div className="bg-zinc-800 p-2 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+                                <Target className="text-blue-500" />
+                             </div>
+                             <div className="text-left">
+                                <p className="font-black uppercase text-sm">Mouse / Touch</p>
+                                <p className="text-[10px] text-white/40 uppercase">Precision tracking</p>
+                             </div>
+                          </div>
+                          <ChevronRight size={20} className="text-white/20 group-hover:text-blue-500 transition-colors" />
+                       </button>
+                    </div>
+                 ) : (
+                    <div className="flex flex-col gap-4">
+                       <button 
+                         onClick={() => { setIsPlaying(true); playSound('start'); }}
+                         className="group relative w-full py-7 bg-white text-black font-black text-2xl uppercase skew-x-[-10deg] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
+                       >
+                          <div className="absolute inset-0 bg-pink-500 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
+                          <span className="relative z-10">{t('game.fest.start')}</span>
+                       </button>
+                       
+                       <div className="flex gap-2">
+                          <button 
+                            onClick={() => setShowShop(true)}
+                            className="flex-1 py-5 bg-zinc-900 border border-white/10 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-zinc-800 transition-colors"
+                          >
+                             <ShoppingCart size={20} /> {t('game.fest.customize')}
+                          </button>
+                          
+                          <button 
+                            onClick={() => setControlMode(null)}
+                            className="p-5 bg-zinc-900 border border-white/10 text-white/40 hover:text-white transition-colors flex items-center justify-center"
+                            title="Change Controls"
+                          >
+                             <Settings size={20} />
+                          </button>
+                       </div>
+                    </div>
+                 )}
 
                  <div className="space-y-4 pt-12 border-t border-white/5">
                     <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/10">
