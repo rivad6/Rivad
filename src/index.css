@@ -116,3 +116,17 @@ html {
   background: rgba(242, 74, 41, 0.6);
 }
 
+
+@keyframes flicker {
+  0% { opacity: 0.98; }
+  5% { opacity: 0.85; }
+  10% { opacity: 0.98; }
+  15% { opacity: 1; }
+  50% { opacity: 0.98; }
+  55% { opacity: 0.95; }
+  60% { opacity: 0.99; }
+  100% { opacity: 1; }
+}
+.crt-flicker {
+  animation: flicker 0.15s infinite;
+}

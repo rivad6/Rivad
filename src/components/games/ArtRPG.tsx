@@ -118,6 +118,12 @@ const storyMap: Record<string, StoryNode> = {
   ...generatePathMapping('p7'),
   ...generatePathMapping('p8'),
   
+  
+  'fail_budget': { textKey: 'game.rpg.fail_budget', choices: [], isEnding: true },
+  'fail_sanity': { textKey: 'game.rpg.fail_sanity', choices: [], isEnding: true },
+  'fail_reputation': { textKey: 'game.rpg.fail_reputation', choices: [], isEnding: true },
+
+
   // THE NEW BIZARRE EXTENSION
   'boss.q1': {
     textKey: 'game.rpg.boss.q1',
@@ -182,7 +188,19 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
   useEffect(() => {
     if (isPausedGlobal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      const node = storyMap[currentNode];
+      
+  useEffect(() => {
+    if (isPausedGlobal) return;
+    if (stats.budget <= 0 && currentNode !== 'fail_budget') {
+      setCurrentNode('fail_budget');
+    } else if (stats.sanity <= 0 && currentNode !== 'fail_sanity') {
+      setCurrentNode('fail_sanity');
+    } else if (stats.reputation <= 0 && currentNode !== 'fail_reputation') {
+      setCurrentNode('fail_reputation');
+    }
+  }, [stats, currentNode, isPausedGlobal]);
+
+  const node = storyMap[currentNode] || { textKey: game.rpg.fail.fallback, choices: [], isEnding: true };
       if (!node || node.isEnding) return;
       
       const choiceCount = node.choices.length;

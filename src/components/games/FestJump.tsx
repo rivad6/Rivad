@@ -19,10 +19,10 @@ interface Character {
 }
 
 const CHARACTERS: Character[] = [
-  { id: 'default', nameKey: 'CYBER-RUNNER', descKey: 'Standard model', price: 0, jumpForce: -13, speed: 12, color: '#6EE7B7', accent: '#f43f5e' },
-  { id: 'punk', nameKey: 'NEON-PUNK', descKey: 'Fast horizontal speed', price: 200, jumpForce: -13.5, speed: 16, color: '#f43f5e', accent: '#6EE7B7' },
-  { id: 'ghost', nameKey: 'GLITCH-GHOST', descKey: 'Heavy but high jumps', price: 500, jumpForce: -18, speed: 9, color: '#ffffff', accent: '#3b82f6' },
-  { id: 'cyber', nameKey: 'MECHA-SYS', descKey: 'Double jump active', price: 1000, jumpForce: -14, speed: 13, color: '#a855f7', accent: '#eab308', doubleJump: true },
+  { id: 'default', nameKey: 'RAVER', descKey: 'Standard attendee', price: 0, jumpForce: -15, speed: 18, color: '#6EE7B7', accent: '#f43f5e' },
+  { id: 'punk', nameKey: 'BASSHEAD', descKey: 'Fast horizontal speed', price: 200, jumpForce: -15.5, speed: 24, color: '#f43f5e', accent: '#6EE7B7' },
+  { id: 'ghost', nameKey: 'SHUFFLER', descKey: 'Heavy but high jumps', price: 500, jumpForce: -21, speed: 14, color: '#ffffff', accent: '#a855f7' },
+  { id: 'cyber', nameKey: 'MAIN-DJ', descKey: 'Double jump active', price: 1000, jumpForce: -16, speed: 19, color: '#eab308', accent: '#3b82f6', doubleJump: true },
 ];
 
 export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }) {
@@ -103,10 +103,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     if (!ctx) return;
 
     const THEMES = [
-      { score: 0, bgSolid: '#0f0c29', bgTop: 'rgba(236, 72, 153, 0.2)', bgBottom: 'rgba(56, 189, 248, 0.0)', gridColor: 'rgba(236, 72, 153, 0.15)', platNorm: '#10b981', platNormDk: '#065f46', platMov: '#3b82f6', platMovDk: '#1e3a8a', star: 'rgba(255,255,255,0.4)', name: 'Neon City' },
-      { score: 1000, bgSolid: '#051205', bgTop: 'rgba(163, 230, 53, 0.15)', bgBottom: 'rgba(16, 185, 129, 0.0)', gridColor: 'rgba(163, 230, 53, 0.15)', platNorm: '#eab308', platNormDk: '#713f12', platMov: '#f97316', platMovDk: '#7c2d12', star: 'rgba(163, 230, 53, 0.4)', name: 'Cyber Slums' },
-      { score: 3000, bgSolid: '#1a0505', bgTop: 'rgba(220, 38, 38, 0.2)', bgBottom: 'rgba(249, 115, 22, 0.0)', gridColor: 'rgba(220, 38, 38, 0.2)', platNorm: '#a8a29e', platNormDk: '#44403c', platMov: '#dc2626', platMovDk: '#7f1d1d', star: 'rgba(248, 113, 113, 0.4)', name: 'Crimson Zone' },
-      { score: 6000, bgSolid: '#000000', bgTop: 'rgba(168, 85, 247, 0.3)', bgBottom: 'rgba(0, 0, 0, 0.0)', gridColor: 'rgba(168, 85, 247, 0.3)', platNorm: '#d8b4fe', platNormDk: '#6b21a8', platMov: '#fcd34d', platMovDk: '#b45309', star: 'rgba(192, 132, 252, 0.6)', name: 'Void Core' }
+      { score: 0, bgSolid: '#09090b', bgTop: 'rgba(236, 72, 153, 0.2)', bgBottom: 'rgba(30, 64, 175, 0.0)', gridColor: 'rgba(236, 72, 153, 0.1)', platNorm: '#ec4899', platNormDk: '#831843', platMov: '#3b82f6', platMovDk: '#1e3a8a', star: 'rgba(255,255,255,0.4)', name: 'Mainstage House' },
+      { score: 1000, bgSolid: '#051205', bgTop: 'rgba(34, 197, 94, 0.15)', bgBottom: 'rgba(5, 150, 105, 0.0)', gridColor: 'rgba(34, 197, 94, 0.15)', platNorm: '#22c55e', platNormDk: '#14532d', platMov: '#f97316', platMovDk: '#7c2d12', star: 'rgba(134, 239, 172, 0.4)', name: 'Trance Arena' },
+      { score: 3000, bgSolid: '#1a0505', bgTop: 'rgba(220, 38, 38, 0.2)', bgBottom: 'rgba(153, 27, 27, 0.0)', gridColor: 'rgba(220, 38, 38, 0.2)', platNorm: '#dc2626', platNormDk: '#7f1d1d', platMov: '#ef4444', platMovDk: '#991b1b', star: 'rgba(248, 113, 113, 0.4)', name: 'Dubstep Bunker' },
+      { score: 6000, bgSolid: '#111827', bgTop: 'rgba(168, 85, 247, 0.3)', bgBottom: 'rgba(0, 0, 0, 0.0)', gridColor: 'rgba(168, 85, 247, 0.3)', platNorm: '#a855f7', platNormDk: '#581c87', platMov: '#eab308', platMovDk: '#854d0e', star: 'rgba(216, 180, 254, 0.6)', name: 'Hardstyle Core' }
     ];
 
     const getTheme = (score: number) => {
@@ -116,11 +116,20 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     };
 
     
-    let bgStars = Array.from({ length: 60 }, () => ({
+        let bgLasers = Array.from({ length: 8 }, () => ({
+      x: Math.random() * 360,
+      angle: (Math.random() - 0.5) * Math.PI / 4,
+      sweepSpeed: (Math.random() * 0.02 + 0.01) * (Math.random() > 0.5 ? 1 : -1),
+      hue: Math.floor(Math.random() * 360),
+      alpha: 0,
+      targetAlpha: Math.random() * 0.3 + 0.1
+    }));
+    let bgParticles = Array.from({ length: 40 }, () => ({
       x: Math.random() * 360,
       y: Math.random() * 640,
-      s: Math.random() * 2 + 1,
-      speed: Math.random() * 0.15 + 0.05
+      s: Math.random() * 3 + 1,
+      speed: Math.random() * 0.5 + 0.2,
+      wobble: Math.random() * Math.PI * 2
     }));
     let lastZone = 'Neon City';
     let zoneBannerTimer = 0;
@@ -142,7 +151,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
     const PLATFORM_WIDTH = 70;
     const PLATFORM_HEIGHT = 12;
-    const GRAVITY = 0.45;
+    const GRAVITY = 0.55;
     
     let player = {
       x: canvas.width / 2,
@@ -150,6 +159,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       vx: 0,
       vy: 0,
       width: 24,
+      height: 24,
       height: 24,
       shield: upgrades.shield > 0 ? 1 : 0,
       jetpack: 0,
@@ -184,8 +194,9 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     let maxScore = 0;
     let bonusScore = 0;
 
-    const keys = keysRef.current;
-    let isShooting = false;
+          const keys = keysRef.current;
+      let isShooting = false;
+      let shootTimer = 0;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
@@ -211,10 +222,13 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     const handlePointerMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      touchTargetX = ((clientX - rect.left) / rect.width) * canvas.width - player.width / 2;
+      touchTargetX = ((clientX - rect.left) / rect.width) * canvas.width;
     };
 
-    const handlePointerDown = () => isShooting = true;
+    const handlePointerDown = (e: any) => {
+      isShooting = true;
+      if (e) handlePointerMove(e);
+    };
     const handlePointerUp = () => { isShooting = false; touchTargetX = null; };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -282,7 +296,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
     let gameState: 'ready' | 'playing' | 'gameover' = 'ready';
     let readyTimer = 120; // 2 seconds at 60fps
 
-    const drawPlayer = (x: number, y: number) => {
+        const drawPlayer = (x, y) => {
       ctx.save();
       if (cameraShake > 0) ctx.translate(Math.random()*cameraShake - cameraShake/2, Math.random()*cameraShake - cameraShake/2);
       
@@ -296,86 +310,91 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       const charX = x + (player.width - pWidth) / 2;
       const charY = y + (player.height - pHeight);
 
-      // Add a slight gradient to the player
+      // Body
       const gradient = ctx.createLinearGradient(charX, charY, charX, charY + pHeight);
       gradient.addColorStop(0, selectedChar.color);
       gradient.addColorStop(1, '#0f172a');
       
-      // Glow effect for character
       ctx.shadowBlur = 15;
       ctx.shadowColor = selectedChar.color;
 
-      // Thruster effect
-      if (player.vy < -2) {
-         ctx.save();
-         const thrustLength = Math.min(20, -player.vy * 2);
-         ctx.shadowBlur = 20;
-         ctx.shadowColor = selectedChar.accent;
-         
-         ctx.fillStyle = selectedChar.accent;
-         ctx.beginPath();
-         // draw thruster flames
-         ctx.moveTo(charX + pWidth * 0.2, charY + pHeight);
-         ctx.lineTo(charX + pWidth * 0.5, charY + pHeight + thrustLength + Math.random()*10);
-         ctx.lineTo(charX + pWidth * 0.8, charY + pHeight);
-         ctx.fill();
-         
-         // Inner bright thruster flame
-         ctx.fillStyle = '#ffffff';
-         ctx.beginPath();
-         ctx.moveTo(charX + pWidth * 0.35, charY + pHeight);
-         ctx.lineTo(charX + pWidth * 0.5, charY + pHeight + thrustLength*0.6 + Math.random()*5);
-         ctx.lineTo(charX + pWidth * 0.65, charY + pHeight);
-         ctx.fill();
-         ctx.restore();
-      }
-
-      // Main body (cyberpunk capsule / block shape)
       ctx.fillStyle = gradient;
       ctx.beginPath();
-      if (selectedChar.id === 'ghost') {
-         ctx.moveTo(charX + pWidth/2, charY);
-         ctx.lineTo(charX + pWidth, charY + pHeight/2);
-         ctx.lineTo(charX + pWidth/2, charY + pHeight);
-         ctx.lineTo(charX, charY + pHeight/2);
-      } else {
-         ctx.roundRect(charX, charY, pWidth, pHeight, 8);
-      }
+      ctx.roundRect(charX, charY, pWidth, pHeight, 8);
       ctx.fill();
       
-      // Outline glow removed, add inner geometric details
+      // Visor/Glasses & Headphones
       ctx.shadowBlur = 0;
-      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      
       if (selectedChar.id === 'ghost') {
          ctx.beginPath();
-         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 2, 4, 0, Math.PI*2);
+         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 2, 6, 0, Math.PI*2);
          ctx.fill();
-      } else {
-         ctx.fillRect(charX + Math.max(4, pWidth*0.2), charY + pHeight*0.2, pWidth*0.6, pHeight*0.25);
+         // ghostly trail
+         ctx.globalAlpha = 0.5;
          ctx.fillStyle = selectedChar.accent;
-         ctx.fillRect(charX + pWidth*0.3, charY + pHeight*0.55, pWidth*0.4, 2);
+         ctx.roundRect(charX + 4, charY + pHeight, pWidth - 8, 10 + Math.sin(Date.now()*0.01)*5, 4);
+         ctx.fill();
+         ctx.globalAlpha = 1.0;
+      } else {
+         // Cool glasses (trippy)
+         ctx.fillRect(charX + Math.max(4, pWidth*0.1), charY + pHeight*0.2, pWidth*0.8, pHeight*0.25);
+         // Glowing Equalizer on shirt
+         ctx.fillStyle = selectedChar.accent;
+         const t = Date.now() * 0.01;
+         ctx.fillRect(charX + pWidth*0.25, charY + pHeight*0.6, pWidth*0.1, 4 + Math.sin(t)*3);
+         ctx.fillRect(charX + pWidth*0.45, charY + pHeight*0.6, pWidth*0.1, 4 + Math.sin(t+1)*3);
+         ctx.fillRect(charX + pWidth*0.65, charY + pHeight*0.6, pWidth*0.1, 4 + Math.sin(t+2)*3);
+         
+         // Headphones
+         ctx.beginPath();
+         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 2, pWidth/2 + 3, Math.PI, 0);
+         ctx.lineWidth = 3;
+         ctx.strokeStyle = selectedChar.accent;
+         ctx.stroke();
+         ctx.fillRect(charX - 3, charY + pHeight/2 - 6, 5, 12); // left earcup
+         ctx.fillRect(charX + pWidth - 2, charY + pHeight/2 - 6, 5, 12); // right earcup
+      }
+
+      // Add glowsticks in hands if bouncing up!
+      if (player.vy < 0) {
+         ctx.shadowBlur = 10;
+         ctx.shadowColor = '#10b981';
+         ctx.strokeStyle = '#10b981';
+         ctx.lineWidth = 3;
+         ctx.beginPath();
+         ctx.moveTo(charX - 10, charY + pHeight/2);
+         ctx.lineTo(charX - 15, charY - 5);
+         ctx.stroke();
+         
+         ctx.shadowColor = '#ec4899';
+         ctx.strokeStyle = '#ec4899';
+         ctx.beginPath();
+         ctx.moveTo(charX + pWidth + 10, charY + pHeight/2);
+         ctx.lineTo(charX + pWidth + 15, charY - 5);
+         ctx.stroke();
+         ctx.shadowBlur = 0;
       }
 
       if (player.shield > 0) {
         ctx.beginPath();
         ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 2;
-        ctx.shadowBlur = 10;
+        ctx.lineWidth = 2 + Math.sin(Date.now()*0.01);
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#3b82f6';
-        ctx.arc(x + player.width/2, y + player.height/2, 22 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
+        ctx.arc(x + player.width/2, y + player.height/2, 26 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
         ctx.stroke();
-
-      
         ctx.shadowBlur = 0;
       }
 
       if (player.jetpack > 0) {
         createParticles(x + player.width/2, y + player.height, '#f59e0b');
         ctx.fillStyle = '#f59e0b';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#f59e0b';
-        ctx.fillRect(charX - 4, charY + pHeight/2, 6, pHeight/2 + 5);
-        ctx.fillRect(charX + pWidth - 2, charY + pHeight/2, 6, pHeight/2 + 5);
+        ctx.fillRect(charX - 4, charY + pHeight/2, 8, pHeight/2 + 5);
+        ctx.fillRect(charX + pWidth - 4, charY + pHeight/2, 8, pHeight/2 + 5);
         ctx.shadowBlur = 0;
       }
 
@@ -386,6 +405,11 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       if (isPausedGlobal || pausedRef.current) return;
       const normalDt = dt / 16.666;
       
+      if (shootTimer > 0) shootTimer -= normalDt;
+      if (isShooting && shootTimer <= 0) {
+         bullets.push({ x: player.x + player.width/2, y: player.y, vy: 15 });
+         shootTimer = 10;
+      }
       if (gameState === 'ready') {
         readyTimer -= normalDt;
         if (readyTimer <= 0) gameState = 'playing';
@@ -429,16 +453,16 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          player.vy = -18 - upgrades.jump * 1.5;
          createParticles(player.x + player.width/2, player.y + player.height, '#f43f5e');
          setHudJetpack(Math.floor(player.jetpack));
-      } else {
-         player.vx *= Math.pow(0.75, normalDt);
+            } else {
+         player.vx *= Math.pow(0.5, normalDt); // Much tighter friction for better control
          
          // Allow touch/mouse dragging to influence movement securely
          if (touchTargetX !== null) {
             const diff = touchTargetX - (player.x + player.width/2);
-            player.vx += Math.max(-selectedChar.speed, Math.min(selectedChar.speed, diff * 0.15)) * normalDt;
+            player.vx += Math.max(-selectedChar.speed, Math.min(selectedChar.speed, diff * 0.3)) * normalDt;
          } else {
-            if (keys.left) player.vx -= selectedChar.speed * 0.25 * normalDt;
-            if (keys.right) player.vx += selectedChar.speed * 0.25 * normalDt;
+            if (keys.left) player.vx -= selectedChar.speed * 0.6 * normalDt;
+            if (keys.right) player.vx += selectedChar.speed * 0.6 * normalDt;
          }
          
          // Hard cap speed to maintain control
@@ -460,9 +484,15 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          powerups.forEach(pw => pw.y += diff);
          floatingTexts.forEach(ft => ft.y += diff);
          bullets.forEach(b => b.y += diff);
-         bgStars.forEach(s => {
-            s.y += diff * s.speed;
-            if (s.y > canvas.height) { s.y -= canvas.height; s.x = Math.random() * canvas.width; }
+                  bgParticles.forEach(p => {
+            p.y += diff * p.speed;
+            if (p.y > canvas.height) { p.y -= canvas.height; p.x = Math.random() * canvas.width; }
+         });
+         bgLasers.forEach(l => {
+            if (Math.random() < 0.01) l.targetAlpha = Math.random() * 0.4;
+            l.alpha += (l.targetAlpha - l.alpha) * 0.05;
+            l.angle += l.sweepSpeed;
+            if (l.angle > Math.PI/3 || l.angle < -Math.PI/3) l.sweepSpeed *= -1;
          });
 
       }
@@ -474,7 +504,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          for(let i=0; i<numPlats; i++) {
              const newP = {
                  x: Math.random() * (canvas.width - PLATFORM_WIDTH),
-                 y: highestPlat - (70 + Math.random()*60),
+                 y: highestPlat - (80 + Math.random()*70),
                  width: PLATFORM_WIDTH,
                  hasSpring: Math.random() > 0.9,
                  type: Math.random() > 0.8 ? 'moving' : (Math.random() > 0.85 ? 'breaking' : 'normal'),
@@ -658,6 +688,37 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          setIsPlaying(false);
       }
       
+            // --- UPDATE PARTICLES, TRAILS AND BULLETS ---
+      for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.x += p.vx * normalDt;
+          p.y += p.vy * normalDt;
+          p.vy += 0.1 * normalDt;
+          p.life -= 0.02 * normalDt;
+          if (p.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = trails.length - 1; i >= 0; i--) {
+          const tr = trails[i];
+          tr.life -= 0.05 * normalDt;
+          if (tr.life <= 0) trails.splice(i, 1);
+      }
+      bullets.forEach((b, i) => {
+         b.y -= b.vy * normalDt;
+         if (b.y < -50) { bullets.splice(i, 1); return; }
+         for (let ei = enemies.length - 1; ei >= 0; ei--) {
+             const en = enemies[ei];
+             if (b.x > en.x && b.x < en.x + en.width && b.y > en.y && b.y < en.y + en.width) {
+                 enemies.splice(ei, 1);
+                 bullets.splice(i, 1);
+                 bonusScore += 100;
+                 createParticles(en.x + en.width/2, en.y, '#f59e0b');
+                 playSound('hit');
+                 break;
+             }
+         }
+      });
+      // ------------------------------------------
+      
       if (scoreRefDOM.current) scoreRefDOM.current.innerText = Math.floor(Math.floor(maxScore) + bonusScore).toString();
     };
 
@@ -688,12 +749,70 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Background Stars (Parallax)
-      ctx.fillStyle = theme.star;
-      bgStars.forEach(s => {
+            // Parallax Particles (Confetti / Dust)
+      bgParticles.forEach(p => {
+         p.wobble += 0.02;
+         ctx.fillStyle = theme.star;
          ctx.beginPath();
-         ctx.arc(s.x, s.y, s.s, 0, Math.PI*2);
+         ctx.arc(p.x + Math.sin(p.wobble)*5, p.y, p.s, 0, Math.PI*2);
          ctx.fill();
       });
+
+      // Render Crowd at the bottom of the screen always
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.9)';
+      ctx.beginPath();
+      const timeOffset = Date.now() * 0.005;
+      for (let ix = 0; ix <= canvas.width + 10; ix += 10) {
+         const crowdBounce = Math.sin(timeOffset + ix * 0.1) * 8 * Math.min(1.5, comboMultiplier / 2);
+         const crowdHeight = 40 + Math.sin(ix * 0.5) * 10 + crowdBounce;
+         if (ix === 0) ctx.moveTo(0, canvas.height);
+         ctx.lineTo(ix, canvas.height - crowdHeight);
+      }
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.fill();
+
+      // Occasional glow sticks in crowd
+      for (let ix = 20; ix < canvas.width; ix += 40) {
+         if (Math.sin(timeOffset * 0.5 + ix) > 0.4) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = theme.platMov;
+            ctx.strokeStyle = theme.platMov;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            const glowY = canvas.height - 35 + Math.sin(timeOffset * 2 + ix) * 10;
+            const glowX = ix + Math.cos(timeOffset * 2 + ix) * 5;
+            ctx.moveTo(ix, canvas.height - 15);
+            ctx.lineTo(glowX, glowY);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+         }
+      }
+
+      // Background Lasers
+      ctx.globalCompositeOperation = 'screen';
+      bgLasers.forEach(l => {
+         if (l.alpha < 0.01) return;
+         ctx.save();
+         ctx.translate(l.x, canvas.height); // Lasers shoot up from bottom
+         ctx.rotate(l.angle);
+         
+         const grd = ctx.createLinearGradient(0, 0, 0, -canvas.height * 1.5);
+         grd.addColorStop(0, 'hsla(' + l.hue + ', 100%, 60%, ' + l.alpha + ')');
+         grd.addColorStop(1, 'hsla(' + l.hue + ', 100%, 60%, 0)');
+         
+         ctx.fillStyle = grd;
+         ctx.beginPath();
+         // Laser beam shape, wide at bottom narrow at top
+         ctx.moveTo(-15, 0);
+         ctx.lineTo(15, 0);
+         ctx.lineTo(3, -canvas.height * 1.5);
+         ctx.lineTo(-3, -canvas.height * 1.5);
+         ctx.fill();
+         
+         ctx.restore();
+      });
+      ctx.globalCompositeOperation = 'source-over';
 
       if (adBreakTimer > 0) {
          ctx.fillStyle = `rgba(16, 185, 129, ${(adBreakTimer / 400) * 0.1})`;
@@ -747,37 +866,100 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              ctx.fillRect(p.x, p.y, p.width, PLATFORM_HEIGHT);
         } else {
             let pColor = theme.platNorm; 
-            if (p.type === 'moving') { pColor = theme.platMov; }
-            else if (p.type === 'breaking') { pColor = '#ef4444'; } // Red
-            else if (p.type === 'boost') { pColor = '#eab308'; } // Yellow
+            let pLight = theme.platMov;
+            if (p.type === 'moving') { pColor = theme.platMov; pLight = '#0ea5e9'; }
+            else if (p.type === 'breaking') { pColor = '#ef4444'; pLight = '#f87171'; } // Red
+            else if (p.type === 'boost') { pColor = '#eab308'; pLight = '#fef08a'; } // Yellow
             
-            // Base rectangle
-            ctx.fillStyle = pColor;
+            // Draw a festival truss/sound system platform
+            ctx.fillStyle = '#0f172a'; // dark metal base
             ctx.beginPath();
-            ctx.roundRect(p.x, p.y, p.width, PLATFORM_HEIGHT, 4);
+            ctx.roundRect(p.x, p.y, p.width, PLATFORM_HEIGHT, 2);
             ctx.fill();
             
             ctx.shadowBlur = 0;
-            // Highlight inner pattern
-            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-            ctx.fillRect(p.x + 4, p.y + 2, p.width - 8, 2);
+            // Truss cross patterns
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for(let i = 0; i < p.width - 5; i += 10) {
+               ctx.moveTo(p.x + i, p.y + 4);
+               ctx.lineTo(p.x + i + 10, p.y + PLATFORM_HEIGHT);
+               ctx.moveTo(p.x + i + 10, p.y + 4);
+               ctx.lineTo(p.x + i, p.y + PLATFORM_HEIGHT);
+            }
+            ctx.stroke();
+
+            // Colored lights / speakers block on top
+            ctx.fillStyle = pColor;
+            ctx.beginPath();
+            ctx.roundRect(p.x + 2, p.y - 2, p.width - 4, 6, 2);
+            ctx.fill();
+
+            // Inner highlight
+            ctx.fillStyle = pLight;
+            ctx.fillRect(p.x + 4, p.y - 1, p.width - 8, 2);
             
-            // Danger stripes for breaking or boost
-            if (p.type === 'breaking' || p.type === 'boost') {
+            // Neon underglow for everything except breaking
+            if (p.type !== 'breaking') {
+               ctx.shadowBlur = 10;
+               ctx.shadowColor = pColor;
+               ctx.fillStyle = pColor;
+               ctx.fillRect(p.x + 4, p.y + PLATFORM_HEIGHT - 2, p.width - 8, 2);
+               ctx.shadowBlur = 0;
+            }
+            
+            // Subwoofers for boost
+            if (p.type === 'boost') {
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                const bounce = Math.sin(Date.now() * 0.02) * 2;
+                ctx.arc(p.x + p.width/2 - 12, p.y + PLATFORM_HEIGHT/2, 4 + bounce, 0, Math.PI*2);
+                ctx.arc(p.x + p.width/2 + 12, p.y + PLATFORM_HEIGHT/2, 4 + bounce, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = pColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Booster beam going UP
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const grad = ctx.createLinearGradient(0, p.y, 0, p.y - 100);
+                grad.addColorStop(0, pColor);
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.globalAlpha = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+                ctx.fillRect(p.x + 10, p.y - 100, p.width - 20, 100);
+                ctx.restore();
+            }
+
+            // Danger stripes for breaking
+            if (p.type === 'breaking') {
                 ctx.save();
                 ctx.beginPath();
-                ctx.roundRect(p.x, p.y + 4, p.width, PLATFORM_HEIGHT - 4, 4);
+                ctx.roundRect(p.x + 2, p.y - 2, p.width - 4, 4, 2);
                 ctx.clip();
-                ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                for(let i=-20; i<p.width; i+=10) {
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                for(let i = -10; i < p.width; i += 8) {
                     ctx.beginPath();
-                    ctx.moveTo(p.x + i, p.y + 4);
-                    ctx.lineTo(p.x + i + 5, p.y + 4);
-                    ctx.lineTo(p.x + i - 5, p.y + PLATFORM_HEIGHT);
-                    ctx.lineTo(p.x + i - 10, p.y + PLATFORM_HEIGHT);
+                    ctx.moveTo(p.x + i, p.y - 2);
+                    ctx.lineTo(p.x + i + 4, p.y - 2);
+                    ctx.lineTo(p.x + i - 2, p.y + 2);
+                    ctx.lineTo(p.x + i - 6, p.y + 2);
                     ctx.fill();
                 }
                 ctx.restore();
+            }
+
+            // Subwoofers for boost
+            if (p.type === 'boost') {
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(p.x + p.width/2 - 10, p.y + PLATFORM_HEIGHT/2, 4, 0, Math.PI*2);
+                ctx.arc(p.x + p.width/2 + 10, p.y + PLATFORM_HEIGHT/2, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.strokeStyle = pColor;
+                ctx.stroke();
             }
 
             if (p.type === 'breaking' && p.crackValue > 0) {
@@ -803,7 +985,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         }
       });
 
-      powerups.forEach(pw => {
+            powerups.forEach(pw => {
         const timeOffset = Date.now() * 0.005;
         const bob = Math.sin(timeOffset + pw.x) * 3;
         
@@ -815,10 +997,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             ctx.shadowBlur = 10;
             ctx.fillStyle = '#a7f3d0';
             ctx.beginPath();
-            ctx.roundRect(2, -5, 4, 16, 2);
+            ctx.roundRect(-2, -8, 4, 16, 2);
             ctx.fill();
             ctx.fillStyle = '#10b981';
-            ctx.fillRect(2, 0, 4, 10);
+            ctx.fillRect(-2, -3, 4, 10);
             ctx.shadowBlur = 0;
         } else if (pw.type === 'vip') {
             ctx.shadowColor = '#f59e0b';
@@ -839,10 +1021,41 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             }
             ctx.fill();
             ctx.shadowBlur = 0;
+        } else if (pw.type === 'merch') {
+            ctx.shadowColor = '#ec4899';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#be185d';
+            ctx.beginPath();
+            ctx.roundRect(-8, -6, 16, 14, 2);
+            ctx.fill();
+            ctx.fillStyle = '#ec4899'; // T-shirt sleeves
+            ctx.beginPath();
+            ctx.roundRect(-12, -6, 6, 8, 2);
+            ctx.roundRect(6, -6, 6, 8, 2);
+            ctx.fill();
+            ctx.fillStyle = '#fdf2f8'; // logo dot
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI*2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        } else if (pw.type === 'beer') {
+            ctx.shadowColor = '#0ea5e9';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#0284c7'; // Can body
+            ctx.beginPath();
+            ctx.roundRect(-5, -8, 10, 16, 2);
+            ctx.fill();
+            ctx.fillStyle = '#cbd5e1'; // Silver top/bottom
+            ctx.fillRect(-5, -8, 10, 2);
+            ctx.fillRect(-5, 6, 10, 2);
+            ctx.fillStyle = '#38bdf8'; // Label
+            ctx.fillRect(-5, -3, 10, 6);
+            ctx.shadowBlur = 0;
         } else {
+            // Magnet
             ctx.shadowColor = '#a855f7';
             ctx.shadowBlur = 15;
-            ctx.fillStyle = '#1e1b4b'; // dark retro base
+            ctx.fillStyle = '#1e1b4b'; 
             ctx.beginPath();
             ctx.arc(0, 0, 12, 0, Math.PI*2);
             ctx.fill();
@@ -851,69 +1064,80 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             ctx.stroke();
             // Magnet U shape
             ctx.strokeStyle = '#d8b4fe';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.arc(0, 2, 5, Math.PI, 0);
+            ctx.arc(0, -2, 5, Math.PI, 0);
+            ctx.lineTo(5, 4);
+            ctx.moveTo(-5, -2);
+            ctx.lineTo(-5, 4);
             ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(-5, 2); ctx.lineTo(-5, -3);
-            ctx.moveTo(5, 2); ctx.lineTo(5, -3);
-            ctx.stroke();
-            ctx.strokeStyle = '#ef4444'; // Red tips
-            ctx.beginPath();
-            ctx.moveTo(-5, -3); ctx.lineTo(-5, -4);
-            ctx.moveTo(5, -3); ctx.lineTo(5, -4);
-            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(-6, 4, 2, 2);
+            ctx.fillRect(4, 4, 2, 2);
             ctx.shadowBlur = 0;
         }
+        
         ctx.restore();
       });
 
-      enemies.forEach(e => {
+                  enemies.forEach(e => {
           ctx.save();
           ctx.translate(e.x + e.width / 2, e.y + e.width / 2);
-          ctx.rotate(Math.sin(Date.now() * 0.005 + e.x) * 0.1);
           
-          ctx.shadowColor = '#ef4444';
-          ctx.shadowBlur = 10;
-          ctx.fillStyle = '#450a0a'; // dark red
-          ctx.beginPath();
-          ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 4);
-          ctx.fill();
-          
-          ctx.fillStyle = '#ef4444';
-          ctx.fillRect(-e.width/2, -e.width/2 + 2, e.width, 4);
-          
-          ctx.shadowBlur = 0;
           if (e.isBouncer) {
-              // Skull vector
-              ctx.fillStyle = 'white';
+              // Bouncer: Big security guard look
+              ctx.shadowColor = '#fbbf24';
+              ctx.shadowBlur = 10;
+              ctx.fillStyle = '#0f172a'; // dark suit
               ctx.beginPath();
-              ctx.arc(0, -2, 6, 0, Math.PI * 2);
+              ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 4);
               ctx.fill();
-              ctx.fillRect(-4, 2, 8, 4);
-              ctx.fillStyle = '#450a0a';
-              ctx.fillRect(-3, -2, 2, 3);
-              ctx.fillRect(1, -2, 2, 3);
-              ctx.fillRect(-1, 2, 2, 2);
-              ctx.fillStyle = 'white';
-              ctx.fillRect(-2, 6, 1, 2);
-              ctx.fillRect(1, 6, 1, 2);
+              
+              // VIP Badge
+              ctx.fillStyle = '#fbbf24';
+              ctx.fillRect(e.width/2 - 10, -e.width/2 + 5, 5, 8);
+              
+              // Shades
+              ctx.fillStyle = '#000';
+              ctx.fillRect(-e.width/2 + 4, -e.width/2 + 10, e.width - 8, 8);
+              
+              // Earpiece
+              ctx.fillStyle = '#ef4444'; 
+              ctx.beginPath();
+              ctx.arc(e.width/2 - 2, -e.width/2 + 15, 2, 0, Math.PI*2);
+              ctx.fill();
           } else {
-              // Space invader vector
-              ctx.fillStyle = 'white';
-              ctx.fillRect(-6, -4, 12, 6);
-              ctx.fillRect(-8, -2, 2, 6);
-              ctx.fillRect(6, -2, 2, 6);
-              ctx.fillStyle = '#450a0a';
-              ctx.fillRect(-3, -2, 2, 2);
-              ctx.fillRect(1, -2, 2, 2);
-              ctx.fillStyle = 'white';
-              ctx.fillRect(-4, 4, 2, 2);
-              ctx.fillRect(2, 4, 2, 2);
+              // Noise Drone
+              ctx.rotate(Math.sin(Date.now() * 0.005 + e.x) * 0.1);
+              ctx.shadowColor = '#ef4444';
+              ctx.shadowBlur = 15;
+              ctx.fillStyle = '#450a0a'; 
+              ctx.beginPath();
+              ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 8);
+              ctx.fill();
+              
+              // Drone speaker front
+              ctx.fillStyle = '#171717';
+              ctx.beginPath();
+              ctx.arc(0, 0, e.width*0.35, 0, Math.PI * 2);
+              ctx.fill();
+              
+              const pulse = Math.sin(Date.now() * 0.02) * 3;
+              ctx.fillStyle = '#ef4444';
+              ctx.beginPath();
+              ctx.arc(0, 0, e.width*0.15 + pulse, 0, Math.PI * 2);
+              ctx.fill();
+              
+              // Antennas
+              ctx.strokeStyle = '#ef4444';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(-e.width/2 + 5, -e.width/2);
+              ctx.lineTo(-e.width/2 - 5, -e.width/2 - 5);
+              ctx.moveTo(e.width/2 - 5, -e.width/2);
+              ctx.lineTo(e.width/2 + 5, -e.width/2 - 5);
+              ctx.stroke();
           }
-          
+          ctx.shadowBlur = 0;
           ctx.restore();
       });
 
@@ -990,6 +1214,11 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
 
       
+      if (shootTimer > 0) shootTimer -= normalDt;
+      if (isShooting && shootTimer <= 0) {
+         bullets.push({ x: player.x + player.width/2, y: player.y, vy: 15 });
+         shootTimer = 10;
+      }
       if (gameState === 'ready') {
          ctx.save();
          ctx.fillStyle = 'rgba(0,0,0,0.6)';
@@ -1026,10 +1255,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
   const [ownedRewards, setOwnedRewards] = useState<string[]>(() => JSON.parse(localStorage.getItem('fest_rewards') || '[]'));
   useEffect(() => localStorage.setItem('fest_rewards', JSON.stringify(ownedRewards)), [ownedRewards]);
 
-  const MARKETING_REWARDS = [
-    { id: 'discount20', name: '20% OFF MERCH', desc: 'Valid at brand store', cost: 1000, type: 'discount', code: 'CYBER20' },
-    { id: 'freedrink', name: 'FREE DRINK ENTRY', desc: 'Sponsor: CyberCola', cost: 2500, type: 'coupon', code: 'ENERGYROCK' },
-    { id: 'vippass', name: 'VIP PASS', desc: 'Event exclusive ticket', cost: 10000, type: 'ticket', code: 'VIPFRONT26' }
+    const MARKETING_REWARDS = [
+    { id: 'discount20', nameKey: 'game.fest.reward.discount.name', descKey: 'game.fest.reward.discount.desc', cost: 1000, type: 'discount', code: 'RAVER20' },
+    { id: 'freedrink', nameKey: 'game.fest.reward.drink.name', descKey: 'game.fest.reward.drink.desc', cost: 2500, type: 'coupon', code: 'STAYHYDRATED' },
+    { id: 'vippass', nameKey: 'game.fest.reward.vip.name', descKey: 'game.fest.reward.vip.desc', cost: 10000, type: 'ticket', code: 'MAIN-STAGE-DJ' }
   ];
 
   return (
@@ -1089,8 +1318,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
               {!showCodeInput ? (
                 <div className="w-full max-w-md flex flex-col items-center flex-1 py-6 justify-start h-full">
                   <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-blue-500 text-4xl mb-6 italic font-black uppercase drop-shadow-[0_0_15px_rgba(236,72,153,0.5)] relative inline-block tracking-widest">
-                     JUMP.EXE
-                     <span className="absolute -top-4 -right-12 rotate-12 text-[9px] bg-red-500/20 text-red-400 font-bold px-2 py-1 border border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.5)] backdrop-blur-sm">EXPERIMENTAL</span>
+                     JUMPFEST
+                     <span className="absolute -top-4 -right-12 rotate-12 text-[9px] bg-green-500/20 text-green-400 font-bold px-2 py-1 border border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.5)] backdrop-blur-sm">V2.0 LIVE</span>
                   </h3>
                   
                   <div className="flex w-full px-2 gap-2 mb-6 shrink-0">
@@ -1107,11 +1336,11 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                   </div>
 
                   <div className="flex-1 w-full overflow-y-auto px-2 custom-scrollbar flex flex-col gap-3">
-                    {shopTab === 'rewards' ? MARKETING_REWARDS.map((reward, i) => (
+                                       {shopTab === 'rewards' ? MARKETING_REWARDS.map((reward, i) => (
                       <div key={'reward_' + reward.id + '_' + i} className="bg-black/50 p-4 border border-yellow-500/30 rounded-xl flex justify-between items-center text-left hover:border-yellow-500/60 transition-colors">
                          <div>
-                            <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase">{reward.name}</p>
-                            <p className="text-white/40 text-[9px] uppercase tracking-wider">{reward.desc}</p>
+                            <p className="text-yellow-400 font-bold text-sm tracking-widest uppercase">{t(reward.nameKey)}</p>
+                            <p className="text-white/40 text-[9px] uppercase tracking-wider">{t(reward.descKey)}</p>
                          </div>
                          {ownedRewards.includes(reward.id) ? (
                             <span className="bg-green-500/20 border border-green-500 text-green-400 px-3 py-2 text-[10px] font-bold rounded">OWNED:<br/>{reward.code}</span>

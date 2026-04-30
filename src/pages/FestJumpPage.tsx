@@ -125,12 +125,12 @@ export function FestJumpPage() {
             
             {/* The Game itself */}
             <div className="w-full h-full relative z-10">
-               <FestJump isFullscreen={true} hideFullscreenButton={true} />
+               <FestJump isFullscreen={true} />
             </div>
           </motion.div>
           
           <div className="hidden lg:flex justify-center mt-6 items-center gap-2 text-[10px] text-gray-600 tracking-widest uppercase font-bold drop-shadow-sm">
-             <Rocket size={12} className="text-pink-600" /> Powered by Jumper.OS Engine v2.0
+             <Rocket size={12} className="text-pink-600" /> Powered by Jumpfest Engine v2.0
           </div>
         </div>
 
@@ -223,7 +223,7 @@ export function FestJumpPage() {
                            </div>
                            <h2 className="text-2xl font-black text-white italic uppercase tracking-widest mb-4">Partner With Us</h2>
                            <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md mx-auto">
-                              Join the Cyber Fest ecosystem. Place your brand's billboards directly inside the hyper-jump experience and reach millions of cyber-runners.
+                              Join the Electronic Music Festival ecosystem. Place your brand's billboards directly inside the Jumpfest experience and reach millions of ravers.
                            </p>
                            <button onClick={handleModalClose} className="px-8 py-3 bg-pink-600 hover:bg-pink-500 text-white font-bold tracking-[0.2em] uppercase rounded border border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.5)] transition-all active:scale-95">
                               Request Media Packet
@@ -238,7 +238,7 @@ export function FestJumpPage() {
                            </div>
                            <h2 className="text-2xl font-black text-white italic uppercase tracking-widest mb-4">Sponsorship Deck</h2>
                            <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md mx-auto">
-                              Curious about our metrics? The Jumper.OS Engine delivers unparalleled engagement. View our interactive PDF to explore tiers, pricing, and custom integrations.
+                              Curious about our metrics? The Jumpfest Engine delivers unparalleled engagement. View our interactive PDF to explore tiers, pricing, and custom integrations.
                            </p>
                            <button onClick={handleModalClose} className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-[0.2em] uppercase rounded border border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all active:scale-95">
                               Download Deck .PDF

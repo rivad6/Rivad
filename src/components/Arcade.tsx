@@ -366,7 +366,7 @@ export function Arcade() {
             <div className="absolute top-0 right-0 w-full h-[150%] bg-gradient-to-bl from-white/5 via-white/5 to-transparent -rotate-12 translate-x-1/2 -translate-y-1/4 pointer-events-none z-[60] mix-blend-overlay transition-opacity group-hover/screen:opacity-50"></div>
             
             {/* CRT Screen Effect overlay */}
-            <div className="absolute inset-0 pointer-events-none z-20 crt"></div>
+            <div className="absolute inset-0 pointer-events-none z-20 crt crt-flicker"></div>
             
             {/* Bezel vignette */}
             <div className="absolute inset-0 z-[15] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.8)_100%)]" />

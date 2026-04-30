@@ -59,10 +59,10 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   }, []);
 
   const cars: CarConfig[] = [
-    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 440, handling: 10, maxHp: 3, color: '#facc15' },
-    { id: 'sport', name: t('game.car.sport.name', 'Velocity RS'), desc: t('game.car.sport.desc'), speed: 620, handling: 14, maxHp: 2, color: '#ef4444' },
-    { id: 'patrol', name: t('game.car.truck.name', 'Sentinel X'), desc: t('game.car.truck.desc'), speed: 400, handling: 8, maxHp: 6, color: '#1e293b' },
-    { id: 'moto', name: t('game.car.moto.name', 'Neon Reaper'), desc: t('game.car.moto.desc'), speed: 580, handling: 20, maxHp: 1, color: '#06b6d4' },
+    { id: 'taxi', name: t('game.car.taxi.name', 'Taxi CDMX'), desc: t('game.car.taxi.desc', 'El clásico rosa con blanco'), speed: 440, handling: 10, maxHp: 3, color: '#ec4899' },
+    { id: 'sport', name: t('game.car.sport.name', 'Fífí Sport'), desc: t('game.car.sport.desc', 'Súper rápido pero odia los baches'), speed: 620, handling: 14, maxHp: 2, color: '#ef4444' },
+    { id: 'patrol', name: t('game.car.truck.name', 'Patrulla'), desc: t('game.car.truck.desc', 'Blindada contra el tráfico pesado'), speed: 400, handling: 8, maxHp: 6, color: '#1e293b' },
+    { id: 'moto', name: t('game.car.moto.name', 'Moto Repartidor'), desc: t('game.car.moto.desc', 'Filtra el tráfico como jefe'), speed: 580, handling: 20, maxHp: 1, color: '#06b6d4' },
   ];
 
   const currentCar = cars.find(c => c.id === selectedCarId) || cars[0];
@@ -475,26 +475,19 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
         ctx.lineWidth = 1;
         ctx.stroke();
       } else {
-        // Taxi - Urban Shuttle
-        ctx.fillStyle = '#fbbf24'; 
+        // Taxi - CDMX Rosa y Blanco
+        ctx.fillStyle = '#ffffff'; 
         ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
+        ctx.fillStyle = '#ec4899'; // CDMX Rosa
+        ctx.beginPath(); ctx.roundRect(bx, by + h/3, w, h*2/3, [0,0,6,6]); ctx.fill();
         
-        // Checker stripes
-        ctx.fillStyle = '#000';
-        for(let i=0; i<w; i+=10) {
-          ctx.fillRect(bx + i, by + 2, 5, 5);
-          ctx.fillRect(bx + i + 5, by + 7, 5, 5);
-          ctx.fillRect(bx + i, by + h - 12, 5, 5);
-          ctx.fillRect(bx + i + 5, by + h - 7, 5, 5);
-        }
-
-        // TAXI roof sign with light
+        // CDMX logo text on roof
         ctx.fillStyle = '#111';
         ctx.fillRect(bx + w/2 - 12, by + h/2 - 10, 24, 8);
-        ctx.fillStyle = '#fbbf24';
+        ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 6px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('URBAN', bx + w/2, by + h/2 - 4);
+        ctx.fillText('CDMX', bx + w/2, by + h/2 - 4);
 
         // Windows
         ctx.fillStyle = '#1e293b';
@@ -545,58 +538,102 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
     };
 
     const drawTree = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      ctx.fillStyle = '#422006';
-      ctx.fillRect(obs.x + obs.width/2 - 4, obs.y + obs.height/2, 8, obs.height/2);
-      ctx.fillStyle = '#166534';
+      // Jacaranda style
+      ctx.fillStyle = '#422006'; // Trunk
+      ctx.fillRect(obs.x + obs.width/2 - 4, obs.y + obs.height/3, 8, obs.height*2/3);
+      // Leaves (purple pink jacaranda)
+      ctx.fillStyle = '#c084fc'; 
       ctx.beginPath();
-      ctx.arc(obs.x + obs.width/2, obs.y + obs.height/4, obs.width/2, 0, Math.PI * 2);
+      ctx.arc(obs.x + obs.width/2, obs.y + obs.height/3, obs.width/1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#d8b4fe'; // lighter highlight
+      ctx.beginPath();
+      ctx.arc(obs.x + obs.width/2 - 5, obs.y + obs.height/4, obs.width/3, 0, Math.PI * 2);
       ctx.fill();
     };
 
     const drawBuilding = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-      ctx.fillStyle = '#f8fafc';
-      for(let iy=0; iy<obs.height; iy+=20) {
-        for(let ix=0; ix<obs.width; ix+=15) {
-          if (Math.random() > 0.3) ctx.fillRect(obs.x + ix + 4, obs.y + iy + 4, 6, 8);
+      const type = obs.id % 4;
+      ctx.save();
+      ctx.translate(obs.x, obs.y);
+      if (type === 0) {
+        // Metrobus Station
+        ctx.fillStyle = '#ef4444'; // Rojo Metrobus
+        ctx.fillRect(0, 0, obs.width, obs.height);
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(5, 5, obs.width - 10, obs.height - 10);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(obs.width/2 - 15, obs.height/2 - 2, 30, 4);
+      } else if (type === 1) {
+        // Oxxo vibes
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(0, 0, obs.width, obs.height/3);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(0, obs.height/3, obs.width, obs.height*2/3);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(obs.width/2 - 12, obs.height/2 - 5, 24, 10);
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('OXXO', obs.width/2, obs.height/2 + 3);
+      } else if (type === 2) {
+        // Tienda de abarrotes / fonda with pink/blue colors
+        ctx.fillStyle = '#ec4899';
+        ctx.fillRect(0, 0, obs.width, obs.height);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(0, obs.height/2, obs.width, obs.height/2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(10, obs.height - 20, obs.width - 20, 20); // door
+      } else {
+        // Classic generic building with windows
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(0, 0, obs.width, obs.height);
+        ctx.fillStyle = '#f8fafc';
+        for(let iy=0; iy<obs.height; iy+=15) {
+          for(let ix=0; ix<obs.width; ix+=15) {
+            if (Math.random() > 0.3) ctx.fillRect(ix + 4, iy + 4, 6, 8);
+          }
         }
       }
+      ctx.restore();
     };
 
     const drawEnemy = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      const bx = obs.x; const by = obs.y; const w = obs.width; const h = obs.height;
+      const bx = obs.x; const by = obs.y; const w = Math.min(obs.width, 36); const h = Math.min(obs.height, 50); // Make it vocho-sized round car
+      const offsetX = obs.x + (obs.width - w) / 2;
+      const offsetY = obs.y + (obs.height - h) / 2;
       
       // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(bx + 6, by + 6, w, h);
+      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(offsetX + 6, offsetY + 6, w, h);
       
-      // Car Body
-      ctx.fillStyle = '#7f1d1d'; // Dark red
-      ctx.beginPath(); ctx.roundRect(bx, by, w, h, 8); ctx.fill();
+      // Vocho Green/White
+      ctx.fillStyle = '#16a34a'; // Green
+      ctx.beginPath(); ctx.roundRect(offsetX, offsetY, w, h, 14); ctx.fill();
+      ctx.fillStyle = '#ffffff'; // White Top
+      ctx.beginPath(); ctx.roundRect(offsetX + 4, offsetY + 15, w - 8, h - 30, 8); ctx.fill();
       
       // Windshield
       ctx.fillStyle = '#111827';
-      ctx.fillRect(bx + 6, by + 10, w - 12, 15);
+      ctx.beginPath();
+      ctx.ellipse(offsetX + w/2, offsetY + 22, w/2 - 6, 6, 0, 0, Math.PI*2);
+      ctx.fill();
       
-      // Headlights (Flickering)
-      if(Math.floor(Date.now()/100) % 3 === 0) {
-        ctx.fillStyle = '#fef08a';
-        ctx.shadowBlur = 10; ctx.shadowColor = '#fef08a';
-        ctx.fillRect(bx + 5, by + 2, 8, 6);
-        ctx.fillRect(bx + w - 13, by + 2, 8, 6);
-        ctx.shadowBlur = 0;
-      }
+      // Rear window
+      ctx.beginPath();
+      ctx.ellipse(offsetX + w/2, offsetY + h - 12, w/2 - 8, 4, 0, 0, Math.PI*2);
+      ctx.fill();
       
-      // Siren
-      ctx.fillStyle = Math.floor(Date.now()/150) % 2 === 0 ? '#ef4444' : '#3b82f6';
-      ctx.beginPath(); ctx.arc(bx + w/2, by + h/2, 4, 0, Math.PI*2); ctx.fill();
+      // Headlights
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(offsetX + 6, offsetY + 8, 4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(offsetX + w - 6, offsetY + 8, 4, 0, Math.PI*2); ctx.fill();
       
       // Wheels
       ctx.fillStyle = '#000';
-      ctx.fillRect(bx - 4, by + 10, 6, 15);
-      ctx.fillRect(bx + w - 2, by + 10, 6, 15);
-      ctx.fillRect(bx - 4, by + h - 25, 6, 15);
-      ctx.fillRect(bx + w - 2, by + h - 25, 6, 15);
+      ctx.fillRect(offsetX - 2, offsetY + 10, 4, 10);
+      ctx.fillRect(offsetX + w - 2, offsetY + 10, 4, 10);
+      ctx.fillRect(offsetX - 2, offsetY + h - 20, 4, 10);
+      ctx.fillRect(offsetX + w - 2, offsetY + h - 20, 4, 10);
     };
 
     const drawPowerup = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -626,10 +663,11 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       ctx.fillStyle = 'rgba(0,0,0,0.4)';
       ctx.fillRect(bx + 4, by + 4, w, h);
       
-      ctx.fillStyle = '#9ca3af';
-      ctx.beginPath(); ctx.roundRect(bx, by, w, 20, [4, 4, 0, 0]); ctx.fill();
-      ctx.fillStyle = '#10b981';
-      ctx.beginPath(); ctx.roundRect(bx, by + 20, w, h - 20, [0, 0, 4, 4]); ctx.fill();
+      // CDMX Microbus colors (green/grey top)
+      ctx.fillStyle = '#d1d5db'; // Grey top
+      ctx.beginPath(); ctx.roundRect(bx, by, w, 25, [4, 4, 0, 0]); ctx.fill();
+      ctx.fillStyle = '#16a34a'; // Green bottom
+      ctx.beginPath(); ctx.roundRect(bx, by + 25, w, h - 25, [0, 0, 4, 4]); ctx.fill();
       
       // Wheels
       ctx.fillStyle = '#000';
@@ -638,12 +676,18 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       ctx.fillRect(bx - 3, by + h - 25, 3, 15);
       ctx.fillRect(bx + w, by + h - 25, 3, 15);
 
+      // Windows
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(bx + 3, by + 6, w - 6, 12); 
-      ctx.fillRect(bx + 3, by + 25, 10, 14);
-      ctx.fillRect(bx + w - 13, by + 25, 10, 14);
-      ctx.fillRect(bx + 3, by + 45, 10, 14);
-      ctx.fillRect(bx + w - 13, by + 45, 10, 14);
+      // Passenger windows
+      ctx.fillRect(bx + 3, by + 28, 12, 14);
+      ctx.fillRect(bx + w - 15, by + 28, 12, 14);
+      ctx.fillRect(bx + 3, by + 48, 12, 14);
+      ctx.fillRect(bx + w - 15, by + 48, 12, 14);
+      
+      // Route Sign
+      ctx.fillStyle = '#ef4444'; // Neon sign
+      ctx.fillRect(bx + 4, by + parseInt(h) - 4, w - 8, 4);
     };
 
     const drawTaco = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -976,6 +1020,18 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       
       ctx.fillStyle = asphaltColor; // Asphalt
       ctx.fillRect(0, 0, GAME_W, GAME_H);
+      
+      // Metrobus Lane (CDMX)
+      ctx.fillStyle = 'rgba(220, 38, 38, 0.15)'; // Deep red lane right side
+      ctx.fillRect(LANES[5] - LANE_WIDTH/2, 0, LANE_WIDTH, GAME_H);
+      ctx.fillStyle = 'rgba(220, 38, 38, 0.5)'; // line
+      ctx.fillRect(LANES[5] - LANE_WIDTH/2 - 2, 0, 4, GAME_H);
+      
+      // Bike Lane (Ciclovía CDMX)
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.15)'; // Green lane left side
+      ctx.fillRect(LANES[0] - LANE_WIDTH/2, 0, LANE_WIDTH, GAME_H);
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.5)'; // line
+      ctx.fillRect(LANES[0] + LANE_WIDTH/2 - 2, 0, 4, GAME_H);
 
       // Screenshake
       if (shakeTime > 0) {
@@ -1341,11 +1397,11 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             </div>
 
             <div className="flex justify-center gap-4 mb-6 text-[8px] text-zinc-500 uppercase font-mono bg-black/40 p-2 rounded">
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#10b981] rounded-sm mb-1" />BUS</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#450a0a] rounded-sm mb-1" />POLI</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#10b981] rounded-sm mb-1" />RUTA</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#16a34a] rounded-sm mb-1" />VOCH</div>
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#ef4444] rounded-sm mb-1" />{t('game.race.gas', 'GAS')}</div>
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#818cf8] rounded-full mb-1 flex items-center justify-center"><Shield size={10} className="text-white"/></div>SHLD</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#3b82f6] rounded-full mb-1 flex items-center justify-center"><Zap size={10} className="text-white"/></div>NITR</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#facc15] rounded-full mb-1 flex items-center justify-center"><Zap size={10} className="text-white"/></div>NITR</div>
             </div>
 
             <button 
