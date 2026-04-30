@@ -58,6 +58,12 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
   const [hasDiscoveredSecret, setHasDiscoveredSecret] = useState(() => localStorage.getItem('invaders_secret_discovered') === 'true');
   const pendingCoinsRef = useRef(0);
   const pausedRef = useRef(false);
+  const pausedGlobalRef = useRef(false);
+
+  useEffect(() => {
+    pausedGlobalRef.current = isPausedGlobal;
+  }, [isPausedGlobal]);
+
   const secretSequence = useRef<string>("");
 
   const [upgrades, setUpgrades] = useState(() => {
@@ -656,7 +662,7 @@ export function CreativeInvaders({ isPausedGlobal = false, hideFullscreenButton 
   const update = useCallback((dt: number) => {
     const s = state.current;
     if (gameState !== "playing" && gameState !== "asteroids" && gameState !== "takeoff") return;
-    if (isPausedGlobal || pausedRef.current) return;
+    if (pausedGlobalRef.current || pausedRef.current) return;
     
     const normalDt = dt / 16.666; // Normalize to 60fps
 

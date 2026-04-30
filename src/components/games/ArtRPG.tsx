@@ -188,19 +188,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
   useEffect(() => {
     if (isPausedGlobal) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      
-  useEffect(() => {
-    if (isPausedGlobal) return;
-    if (stats.budget <= 0 && currentNode !== 'fail_budget') {
-      setCurrentNode('fail_budget');
-    } else if (stats.sanity <= 0 && currentNode !== 'fail_sanity') {
-      setCurrentNode('fail_sanity');
-    } else if (stats.reputation <= 0 && currentNode !== 'fail_reputation') {
-      setCurrentNode('fail_reputation');
-    }
-  }, [stats, currentNode, isPausedGlobal]);
-
-  const node = storyMap[currentNode] || { textKey: 'game.rpg.fail.fallback', choices: [], isEnding: true };
+      const node = storyMap[currentNode] || { textKey: 'game.rpg.fail.fallback', choices: [], isEnding: true };
       if (!node || node.isEnding) return;
       
       const choiceCount = node.choices.length;
@@ -220,7 +208,18 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentNode, selectedIndex, isPausedGlobal]);
+  }, [currentNode, selectedIndex, isPausedGlobal, playSound]);
+
+  useEffect(() => {
+    if (isPausedGlobal) return;
+    if (stats.budget <= 0 && currentNode !== 'fail_budget') {
+      setCurrentNode('fail_budget');
+    } else if (stats.sanity <= 0 && currentNode !== 'fail_sanity') {
+      setCurrentNode('fail_sanity');
+    } else if (stats.reputation <= 0 && currentNode !== 'fail_reputation') {
+      setCurrentNode('fail_reputation');
+    }
+  }, [stats, currentNode, isPausedGlobal]);
 
   const node = storyMap[currentNode];
 

@@ -16,6 +16,11 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
   const [playerScore, setPlayerScore] = useState(0);
   const [cpuScore, setCpuScore] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const pausedGlobalRef = useRef(false);
+
+  useEffect(() => {
+    pausedGlobalRef.current = isPausedGlobal;
+  }, [isPausedGlobal]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -313,10 +318,14 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
     const TIME_STEP = 1000 / 60;
 
     const gameLoop = (time: number) => {
-      const dt = time - lastTime;
-      if (dt >= TIME_STEP) {
-        lastTime = time - (dt % TIME_STEP);
-        draw();
+      if (pausedGlobalRef.current) {
+        lastTime = time;
+      } else {
+        const dt = time - lastTime;
+        if (dt >= TIME_STEP) {
+          lastTime = time - (dt % TIME_STEP);
+          draw();
+        }
       }
       animationFrameId = requestAnimationFrame(gameLoop);
     };

@@ -61,7 +61,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   const cars: CarConfig[] = [
     { id: 'taxi', name: t('game.car.taxi.name', 'Taxi CDMX'), desc: t('game.car.taxi.desc', 'El clásico rosa con blanco'), speed: 440, handling: 10, maxHp: 3, color: '#ec4899' },
     { id: 'sport', name: t('game.car.sport.name', 'Fífí Sport'), desc: t('game.car.sport.desc', 'Súper rápido pero odia los baches'), speed: 620, handling: 14, maxHp: 2, color: '#ef4444' },
-    { id: 'patrol', name: t('game.car.truck.name', 'Patrulla'), desc: t('game.car.truck.desc', 'Blindada contra el tráfico pesado'), speed: 400, handling: 8, maxHp: 6, color: '#1e293b' },
+    { id: 'patrol', name: t('game.car.patrol.name', 'Interceptor Policial'), desc: t('game.car.patrol.desc', 'Unidad blindada diseñada para persecuciones extremas'), speed: 400, handling: 8, maxHp: 6, color: '#1e293b' },
     { id: 'moto', name: t('game.car.moto.name', 'Moto Repartidor'), desc: t('game.car.moto.desc', 'Filtra el tráfico como jefe'), speed: 580, handling: 20, maxHp: 1, color: '#06b6d4' },
   ];
 
@@ -83,9 +83,14 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   const [showStory, setShowStory] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('race_mobile_controls') === 'true');
+  const [isPaused, setIsPaused] = useState(false);
   const scoreRefDOM = useRef<HTMLSpanElement>(null);
   const keysGamepad = useRef({ left: false, right: false });
-  const pausedRef = useRef(false);
+  const pausedRef = useRef({ local: false, global: false });
+
+  useEffect(() => {
+    pausedRef.current = { local: isPaused, global: isPausedGlobal };
+  }, [isPaused, isPausedGlobal]);
 
   useEffect(() => {
     localStorage.setItem('race_mobile_controls', showMobileControls.toString());
@@ -354,145 +359,255 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
       if (selectedCarId === 'moto') {
         // Cyberpunk Hyper-Bike
-        ctx.fillStyle = '#111'; // Tires
-        ctx.fillRect(bx + w/2 - 5, by, 10, 15);
-        ctx.fillRect(bx + w/2 - 5, by + h - 15, 10, 15);
-        
-        ctx.fillStyle = currentCar.color; // Main body
+        // Underglow
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = currentCar.color;
+        ctx.fillStyle = currentCar.color;
+        ctx.fillRect(bx + w/2 - 2, by + 10, 4, h - 20);
+        ctx.shadowBlur = 0;
+
+        // Tires
+        ctx.fillStyle = '#0f172a'; // Tires
         ctx.beginPath();
-        ctx.moveTo(bx + w/2, by + 5);
-        ctx.lineTo(bx + w - 4, by + h/2 + 5);
-        ctx.lineTo(bx + w/2, by + h - 5);
-        ctx.lineTo(bx + 4, by + h/2 + 5);
+        ctx.roundRect(bx + w/2 - 4, by - 4, 8, 16, 2); // Front
+        ctx.roundRect(bx + w/2 - 5, by + h - 16, 10, 18, 2); // Back
+        ctx.fill();
+        
+        // Chassis / Engine block
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(bx + w/2 - 6, by + 10, 12, h - 20);
+        
+        ctx.fillStyle = currentCar.color; // Main body cowling
+        ctx.beginPath();
+        ctx.moveTo(bx + w/2, by + 4);
+        ctx.lineTo(bx + w - 2, by + h/2);
+        ctx.lineTo(bx + w/2 + 2, by + h - 10);
+        ctx.lineTo(bx + w/2 - 2, by + h - 10);
+        ctx.lineTo(bx + 2, by + h/2);
         ctx.closePath();
         ctx.fill();
 
-        // Neon Glow
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = currentCar.color;
+        // Neon Accents
         ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
-        ctx.shadowBlur = 0;
 
-        // Rider seat
-        ctx.fillStyle = '#222';
-        ctx.fillRect(bx + w/2 - 4, by + h/2 - 5, 8, 12);
+        // Rider seat & Rider
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(bx + w/2 - 5, by + h/2 - 4, 10, 14);
         
         // Handlebars
-        ctx.strokeStyle = '#666';
-        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(bx + 2, by + h/4 + 10);
-        ctx.lineTo(bx + w - 2, by + h/4 + 10);
+        ctx.moveTo(bx + 1, by + h/4 + 6);
+        ctx.lineTo(bx + w/2, by + h/4 + 2);
+        ctx.lineTo(bx + w - 1, by + h/4 + 6);
         ctx.stroke();
+
+        // Windshield
+        ctx.fillStyle = '#38bdf8';
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(bx + w/2, by - 2);
+        ctx.lineTo(bx + w/2 + 4, by + 8);
+        ctx.lineTo(bx + w/2 - 4, by + 8);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        
       } else if (selectedCarId === 'patrol') {
         // Armored Interceptor
-        ctx.fillStyle = '#000'; // Huge tires
-        ctx.fillRect(bx - 4, by + 5, 8, 18);
-        ctx.fillRect(bx + w - 4, by + 5, 8, 18);
-        ctx.fillRect(bx - 4, by + h - 23, 8, 18);
-        ctx.fillRect(bx + w - 4, by + h - 23, 8, 18);
+        ctx.fillStyle = '#020617'; // Huge tires
+        ctx.beginPath(); ctx.roundRect(bx - 4, by + 5, 8, 18, 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx + w - 4, by + 5, 8, 18, 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx - 4, by + h - 23, 8, 18, 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx + w - 4, by + h - 23, 8, 18, 2); ctx.fill();
 
-        // Body
+        // Main Heavy Body
         ctx.fillStyle = '#0f172a';
-        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 2); ctx.fill();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#000';
+        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 4); ctx.fill();
+        ctx.shadowBlur = 0;
         
+        // Body details (armor plates)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(bx + 2, by + 10, w - 4, h - 20);
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 4, by + 20); ctx.lineTo(bx + w - 4, by + 20);
+        ctx.moveTo(bx + 4, by + h - 25); ctx.lineTo(bx + w - 4, by + h - 25);
+        ctx.stroke();
+
         // Bull bar
-        ctx.fillStyle = '#334155';
+        ctx.fillStyle = '#475569';
         ctx.fillRect(bx - 2, by - 4, w + 4, 6);
+        ctx.fillRect(bx + 4, by - 6, w - 8, 4);
         
         // Reinforced roof
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(bx + 3, by + 20, w - 6, h - 40);
+        ctx.fillStyle = '#020617';
+        ctx.beginPath(); ctx.roundRect(bx + 4, by + 22, w - 8, h - 45, 2); ctx.fill();
         
+        // Windows (tinted black)
+        ctx.fillStyle = '#000';
+        ctx.fillRect(bx + 5, by + 15, w - 10, 7); // windshield
+        ctx.fillRect(bx + 5, by + h - 22, w - 10, 5); // back
+
         // Identity
-        ctx.fillStyle = '#fff';
-        ctx.font = 'black 10px Arial';
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 10px monospace';
         ctx.textAlign = 'center';
         ctx.save();
-        ctx.translate(bx + w/2, by + h/2 + 5);
+        ctx.translate(bx + w/2, by + h/2 + 7);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillText('X-UNIT', 0, 0);
+        ctx.fillText('POLICE', 0, 0);
         ctx.restore();
 
         // High-intensity light bar
         const isFlicker = Math.floor(Date.now() / 60) % 2 === 0;
-        const leftColor = isFlicker ? '#ef4444' : '#000';
-        const rightColor = !isFlicker ? '#3b82f6' : '#000';
+        const leftColor = isFlicker ? '#ef4444' : '#7f1d1d';
+        const rightColor = !isFlicker ? '#3b82f6' : '#1e3a8a';
         
         ctx.fillStyle = leftColor;
-        ctx.shadowBlur = isFlicker ? 30 : 0; ctx.shadowColor = '#ef4444';
-        ctx.fillRect(bx + 5, by + h/2 - 3, w/2 - 6, 6);
+        ctx.shadowBlur = isFlicker ? 30 : 5; ctx.shadowColor = '#ef4444';
+        ctx.fillRect(bx + 6, by + h/2 - 6, w/2 - 7, 5);
         
         ctx.fillStyle = rightColor;
-        ctx.shadowBlur = !isFlicker ? 30 : 0; ctx.shadowColor = '#3b82f6';
-        ctx.fillRect(bx + w/2 + 1, by + h/2 - 3, w/2 - 6, 6);
+        ctx.shadowBlur = !isFlicker ? 30 : 5; ctx.shadowColor = '#3b82f6';
+        ctx.fillRect(bx + w/2 + 1, by + h/2 - 6, w/2 - 7, 5);
         ctx.shadowBlur = 0;
       } else if (selectedCarId === 'sport') {
         // Velocity RS - Sleek Supercar
-        ctx.fillStyle = '#000';
-        ctx.fillRect(bx - 2, by + 10, 4, 15);
-        ctx.fillRect(bx + w - 2, by + 10, 4, 15);
-        ctx.fillRect(bx - 2, by + h - 25, 4, 15);
-        ctx.fillRect(bx + w - 2, by + h - 25, 4, 15);
-
-        // Low body
-        ctx.fillStyle = '#ef4444';
+        // Wide racing tires
+        ctx.fillStyle = '#020617';
         ctx.beginPath();
-        ctx.moveTo(bx + 4, by);
-        ctx.lineTo(bx + w - 4, by);
-        ctx.lineTo(bx + w, by + h - 10);
-        ctx.lineTo(bx + w - 5, by + h);
-        ctx.lineTo(bx + 5, by + h);
-        ctx.lineTo(bx, by + h - 10);
+        ctx.roundRect(bx - 2, by + 8, 5, 16, 2);
+        ctx.roundRect(bx + w - 3, by + 8, 5, 16, 2);
+        ctx.roundRect(bx - 3, by + h - 26, 6, 18, 2);
+        ctx.roundRect(bx + w - 3, by + h - 26, 6, 18, 2);
+        ctx.fill();
+
+        // Underglow neon
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = currentCar.color;
+        ctx.fillStyle = currentCar.color;
+        ctx.fillRect(bx + 2, by + 10, w - 4, h - 20);
+        ctx.shadowBlur = 0;
+
+        // Aerodynamic wide body
+        ctx.fillStyle = currentCar.color;
+        ctx.beginPath();
+        ctx.moveTo(bx + 6, by);
+        ctx.lineTo(bx + w - 6, by);
+        ctx.lineTo(bx + w - 2, by + h/3);
+        ctx.lineTo(bx + w, by + h - 12);
+        ctx.lineTo(bx + w - 4, by + h);
+        ctx.lineTo(bx + 4, by + h);
+        ctx.lineTo(bx, by + h - 12);
+        ctx.lineTo(bx + 2, by + h/3);
         ctx.closePath();
         ctx.fill();
 
-        // Carbon fiber hood
-        ctx.fillStyle = '#222';
+        // Racing stripes
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(bx + w/2 - 4, by + 2, 3, h - 4);
+        ctx.fillRect(bx + w/2 + 1, by + 2, 3, h - 4);
+
+        // Carbon fiber hood vents
+        ctx.fillStyle = '#0f172a';
         ctx.beginPath();
-        ctx.moveTo(bx + w/2 - 8, by + 5);
-        ctx.lineTo(bx + w/2 + 8, by + 5);
-        ctx.lineTo(bx + w/2 + 12, by + 25);
-        ctx.lineTo(bx + w/2 - 12, by + 25);
+        ctx.moveTo(bx + w/2 - 8, by + 8);
+        ctx.lineTo(bx + w/2 + 8, by + 8);
+        ctx.lineTo(bx + w/2 + 14, by + 22);
+        ctx.lineTo(bx + w/2 - 14, by + 22);
         ctx.closePath();
         ctx.fill();
 
         // Huge spoiler
-        ctx.fillStyle = '#111';
-        ctx.fillRect(bx - 6, by + h - 8, w + 12, 5);
-        ctx.fillStyle = '#333';
-        ctx.fillRect(bx - 6, by + h - 10, 2, 8);
-        ctx.fillRect(bx + w + 4, by + h - 10, 2, 8);
+        ctx.fillStyle = '#020617'; // Carbon fiber color
+        ctx.beginPath(); ctx.roundRect(bx - 6, by + h - 10, w + 12, 6, 2); ctx.fill();
+        ctx.fillStyle = currentCar.color; // Spoiler mounts
+        ctx.fillRect(bx + w/4, by + h - 14, 2, 6);
+        ctx.fillRect(bx + w*3/4 - 2, by + h - 14, 2, 6);
 
-        // Cockpit
-        ctx.fillStyle = '#0f172a';
+        // Cockpit (tinted aerodynamic glass)
+        ctx.fillStyle = '#020617';
         ctx.beginPath();
-        ctx.roundRect(bx + 6, by + 28, w - 12, 18, 10);
+        ctx.moveTo(bx + w/2 - 10, by + 28);
+        ctx.lineTo(bx + w/2 + 10, by + 28);
+        ctx.lineTo(bx + w/2 + 12, by + 46);
+        ctx.lineTo(bx + w/2 - 12, by + 46);
+        ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = '#3b82f6';
+        
+        ctx.strokeStyle = '#38bdf8';
         ctx.lineWidth = 1;
         ctx.stroke();
-      } else {
-        // Taxi - CDMX Rosa y Blanco
-        ctx.fillStyle = '#ffffff'; 
-        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
-        ctx.fillStyle = '#ec4899'; // CDMX Rosa
-        ctx.beginPath(); ctx.roundRect(bx, by + h/3, w, h*2/3, [0,0,6,6]); ctx.fill();
         
-        // CDMX logo text on roof
+        // Headlights
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#fef08a';
+        ctx.beginPath(); ctx.roundRect(bx + 6, by + 2, 6, 3, 1); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx + w - 12, by + 2, 6, 3, 1); ctx.fill();
+        ctx.shadowBlur = 0;
+
+      } else {
+        // Taxi - Classic Cab
+        // Tires
         ctx.fillStyle = '#111';
-        ctx.fillRect(bx + w/2 - 12, by + h/2 - 10, 24, 8);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 6px sans-serif';
+        ctx.fillRect(bx - 2, by + 8, 4, 14);
+        ctx.fillRect(bx + w - 2, by + 8, 4, 14);
+        ctx.fillRect(bx - 2, by + h - 22, 4, 14);
+        ctx.fillRect(bx + w - 2, by + h - 22, 4, 14);
+
+        // Main body paint (Yellow or Pink)
+        ctx.fillStyle = currentCar.color; 
+        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 6); ctx.fill();
+        
+        // Checkered pattern on sides (Classic taxi element)
+        ctx.fillStyle = '#000';
+        for(let i=0; i<6; i++) {
+          if (i%2===0) {
+             ctx.fillRect(bx, by + 15 + i*6, 3, 6);
+             ctx.fillRect(bx + w - 3, by + 15 + i*6, 3, 6);
+          } else {
+             ctx.fillStyle = '#fff';
+             ctx.fillRect(bx, by + 15 + i*6, 3, 6);
+             ctx.fillRect(bx + w - 3, by + 15 + i*6, 3, 6);
+             ctx.fillStyle = '#000';
+          }
+        }
+
+        // Roof light
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.roundRect(bx + w/2 - 12, by + h/2 - 12, 24, 10, 2); ctx.fill();
+        
+        ctx.fillStyle = '#facc15';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#facc15';
+        ctx.beginPath(); ctx.roundRect(bx + w/2 - 10, by + h/2 - 10, 20, 6, 1); ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 5px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('CDMX', bx + w/2, by + h/2 - 4);
+        ctx.fillText('TAXI', bx + w/2, by + h/2 - 5);
 
         // Windows
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(bx + 4, by + 12, w - 8, 14); // Front
-        ctx.fillRect(bx + 3, by + 35, w - 6, 12); // Back
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.roundRect(bx + 4, by + 14, w - 8, 12, 2); ctx.fill(); // Front
+        ctx.beginPath(); ctx.roundRect(bx + 4, by + 36, w - 8, 10, 2); ctx.fill(); // Back
+        // Rear window lines
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(bx+6, by+40); ctx.lineTo(bx+w-6, by+40); ctx.stroke();
+
+        // Bumpers
+        ctx.fillStyle = '#334155';
+        ctx.beginPath(); ctx.roundRect(bx + 2, by - 2, w - 4, 4, 2); ctx.fill(); // Front Bumper
+        ctx.beginPath(); ctx.roundRect(bx + 2, by + h - 2, w - 4, 4, 2); ctx.fill(); // Back Bumper
       }
 
       // Shield effect
@@ -515,125 +630,168 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
     };
 
     const drawOil = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      ctx.fillStyle = 'rgba(0,0,0,0.8)';
+      // Iridescent Cyber-Oil Slick
+      ctx.save();
+      const grad = ctx.createRadialGradient(
+        obs.x + obs.width/2, obs.y + obs.height/2, 2,
+        obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2
+      );
+      grad.addColorStop(0, '#1e293b');
+      grad.addColorStop(0.4, '#0f172a');
+      grad.addColorStop(0.7, 'rgba(236, 72, 153, 0.4)'); // Pink sheen
+      grad.addColorStop(0.9, 'rgba(56, 189, 248, 0.4)'); // Cyan sheen
+      grad.addColorStop(1, 'transparent');
+      
+      ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.ellipse(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, obs.height/2, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.1)';
-      ctx.beginPath();
-      ctx.ellipse(obs.x + obs.width/3, obs.y + obs.height/3, obs.width/6, obs.height/6, 0.5, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.restore();
     };
 
     const drawCone = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      ctx.fillStyle = '#f97316';
+      // High-Fidelity Traffic Cone
+      ctx.save();
+      const bx = obs.x + obs.width/2;
+      const by = obs.y + obs.height;
+      
+      // Base
+      ctx.fillStyle = '#431407'; 
       ctx.beginPath();
-      ctx.moveTo(obs.x + obs.width/2, obs.y);
-      ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
-      ctx.lineTo(obs.x, obs.y + obs.height);
-      ctx.closePath();
+      ctx.ellipse(bx, by, obs.width/2, 6, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = 'white';
-      ctx.fillRect(obs.x + obs.width/4, obs.y + obs.height/2, obs.width/2, obs.height/4);
+      
+      // Body
+      const coneGrad = ctx.createLinearGradient(obs.x, obs.y, obs.x + obs.width, obs.y);
+      coneGrad.addColorStop(0, '#ea580c');
+      coneGrad.addColorStop(0.5, '#fb923c');
+      coneGrad.addColorStop(1, '#ea580c');
+      ctx.fillStyle = coneGrad;
+      ctx.beginPath();
+      ctx.moveTo(bx - 4, obs.y);
+      ctx.lineTo(bx + 4, obs.y);
+      ctx.lineTo(bx + obs.width/2 - 2, by - 2);
+      ctx.lineTo(bx - obs.width/2 + 2, by - 2);
+      ctx.fill();
+      
+      // Reflective Band
+      ctx.fillStyle = '#f8fafc';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(bx - 8, obs.y + obs.height*0.4);
+      ctx.lineTo(bx + 8, obs.y + obs.height*0.4);
+      ctx.lineTo(bx + 12, obs.y + obs.height*0.6);
+      ctx.lineTo(bx - 12, obs.y + obs.height*0.6);
+      ctx.fill();
+      ctx.restore();
     };
 
     const drawTree = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      // Jacaranda style
-      ctx.fillStyle = '#422006'; // Trunk
-      ctx.fillRect(obs.x + obs.width/2 - 4, obs.y + obs.height/3, 8, obs.height*2/3);
-      // Leaves (purple pink jacaranda)
-      ctx.fillStyle = '#c084fc'; 
-      ctx.beginPath();
-      ctx.arc(obs.x + obs.width/2, obs.y + obs.height/3, obs.width/1.8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#d8b4fe'; // lighter highlight
-      ctx.beginPath();
-      ctx.arc(obs.x + obs.width/2 - 5, obs.y + obs.height/4, obs.width/3, 0, Math.PI * 2);
-      ctx.fill();
+      // Aesthetic Jacaranda Tree
+      ctx.save();
+      const bx = obs.x + obs.width/2;
+      const by = obs.y + obs.height;
+      
+      // Trunk
+      ctx.fillStyle = '#2d150b';
+      ctx.fillRect(bx - 4, obs.y + obs.height*0.5, 8, obs.height*0.5);
+      
+      // Lush Purple Canopy
+      const t = Date.now() * 0.002;
+      const sway = Math.sin(t + obs.id) * 3;
+      
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(168, 85, 247, 0.5)';
+      
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath(); ctx.arc(bx + sway, obs.y + obs.height*0.3, obs.width/2, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#c084fc';
+      ctx.beginPath(); ctx.arc(bx + sway - 10, obs.y + obs.height*0.2, obs.width/3, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#d8b4fe';
+      ctx.beginPath(); ctx.arc(bx + sway + 12, obs.y + obs.height*0.4, obs.width/3, 0, Math.PI*2); ctx.fill();
+      
+      // Petals
+      ctx.fillStyle = '#f5f3ff';
+      ctx.globalAlpha = 0.6;
+      for(let i=0; i<3; i++) {
+         const px = bx + Math.sin(t + i) * 20;
+         const py = by + Math.cos(t + i) * 5;
+         ctx.fillRect(px, py, 3, 3);
+      }
+      ctx.restore();
     };
 
     const drawBuilding = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      const type = obs.id % 4;
       ctx.save();
       ctx.translate(obs.x, obs.y);
+      
+      // Cyber-Urban Structure
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+      ctx.fillRect(0, 0, obs.width, obs.height);
+      
+      // Frame / Outline
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(0, 0, obs.width, obs.height);
+      
+      const type = obs.id % 4;
       if (type === 0) {
-        // Metrobus Station
-        ctx.fillStyle = '#ef4444'; // Rojo Metrobus
-        ctx.fillRect(0, 0, obs.width, obs.height);
-        ctx.fillStyle = '#111827';
-        ctx.fillRect(5, 5, obs.width - 10, obs.height - 10);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(obs.width/2 - 15, obs.height/2 - 2, 30, 4);
+         // Neon Advertising Billboard
+         const blink = Date.now() % 1000 > 500;
+         ctx.fillStyle = blink ? '#ec4899' : '#312e81';
+         ctx.fillRect(4, 4, obs.width - 8, obs.height - 8);
+         ctx.fillStyle = '#fff';
+         ctx.font = '900 12px monospace';
+         ctx.fillText('NEON_LIVE', 8, obs.height/2);
       } else if (type === 1) {
-        // Oxxo vibes
-        ctx.fillStyle = '#dc2626';
-        ctx.fillRect(0, 0, obs.width, obs.height/3);
-        ctx.fillStyle = '#fef08a';
-        ctx.fillRect(0, obs.height/3, obs.width, obs.height*2/3);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(obs.width/2 - 12, obs.height/2 - 5, 24, 10);
-        ctx.fillStyle = '#dc2626';
-        ctx.font = 'bold 8px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('OXXO', obs.width/2, obs.height/2 + 3);
-      } else if (type === 2) {
-        // Tienda de abarrotes / fonda with pink/blue colors
-        ctx.fillStyle = '#ec4899';
-        ctx.fillRect(0, 0, obs.width, obs.height);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(0, obs.height/2, obs.width, obs.height/2);
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(10, obs.height - 20, obs.width - 20, 20); // door
+         // Data Center with Pulsing Lights
+         for(let i=0; i<3; i++) {
+            const alpha = 0.2 + Math.abs(Math.sin(Date.now()*0.002 + i))*0.8;
+            ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+            ctx.fillRect(obs.width*0.2, 10 + i*15, obs.width*0.6, 6);
+         }
       } else {
-        // Classic generic building with windows
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(0, 0, obs.width, obs.height);
-        ctx.fillStyle = '#f8fafc';
-        for(let iy=0; iy<obs.height; iy+=15) {
-          for(let ix=0; ix<obs.width; ix+=15) {
-            if (Math.random() > 0.3) ctx.fillRect(ix + 4, iy + 4, 6, 8);
-          }
-        }
+         // Grid Apartment Look
+         ctx.fillStyle = 'rgba(250, 204, 21, 0.2)';
+         for(let ix=4; ix<obs.width-4; ix+=8) {
+            for(let iy=4; iy<obs.height-4; iy+=8) {
+               if (Math.random() > 0.7) ctx.fillRect(ix, iy, 4, 4);
+            }
+         }
       }
       ctx.restore();
     };
 
     const drawEnemy = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      const bx = obs.x; const by = obs.y; const w = Math.min(obs.width, 36); const h = Math.min(obs.height, 50); // Make it vocho-sized round car
+      ctx.save();
+      const bx = obs.x; const by = obs.y; const w = Math.min(obs.width, 36); const h = Math.min(obs.height, 50);
       const offsetX = obs.x + (obs.width - w) / 2;
       const offsetY = obs.y + (obs.height - h) / 2;
       
-      // Shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(offsetX + 6, offsetY + 6, w, h);
+      // Elite Vocho (Cyber-Security)
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(22, 163, 74, 0.5)';
       
-      // Vocho Green/White
-      ctx.fillStyle = '#16a34a'; // Green
-      ctx.beginPath(); ctx.roundRect(offsetX, offsetY, w, h, 14); ctx.fill();
-      ctx.fillStyle = '#ffffff'; // White Top
-      ctx.beginPath(); ctx.roundRect(offsetX + 4, offsetY + 15, w - 8, h - 30, 8); ctx.fill();
+      // Chassis
+      ctx.fillStyle = '#14532d'; // Dark forest green
+      ctx.beginPath(); ctx.roundRect(offsetX, offsetY, w, h, 16); ctx.fill();
+      ctx.fillStyle = '#16a34a'; // Vibrant green
+      ctx.beginPath(); ctx.roundRect(offsetX + 2, offsetY + 2, w - 4, h - 4, 14); ctx.fill();
       
-      // Windshield
-      ctx.fillStyle = '#111827';
-      ctx.beginPath();
-      ctx.ellipse(offsetX + w/2, offsetY + 22, w/2 - 6, 6, 0, 0, Math.PI*2);
-      ctx.fill();
+      // White Hood/Top
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath(); ctx.roundRect(offsetX + 6, offsetY + 12, w - 12, h - 24, 6); ctx.fill();
       
-      // Rear window
-      ctx.beginPath();
-      ctx.ellipse(offsetX + w/2, offsetY + h - 12, w/2 - 8, 4, 0, 0, Math.PI*2);
-      ctx.fill();
+      // Pulsing Neon Headlights
+      const beam = Math.abs(Math.sin(Date.now() * 0.01)) * 10;
+      ctx.fillStyle = '#fff';
+      ctx.shadowBlur = beam;
+      ctx.shadowColor = '#facc15';
+      ctx.beginPath(); ctx.arc(offsetX + 8, offsetY + 6, 4, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(offsetX + w - 8, offsetY + 6, 4, 0, Math.PI*2); ctx.fill();
       
-      // Headlights
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath(); ctx.arc(offsetX + 6, offsetY + 8, 4, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(offsetX + w - 6, offsetY + 8, 4, 0, Math.PI*2); ctx.fill();
-      
-      // Wheels
-      ctx.fillStyle = '#000';
-      ctx.fillRect(offsetX - 2, offsetY + 10, 4, 10);
-      ctx.fillRect(offsetX + w - 2, offsetY + 10, 4, 10);
-      ctx.fillRect(offsetX - 2, offsetY + h - 20, 4, 10);
-      ctx.fillRect(offsetX + w - 2, offsetY + h - 20, 4, 10);
+      ctx.restore();
     };
 
     const drawPowerup = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -831,16 +989,17 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
     const loop = (timestamp: number) => {
       if (isGameOver) return;
-      if (isPausedGlobal || pausedRef.current) {
-        if (!isPausedGlobal && countdownTimer > 0) {
+      const isPausedLocally = pausedRef.current.local;
+      const isPausedGlobally = pausedRef.current.global;
+      if (isPausedGlobally || isPausedLocally) {
+        if (!isPausedGlobally && countdownTimer > 0) {
            countdownTimer -= (timestamp - lastTime) / 1000;
            if (countdownTimer <= 0) {
-             pausedRef.current = false;
+             setIsPaused(false);
            }
         }
         lastTime = timestamp;
         
-        // Draw Pause Screen partial
         ctx.fillStyle = 'rgba(0,0,0,0.02)';
         ctx.fillRect(0, 0, GAME_W, GAME_H);
         
@@ -1093,30 +1252,50 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       // Sky/Env color
       const skyAngle = (dayNightCycle * Math.PI * 2);
       const isNight = Math.sin(skyAngle) < 0;
-      const asphaltColor = isNight ? '#18181b' : '#27272a'; // Darker, polished asphalt
+      const asphaltColor = isNight ? '#0f172a' : '#1e293b'; // Cyberpunk asphalt
       
       ctx.fillStyle = asphaltColor; // Asphalt
       ctx.fillRect(0, 0, GAME_W, GAME_H);
       
+      // Dynamic grid pattern for the road
+      ctx.strokeStyle = isNight ? 'rgba(56, 189, 248, 0.05)' : 'rgba(236, 72, 153, 0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i=0; i<GAME_W; i+=30) {
+        ctx.moveTo(i, 0); ctx.lineTo(i, GAME_H);
+      }
+      for (let j=0; j<GAME_H; j+=30) {
+        const lineY = (j + roadOffset * 2) % GAME_H;
+        ctx.moveTo(0, lineY); ctx.lineTo(GAME_W, lineY);
+      }
+      ctx.stroke();
+
       // Speed lines on asphalt
-      ctx.fillStyle = isNight ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.05)';
-      for (let i = 0; i < 30; i++) {
+      const speedLinesCount = nitroTimer > 0 ? 50 : 30;
+      ctx.fillStyle = isNight ? 'rgba(56, 189, 248, 0.15)' : 'rgba(236, 72, 153, 0.15)';
+      for (let i = 0; i < speedLinesCount; i++) {
          const slX = 0 + (i * 37) % (GAME_W - 0 * 2);
-         const slY = ((currentDistance * 100) + i * 93) % GAME_H;
-         ctx.fillRect(slX, slY, 2, 40);
+         const slY = ((currentDistance * 180) + i * 93) % GAME_H;
+         ctx.fillRect(slX, slY, 2, 60 + Math.random()*30);
       }
       
-      // Metrobus Lane (CDMX)
-      ctx.fillStyle = 'rgba(220, 38, 38, 0.15)'; // Deep red lane right side
-      ctx.fillRect(LANES[5] - LANE_WIDTH/2, 0, LANE_WIDTH, GAME_H);
-      ctx.fillStyle = 'rgba(220, 38, 38, 0.5)'; // line
-      ctx.fillRect(LANES[5] - LANE_WIDTH/2 - 2, 0, 4, GAME_H);
-      
-      // Bike Lane (Ciclovía CDMX)
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.15)'; // Green lane left side
+      // Hyperloop Lane Left
+      ctx.fillStyle = 'rgba(236, 72, 153, 0.15)'; // Hot pink glow
       ctx.fillRect(LANES[0] - LANE_WIDTH/2, 0, LANE_WIDTH, GAME_H);
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.5)'; // line
+      ctx.fillStyle = 'rgba(236, 72, 153, 0.8)'; // Core line
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ec4899';
       ctx.fillRect(LANES[0] + LANE_WIDTH/2 - 2, 0, 4, GAME_H);
+      ctx.shadowBlur = 0;
+      
+      // Express Neon Lane Right
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.15)'; // Cyan glow
+      ctx.fillRect(LANES[5] - LANE_WIDTH/2, 0, LANE_WIDTH, GAME_H);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.8)'; // Core line
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#38bdf8';
+      ctx.fillRect(LANES[5] - LANE_WIDTH/2 - 2, 0, 4, GAME_H);
+      ctx.shadowBlur = 0;
 
       // Screenshake
       if (shakeTime > 0) {
@@ -1237,31 +1416,38 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       }
 
       // Progress Bar Background
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(10, 10, GAME_W - 20, 15);
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+      ctx.beginPath(); ctx.roundRect(10, 10, GAME_W - 20, 18, 4); ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(10, 10, GAME_W - 20, 18);
+
       // Progress Bar Fill
       const progressWidth = ((GAME_W - 20) * (currentDistance / GOAL_DISTANCE));
       const progressGrad = ctx.createLinearGradient(10, 0, GAME_W - 10, 0);
-      progressGrad.addColorStop(0, '#f97316');
-      progressGrad.addColorStop(1, '#facc15');
+      progressGrad.addColorStop(0, '#ec4899');
+      progressGrad.addColorStop(1, '#38bdf8');
       ctx.fillStyle = progressGrad;
-      ctx.fillRect(10, 10, progressWidth, 15);
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#38bdf8';
+      ctx.fillRect(10, 10, Math.max(0, progressWidth), 18);
+      ctx.shadowBlur = 0;
       
       ctx.fillStyle = 'white';
-      ctx.font = 'bold 8px monospace';
+      ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`${Math.floor(currentDistance)} / ${GOAL_DISTANCE}km`, GAME_W/2, 21);
+      ctx.fillText(`${Math.floor(currentDistance)} / ${GOAL_DISTANCE}km`, GAME_W/2, 23);
 
       // Fuel Progress Bar
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(10, 30, GAME_W - 20, 8);
+      ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+      ctx.beginPath(); ctx.roundRect(10, 32, GAME_W - 20, 10, 2); ctx.fill();
       const gasWidth = ((GAME_W - 20) * (currentGas / MAX_GAS));
-      ctx.fillStyle = currentGas < 20 ? (Math.floor(Date.now() / 200) % 2 === 0 ? '#ef4444' : '#fee2e2') : '#3b82f6';
-      ctx.fillRect(10, 30, Math.max(0, gasWidth), 8);
+      ctx.fillStyle = currentGas < 20 ? (Math.floor(Date.now() / 200) % 2 === 0 ? '#ef4444' : '#fee2e2') : '#38bdf8';
+      ctx.fillRect(10, 32, Math.max(0, gasWidth), 10);
       ctx.fillStyle = 'white';
-      ctx.font = 'bold 8px monospace';
+      ctx.font = 'bold 7px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`${t('game.race.gas', 'FUEL')} ${Math.floor(currentGas)}%`, GAME_W/2, 37);
+      ctx.fillText(`${t('game.race.gas', 'FUEL')} ${Math.floor(currentGas)}%`, GAME_W/2, 40);
 
       // Env Indicator
       ctx.textAlign = 'left';
@@ -1279,7 +1465,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
     animFrame = requestAnimationFrame(loop);
 
-    const onBlur = () => { pausedRef.current = true; };
+    const onBlur = () => { setIsPaused(true); };
     window.addEventListener('blur', onBlur);
 
     return () => {
@@ -1290,7 +1476,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       canvas.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('blur', onBlur);
     };
-  }, [isPlaying, playSound, isPausedGlobal]);
+  }, [isPlaying, playSound]);
 
   return (
     <div ref={containerRef} className={cn(
@@ -1301,7 +1487,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       
       {/* Universal/Manual Pause Overlay */}
       <AnimatePresence>
-        {(isPlaying && (isPausedGlobal || pausedRef.current)) && (
+        {(isPlaying && (isPausedGlobal || isPaused)) && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1325,7 +1511,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             </p>
             {!isPausedGlobal && (
               <button
-                onClick={() => { pausedRef.current = false; playSound('start'); }}
+                onClick={() => { setIsPaused(false); playSound('start'); }}
                 className="bg-orange-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
               >
                 RESUME
@@ -1335,30 +1521,37 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
         )}
       </AnimatePresence>
       
-      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-xs text-brand-accent font-bold bg-[#111] rounded-t-xl border-x-4 border-t-4 border-brand-accent/50 shadow-lg shrink-0">
-         <div className="flex items-center gap-2 md:gap-4">
-            <button 
-              onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
-              className={`flex items-center gap-1 uppercase text-[7px] md:text-[8px] font-bold border px-1 md:px-1.5 py-0.5 md:py-1 transition-all ${showMobileControls ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
-            >
-              <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {showMobileControls ? 'ON' : 'OFF'}
-            </button>
-            <span className="flex items-center gap-1 md:gap-2">
+      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-6 py-3 text-[10px] md:text-xs text-brand-accent font-bold bg-[#0c0c0e]/95 rounded-t-2xl border-t-2 border-brand-accent/40 shadow-[0_-10px_30px_rgba(56,189,248,0.1)] shrink-0 z-20">
+         <div className="flex items-center gap-6">
+            <div className="flex flex-col gap-0.5">
+               <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-black">Control_Module</span>
                <button 
-                 onClick={() => { pausedRef.current = !pausedRef.current; playSound('click'); }}
-                 className="p-1 hover:bg-white/10 rounded transition-colors text-white/40 hover:text-white"
+                 onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
+                 className={`flex items-center gap-1.5 uppercase text-[9px] font-black border px-2 py-0.5 rounded transition-all ${showMobileControls ? 'bg-brand-accent/20 border-brand-accent text-brand-accent shadow-[0_0_10px_rgba(56,189,248,0.3)]' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
                >
-                 <Banknote className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 animate-pulse" />
+                 <Zap className="w-2.5 h-2.5" /> {showMobileControls ? 'READY' : 'OFF'}
                </button>
-               <span className="font-mono text-sm md:text-lg">{t('game.race.score')}<span ref={scoreRefDOM}>{score}</span></span>
-               {hp > 0 && (
-                 <div className="flex gap-0.5 md:gap-1">
-                   {Array.from({length: hp}).map((_, i) => <Heart key={i} size={10} className="text-red-500 fill-red-500 animate-pulse" />)}
-                 </div>
-               )}
-            </span>
+            </div>
+            
+            <div className="flex flex-col gap-0.5">
+               <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-black italic">Earnings_Monitor</span>
+               <div className="flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-green-500" />
+                  <span className="font-mono text-base md:text-xl text-white tracking-tighter" ref={scoreRefDOM}>{score}</span>
+               </div>
+            </div>
          </div>
-         <span className="flex items-center gap-1 opacity-50 text-[8px] md:text-xs"><TerminalSquare size={12} /> {t('arc.game7')}</span>
+
+         <div className="flex flex-col items-end gap-1">
+            <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-black">Integrity_Check</span>
+            {hp > 0 && (
+              <div className="flex gap-1">
+                {Array.from({length: 5}).map((_, i) => (
+                   <div key={i} className={`w-1.5 h-4 rounded-sm border ${i < hp ? 'bg-red-500 border-red-400 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-white/5 border-white/10'}`}></div>
+                ))}
+              </div>
+            )}
+         </div>
       </div>
 
       <div className={cn(

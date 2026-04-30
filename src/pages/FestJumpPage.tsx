@@ -86,7 +86,6 @@ export function FestJumpPage() {
             >
                <h1 className="text-5xl md:text-8xl lg:text-9xl font-black text-white tracking-tighter uppercase leading-[0.8] mb-4">
                   {t('game.fest.page.event_name', 'JUMPFEST')}
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-500">2026</span>
                </h1>
                <div className="flex items-center justify-center gap-4 text-xs md:text-sm font-mono text-gray-400 tracking-[0.3em] uppercase">
                   <Music size={14} className="text-fuchsia-500" />
