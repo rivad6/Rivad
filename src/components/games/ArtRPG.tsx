@@ -200,7 +200,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
     }
   }, [stats, currentNode, isPausedGlobal]);
 
-  const node = storyMap[currentNode] || { textKey: game.rpg.fail.fallback, choices: [], isEnding: true };
+  const node = storyMap[currentNode] || { textKey: 'game.rpg.fail.fallback', choices: [], isEnding: true };
       if (!node || node.isEnding) return;
       
       const choiceCount = node.choices.length;

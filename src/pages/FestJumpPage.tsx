@@ -1,14 +1,23 @@
 import { FestJump } from '../components/games/FestJump';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Rocket, Star, Ticket, Zap, ChevronRight, Music, Mail, ExternalLink, Trophy, X, User } from 'lucide-react';
+import { ArrowLeft, Rocket, Star, Ticket, Zap, ChevronRight, Music, Mail, ExternalLink, Trophy, X, User, Disc, Radio, MonitorSpeaker, Cpu, ChevronDown } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export function FestJumpPage() {
   const { t } = useLanguage();
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
   
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleModalClose = () => setActiveModal(null);
 
   const PLAYERS = [
@@ -20,186 +29,220 @@ export function FestJumpPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#020202] flex flex-col relative font-mono selection:bg-pink-500 selection:text-white overflow-x-hidden">
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(236,72,153,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" style={{ transform: 'perspective(1000px) rotateX(60deg) translateY(-200px) scale(3)' }} />
-        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-pink-500/10 rounded-full blur-[150px] mix-blend-screen animate-pulse" style={{ animationDuration: '4s' }} />
-        <div className="absolute bottom-1/4 -right-1/4 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[200px] bg-gradient-to-r from-transparent via-purple-500/5 to-transparent blur-[50px] rotate-45" />
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col relative font-sans selection:bg-fuchsia-500 selection:text-white overflow-x-hidden">
+      
+      {/* Background Ambience */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1540039155732-d688fa53b4ad?q=80&w=2669&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-screen" />
+        <div className="absolute inset-x-0 bottom-0 h-[80vh] bg-gradient-to-t from-[#020617] via-[#0f172a]/80 to-transparent" />
+        
+        {/* Animated Light Beams */}
+        <motion.div 
+          animate={{ rotate: [0, 5, -5, 0], opacity: [0.3, 0.6, 0.3] }} 
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-[20%] left-[20%] w-[150px] h-[150%] bg-fuchsia-600/10 blur-[100px] origin-top mix-blend-screen" 
+        />
+        <motion.div 
+          animate={{ rotate: [0, -8, 8, 0], opacity: [0.2, 0.5, 0.2] }} 
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute -top-[10%] right-[15%] w-[200px] h-[150%] bg-cyan-500/10 blur-[120px] origin-top mix-blend-screen" 
+        />
       </div>
 
-      {/* Persistent Navigation */}
-      <div className="relative z-50 w-full p-4 md:p-6 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-xl">
-        <div className="flex items-center gap-6">
+      {/* Global Navigation Header */}
+      <header className={`fixed top-0 w-full z-[100] transition-all duration-500 ${scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5 py-4' : 'bg-transparent py-8'}`}>
+        <div className="max-w-[1800px] mx-auto px-6 md:px-12 flex items-center justify-between">
           <Link 
             to="/" 
-            className="flex items-center gap-2 text-xs md:text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-[0.2em] relative group"
+            className="flex items-center gap-3 text-sm font-medium text-gray-400 hover:text-white transition-colors group"
           >
-            <div className="absolute -inset-2 bg-white/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-            <ArrowLeft size={16} /> <span className="relative z-10">{t('game.fest.back')}</span>
+            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:bg-white/10 group-hover:scale-110 transition-all">
+              <ArrowLeft size={16} />
+            </div>
+            <span className="uppercase tracking-[0.2em]">{t('game.fest.back', 'BACK TO ARCADE')}</span>
           </Link>
-          <div className="h-4 w-px bg-white/10 hidden md:block"></div>
-          <span className="hidden md:inline-block text-[10px] text-pink-500 font-bold tracking-[0.3em] uppercase drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">
-            {t('game.fest.page.subtitle')}
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-           <div className="flex items-center gap-2 bg-pink-500/10 border border-pink-500/30 px-3 py-1.5 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.2)]">
-              <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
-              <span className="text-[10px] text-pink-400 tracking-widest font-bold">SERVER STATUS: LIVE</span>
-           </div>
-        </div>
-      </div>
-
-      {/* Main Layout Grid */}
-      <div className="relative z-10 flex-grow w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-8 p-0 lg:p-8">
-        
-        {/* Left Sidebar - Festival Info & Ads */}
-        <div className="hidden lg:flex lg:col-span-3 flex-col gap-8 py-8 pl-4">
           
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-            <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-pink-200 to-pink-600 tracking-tighter leading-none italic uppercase drop-shadow-[0_0_15px_rgba(236,72,153,0.4)]">
-              {t('game.fest.page.event_name')}
-            </h1>
-            <p className="text-blue-400 tracking-[0.3em] text-[10px] font-bold uppercase flex items-center gap-2 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">
-              <Music size={12} /> {t('game.fest.page.event_date')}
-            </p>
-          </motion.div>
-
-          {/* Interactive Promo Ad 1 */}
-          <motion.button 
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} 
-            onClick={() => setActiveModal('sponsor_contact')}
-            className="text-left bg-gradient-to-br from-pink-500/10 to-transparent p-6 rounded-2xl border border-pink-500/20 backdrop-blur-md relative overflow-hidden group hover:border-pink-500/50 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:shadow-[0_4px_25px_rgba(236,72,153,0.2)] hover:-translate-y-1"
-          >
-            <div className="absolute inset-0 bg-pink-500/0 group-hover:bg-pink-500/5 transition-colors duration-500" />
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-pink-500/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Star className="text-pink-400 group-hover:animate-spin-slow" size={20} />
-                <span className="text-[9px] bg-pink-500/20 text-pink-300 px-2 py-1 rounded tracking-widest font-bold shadow-[inset_0_0_5px_rgba(236,72,153,0.2)]">AD_SPACE_01</span>
-              </div>
-              <h3 className="text-white font-black tracking-widest text-lg mb-2 uppercase drop-shadow-md">{t('game.fest.page.promo1')}</h3>
-              <p className="text-sm text-gray-400 mb-6 group-hover:text-gray-300 transition-colors leading-relaxed">{t('game.fest.page.promo1.desc')}</p>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-pink-400 font-bold flex items-center gap-2 group-hover:text-pink-300 transition-colors">
-                <Mail size={12} /> {t('game.fest.page.contact')} <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </motion.button>
-
-          {/* Interactive Promo Ad 2 */}
-          <motion.button 
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} 
-            onClick={() => setActiveModal('sponsor_deck')}
-            className="text-left bg-gradient-to-br from-blue-500/10 to-transparent p-6 rounded-2xl border border-blue-500/20 backdrop-blur-md relative overflow-hidden group hover:border-blue-500/50 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)] hover:shadow-[0_4px_25px_rgba(59,130,246,0.2)] hover:-translate-y-1"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-500/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-             <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <Zap className="text-blue-400 group-hover:scale-110 transition-transform" size={20} />
-                <span className="text-[9px] bg-blue-500/20 text-blue-300 px-2 py-1 rounded tracking-widest font-bold shadow-[inset_0_0_5px_rgba(59,130,246,0.2)]">AD_SPACE_02</span>
-              </div>
-              <h3 className="text-white font-black tracking-widest text-lg mb-2 uppercase drop-shadow-md">{t('game.fest.page.promo2')}</h3>
-              <p className="text-sm text-gray-400 mb-6 group-hover:text-gray-300 transition-colors leading-relaxed">{t('game.fest.page.promo2.desc')}</p>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-blue-400 font-bold flex items-center gap-2 group-hover:text-blue-300 transition-colors">
-                <ExternalLink size={12} /> {t('game.fest.page.deck')} <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </motion.button>
-
-        </div>
-
-        {/* Center - Game Container */}
-        <div className="col-span-1 lg:col-span-6 flex flex-col h-[100dvh] lg:h-auto w-full max-w-[600px] mx-auto justify-center">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", damping: 20, stiffness: 100 }}
-            className="w-full h-full lg:h-[800px] bg-[#050510] lg:rounded-3xl lg:border border-white/5 lg:shadow-[0_0_50px_rgba(236,72,153,0.1),inset_0_0_30px_rgba(0,0,0,0.8)] overflow-hidden relative flex flex-col ring-1 ring-white/5 group"
-          >
-            {/* Hologram aesthetic lines */}
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-pink-500/50 to-transparent opacity-50 z-20 pointer-events-none group-hover:opacity-100 transition-opacity"></div>
-            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-transparent via-blue-500/30 to-transparent z-20 pointer-events-none group-hover:via-blue-500/60 transition-colors"></div>
-            <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-transparent via-pink-500/30 to-transparent z-20 pointer-events-none group-hover:via-pink-500/60 transition-colors"></div>
-            
-            {/* The Game itself */}
-            <div className="w-full h-full relative z-10">
-               <FestJump isFullscreen={true} />
-            </div>
-          </motion.div>
-          
-          <div className="hidden lg:flex justify-center mt-6 items-center gap-2 text-[10px] text-gray-600 tracking-widest uppercase font-bold drop-shadow-sm">
-             <Rocket size={12} className="text-pink-600" /> Powered by Jumpfest Engine v2.0
+          <div className="hidden md:flex items-center gap-8">
+             <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
+                <span className="text-xs text-gray-300 font-mono tracking-widest uppercase">Nodes Online</span>
+             </div>
+             <div className="h-4 w-px bg-white/10" />
+             <a href="#sponsor" className="text-xs text-gray-400 hover:text-fuchsia-400 font-mono tracking-widest uppercase transition-colors">Sponsors</a>
+             <a href="#leaderboard" className="text-xs text-gray-400 hover:text-cyan-400 font-mono tracking-widest uppercase transition-colors">Rankings</a>
           </div>
         </div>
+      </header>
 
-        {/* Right Sidebar - Info */}
-        <div className="hidden lg:flex lg:col-span-3 flex-col gap-6 py-8 pr-4">
-           
-           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="p-6 rounded-2xl bg-gradient-to-br from-white/5 to-transparent border border-white/10 backdrop-blur-md relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full" />
-              <div className="flex items-center gap-3 mb-4 relative z-10">
-                 <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center border border-pink-500/30">
-                    <Ticket className="text-pink-400" size={20} />
-                 </div>
-                 <h3 className="text-white font-black tracking-widest uppercase">{t('game.fest.page.why_play')}</h3>
-              </div>
-              <p className="text-sm text-gray-400 leading-relaxed relative z-10">
-                {t('game.fest.page.why_play.desc')}
-              </p>
-           </motion.div>
+      {/* Hero Section */}
+      <section className="relative z-10 pt-32 pb-12 md:pt-48 md:pb-24 px-6">
+         <div className="max-w-[1200px] mx-auto text-center flex flex-col items-center">
+            
+            <motion.div 
+               initial={{ opacity: 0, y: 30 }} 
+               animate={{ opacity: 1, y: 0 }} 
+               transition={{ duration: 1, ease: 'easeOut' }}
+               className="mb-8"
+            >
+               <h1 className="text-5xl md:text-8xl lg:text-9xl font-black text-white tracking-tighter uppercase leading-[0.8] mb-4">
+                  {t('game.fest.page.event_name', 'JUMPFEST')}
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-500">2026</span>
+               </h1>
+               <div className="flex items-center justify-center gap-4 text-xs md:text-sm font-mono text-gray-400 tracking-[0.3em] uppercase">
+                  <Music size={14} className="text-fuchsia-500" />
+                  <span>The Ultimate Virtual Rave</span>
+                  <Radio size={14} className="text-cyan-500" />
+               </div>
+            </motion.div>
 
-           {/* Interactive Leaderboard */}
-           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 mb-2 px-2">
-                 <Trophy size={16} className="text-yellow-500" />
-                 <h4 className="text-[12px] text-white tracking-[0.2em] uppercase font-black">{t('game.fest.page.top_jumps')}</h4>
-              </div>
-              
-              <div className="space-y-2">
-                 {PLAYERS.map((player, i) => (
-                   <motion.div 
-                     key={`player_${player.name}_${i}`} 
-                     whileHover={{ scale: 1.02, x: 5 }}
-                     className="flex items-center p-3 rounded-xl bg-black/40 border border-white/5 hover:border-pink-500/30 hover:bg-black/60 transition-all cursor-pointer group relative overflow-hidden"
-                     onClick={() => setActiveModal(`player_${player.name}`)}
-                   >
-                     {i === 0 && <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 to-transparent pointer-events-none" />}
-                     <div className={`w-8 h-8 rounded shrink-0 flex items-center justify-center font-black text-sm border shadow-sm ${i === 0 ? 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50' : i === 1 ? 'bg-gray-300/20 text-gray-300 border-gray-300/50' : i === 2 ? 'bg-orange-500/20 text-orange-500 border-orange-500/50' : 'bg-white/5 text-gray-500 border-white/10'}`}>
-                        {player.rank}
+            <motion.p 
+               initial={{ opacity: 0 }} 
+               animate={{ opacity: 1 }} 
+               transition={{ duration: 1, delay: 0.5 }}
+               className="max-w-2xl text-gray-400 text-sm md:text-base leading-relaxed mb-12"
+            >
+               {t('game.fest.page.why_play.desc', 'Step into the neon arena. Timing is everything. Gather multiplier shards, avoid the void sentinels, and cement your legacy on the global mainstage.')}
+            </motion.p>
+            
+            <motion.a 
+               href="#gameboard"
+               initial={{ opacity: 0, scale: 0.8 }} 
+               animate={{ opacity: 1, scale: 1 }} 
+               transition={{ type: "spring", delay: 0.8 }}
+               className="flex items-center gap-3 bg-white text-black px-8 py-4 rounded-full font-bold uppercase tracking-widest hover:bg-fuchsia-400 transition-colors animate-bounce shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+            >
+               <Rocket size={18} /> Enter the Arena
+            </motion.a>
+         </div>
+      </section>
+
+      {/* Main Content Grid */}
+      <main className="relative z-10 max-w-[1800px] mx-auto w-full px-4 md:px-8 pb-32" id="gameboard">
+         
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+            
+            {/* Left Column: Festival Identity */}
+            <div className="lg:col-span-3 flex flex-col gap-8 order-2 lg:order-1">
+               <div className="border border-white/10 bg-white/[0.02] backdrop-blur-md rounded-3xl p-8 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/20 blur-[50px] -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+                  <div className="w-12 h-12 bg-fuchsia-500/10 rounded-2xl flex items-center justify-center border border-fuchsia-500/20 mb-6 text-fuchsia-400">
+                     <Disc size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold mb-4 uppercase tracking-wider">Lineup Announced</h3>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-6">
+                     Compete against algorithmic DJs and synthetic crowd surges. The higher you climb, the harder the bass drops.
+                  </p>
+                  <ul className="space-y-3 font-mono text-xs text-gray-500">
+                     <li className="flex justify-between border-b mx-0 border-white/5 pb-2"><span>[STAGE 1]</span> <span className="text-cyan-400">Mainstage</span></li>
+                     <li className="flex justify-between border-b mx-0 border-white/5 pb-2"><span>[STAGE 2]</span> <span className="text-emerald-400">Trance Arena</span></li>
+                     <li className="flex justify-between border-b mx-0 border-white/5 pb-2"><span>[STAGE 3]</span> <span className="text-orange-400">Warehouse</span></li>
+                  </ul>
+               </div>
+
+               <div className="border border-white/10 bg-white/[0.02] backdrop-blur-md rounded-3xl p-8" id="sponsor">
+                   <h3 className="text-xs font-mono tracking-widest text-gray-500 uppercase mb-6 flex items-center gap-2">
+                     <MonitorSpeaker size={14} /> Global Sponsors
+                   </h3>
+                   <div className="space-y-4">
+                      {/* Sponsor Block */}
+                      <button onClick={() => setActiveModal('sponsor_contact')} className="w-full text-left bg-gradient-to-r from-gray-900 to-black border border-white/5 p-4 rounded-xl hover:border-fuchsia-500/50 transition-colors group">
+                         <div className="flex justify-between items-center mb-2">
+                           <span className="font-bold text-white uppercase tracking-wider">Neon Cola</span>
+                           <span className="text-[10px] bg-fuchsia-500/20 text-fuchsia-400 px-2 py-1 rounded font-mono">PARTNER</span>
+                         </div>
+                         <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors">Official energy provider of the simulation.</p>
+                      </button>
+                      <button onClick={() => setActiveModal('sponsor_deck')} className="w-full text-left bg-gradient-to-r from-gray-900 to-black border border-white/5 p-4 rounded-xl hover:border-cyan-500/50 transition-colors group">
+                         <div className="flex justify-between items-center mb-2">
+                           <span className="font-bold text-white uppercase tracking-wider">Cybernetics Inc</span>
+                           <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded font-mono">PLATINUM</span>
+                         </div>
+                         <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors">Upgrading raver bodies since 2024.</p>
+                      </button>
+                   </div>
+               </div>
+            </div>
+
+            {/* Center Column: THE GAME HOST */}
+            <div className="lg:col-span-6 order-1 lg:order-2">
+               <div className="w-full relative aspect-[9/16] md:aspect-square lg:aspect-[4/5] bg-black rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
+                  
+                  {/* Decorative Frame */}
+                  <div className="absolute top-0 inset-x-0 h-10 bg-zinc-900/80 backdrop-blur border-b border-white/10 z-20 flex items-center justify-between px-4">
+                     <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500/50 border border-red-500" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/50 border border-yellow-500" />
+                        <div className="w-3 h-3 rounded-full bg-green-500/50 border border-green-500" />
                      </div>
-                     <div className="flex-1 min-w-0 px-4">
-                        <span className="block text-white font-bold tracking-wider truncate text-xs group-hover:text-pink-300 transition-colors">{player.name}</span>
-                        <span className="block text-[9px] text-gray-500 tracking-widest uppercase mt-0.5">Model: {player.char}</span>
-                     </div>
-                     <span className={`text-sm tabular-nums font-black tracking-widest ${i === 0 ? 'text-yellow-500' : 'text-pink-400'}`}>
-                        {player.score}<span className="text-[10px] text-gray-500 font-normal ml-1">KARMAS</span>
-                     </span>
-                   </motion.div>
-                 ))}
-              </div>
-              
-              <button 
-                 onClick={() => setActiveModal('full_rankings')}
-                 className="p-3 rounded-xl border border-white/10 bg-white/5 text-center text-[10px] text-gray-400 tracking-widest uppercase font-bold hover:text-white hover:bg-white/10 hover:border-white/20 transition-all mt-2"
-              >
-                {t('game.fest.page.rankings')}
-              </button>
-           </motion.div>
+                     <div className="font-mono text-[10px] text-gray-500 tracking-widest">FEST_JUMP.EXE</div>
+                     <div className="w-16" />
+                  </div>
 
-        </div>
+                  <div className="absolute inset-0 pt-10">
+                     <FestJump isFullscreen={true} />
+                  </div>
+               </div>
+               
+               <div className="mt-8 flex items-center justify-center gap-4 text-xs font-mono text-gray-500">
+                  <Cpu size={14} /> Server Load: 42% <span className="text-white/20">|</span> Latency: 12ms <span className="text-white/20">|</span> Uptime: 99.9%
+               </div>
+            </div>
 
-      </div>
+            {/* Right Column: Community & Leaderboards */}
+            <div className="lg:col-span-3 flex flex-col gap-8 order-3" id="leaderboard">
+               <div className="border border-white/10 bg-white/[0.02] backdrop-blur-md rounded-3xl p-8 shadow-xl">
+                  <div className="flex items-center justify-between mb-8">
+                     <h3 className="text-lg font-bold uppercase tracking-widest flex items-center gap-3">
+                        <Trophy className="text-yellow-500" size={20} /> Hall of Fame
+                     </h3>
+                  </div>
 
-      {/* Global Modals overlay */}
+                  <div className="space-y-3">
+                     {PLAYERS.map((player, i) => (
+                        <div 
+                           key={`player_${player.name}`}
+                           onClick={() => setActiveModal(`player_${player.name}`)}
+                           className="group flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 cursor-pointer transition-all"
+                        >
+                           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm
+                              ${i === 0 ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/50' : 
+                                i === 1 ? 'bg-gray-300/20 text-gray-300 border border-gray-400/50' : 
+                                i === 2 ? 'bg-orange-600/20 text-orange-500 border border-orange-500/50' : 
+                                'bg-white/5 text-gray-500'}`}
+                           >
+                              {player.rank}
+                           </div>
+                           <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-sm tracking-widest truncate group-hover:text-fuchsia-400 transition-colors">{player.name}</h4>
+                              <p className="text-[10px] font-mono text-gray-500 uppercase mt-1">Class: {player.char}</p>
+                           </div>
+                           <div className="text-right">
+                              <span className="block font-mono font-bold text-white tracking-widest">{player.score}</span>
+                              <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Karmas</span>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+
+                  <button 
+                     onClick={() => setActiveModal('full_rankings')}
+                     className="w-full mt-6 py-3 border border-white/10 text-xs font-mono text-gray-400 hover:text-white hover:bg-white/5 rounded-xl uppercase tracking-widest transition-all"
+                  >
+                     View Global Ranks
+                  </button>
+               </div>
+            </div>
+         </div>
+      </main>
+
+      {/* Global Modals */}
       <AnimatePresence>
          {activeModal && (
             <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
-               className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+               className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                onClick={handleModalClose}
             >
                <motion.div 
@@ -207,55 +250,55 @@ export function FestJumpPage() {
                   animate={{ scale: 1, y: 0 }}
                   exit={{ scale: 0.95, y: 20 }}
                   onClick={e => e.stopPropagation()}
-                  className="bg-[#0f0c29] border-2 border-pink-500/30 rounded-2xl max-w-lg w-full p-8 shadow-[0_0_50px_rgba(236,72,153,0.15)] relative overflow-hidden"
+                  className="bg-[#0a0a0a] border border-white/10 rounded-3xl max-w-lg w-full p-8 md:p-12 shadow-2xl relative overflow-hidden font-sans"
                >
-                  <div className="absolute inset-0 bg-[linear-gradient(rgba(236,72,153,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.05)_1px,transparent_1px)] bg-[length:20px_20px] pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 to-transparent pointer-events-none" />
                   
-                  <button onClick={handleModalClose} className="absolute top-4 right-4 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors z-10">
+                  <button onClick={handleModalClose} className="absolute top-6 right-6 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors z-10">
                      <X size={16} />
                   </button>
 
-                  <div className="relative z-10 font-mono text-center">
+                  <div className="relative z-10 flex flex-col items-center text-center">
                      {activeModal === 'sponsor_contact' && (
                         <>
-                           <div className="w-16 h-16 rounded-full bg-pink-500/20 border border-pink-500/50 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(236,72,153,0.4)]">
-                              <Mail size={32} className="text-pink-400" />
+                           <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/20 border border-fuchsia-500/50 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(217,70,239,0.3)] text-fuchsia-400">
+                              <Mail size={24} />
                            </div>
-                           <h2 className="text-2xl font-black text-white italic uppercase tracking-widest mb-4">Partner With Us</h2>
-                           <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md mx-auto">
-                              Join the Electronic Music Festival ecosystem. Place your brand's billboards directly inside the Jumpfest experience and reach millions of ravers.
+                           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Partner With Us</h2>
+                           <p className="text-gray-400 leading-relaxed mb-8">
+                              Place your brand directly inside the Jumpfest simulation. We offer virtual billboards, custom playable characters, and thematic power-ups.
                            </p>
-                           <button onClick={handleModalClose} className="px-8 py-3 bg-pink-600 hover:bg-pink-500 text-white font-bold tracking-[0.2em] uppercase rounded border border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.5)] transition-all active:scale-95">
-                              Request Media Packet
+                           <button onClick={handleModalClose} className="w-full py-4 bg-white hover:bg-gray-200 text-black font-bold uppercase tracking-widest rounded-xl transition-all">
+                              Request Media Kit
                            </button>
                         </>
                      )}
                      
                      {activeModal === 'sponsor_deck' && (
                         <>
-                           <div className="w-16 h-16 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
-                              <ExternalLink size={32} className="text-blue-400" />
+                           <div className="w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(6,182,212,0.3)] text-cyan-400">
+                              <ExternalLink size={24} />
                            </div>
-                           <h2 className="text-2xl font-black text-white italic uppercase tracking-widest mb-4">Sponsorship Deck</h2>
-                           <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-md mx-auto">
-                              Curious about our metrics? The Jumpfest Engine delivers unparalleled engagement. View our interactive PDF to explore tiers, pricing, and custom integrations.
+                           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Sponsorship Deck</h2>
+                           <p className="text-gray-400 leading-relaxed mb-8">
+                              Dive into our realtime metrics. The Engine delivers unparalleled engagement. View our interactive brief to explore tiers and integrations.
                            </p>
-                           <button onClick={handleModalClose} className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-[0.2em] uppercase rounded border border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all active:scale-95">
-                              Download Deck .PDF
+                           <button onClick={handleModalClose} className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-widest rounded-xl transition-all">
+                              Download Brief PDF
                            </button>
                         </>
                      )}
 
                      {activeModal === 'full_rankings' && (
                         <>
-                           <div className="w-16 h-16 rounded-full bg-yellow-500/20 border border-yellow-500/50 flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(234,179,8,0.4)]">
-                              <Trophy size={32} className="text-yellow-400" />
+                           <div className="w-16 h-16 rounded-2xl bg-yellow-500/20 border border-yellow-500/50 flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(234,179,8,0.3)] text-yellow-400">
+                              <Trophy size={24} />
                            </div>
-                           <h2 className="text-2xl font-black text-white italic uppercase tracking-widest mb-4">Global Network</h2>
-                           <p className="text-gray-400 text-sm leading-relaxed mb-8">
-                              The global leaderboard is currently compiling data from the outer rim sectors. Please check back next cycle.
+                           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-4">Global Network</h2>
+                           <p className="text-gray-400 leading-relaxed mb-8">
+                              We are currently fetching the planetary leaderboard data from outer rim nodes. Please check back next cycle.
                            </p>
-                           <button onClick={handleModalClose} className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold tracking-[0.2em] uppercase rounded border border-zinc-600 transition-colors">
+                           <button onClick={handleModalClose} className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest rounded-xl border border-zinc-700 transition-colors">
                               Close Dashboard
                            </button>
                         </>
@@ -263,17 +306,19 @@ export function FestJumpPage() {
 
                      {activeModal.startsWith('player_') && (
                         <>
-                           <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-pink-500/20 to-blue-500/20 border border-white/20 flex items-center justify-center mx-auto mb-6 shadow-xl overflow-hidden relative">
-                              <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:10px_10px] bg-repeat pointer-events-none" />
-                              <User size={40} className="text-white/50" />
+                           <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-fuchsia-500 to-cyan-500 p-1 mb-6">
+                              <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center border-4 border-black">
+                                 <User size={32} className="text-white/50" />
+                              </div>
                            </div>
-                           <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-2">{activeModal.replace('player_', '')}</h2>
-                           <div className="flex items-center justify-center gap-4 mb-8 text-xs font-bold uppercase tracking-widest">
-                              <span className="text-pink-400 p-2 bg-pink-500/10 rounded border border-pink-500/20">Lv.99</span>
-                              <span className="text-blue-400 p-2 bg-blue-500/10 rounded border border-blue-500/20">Elite Rank</span>
+                           <h2 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">{activeModal.replace('player_', '')}</h2>
+                           
+                           <div className="flex gap-4 mb-8 font-mono text-xs uppercase tracking-widest">
+                              <span className="px-3 py-1 bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 rounded-md">Level 99</span>
+                              <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-md">Vanguard</span>
                            </div>
                            
-                           <button onClick={handleModalClose} className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-bold tracking-[0.2em] uppercase rounded border border-white/20 transition-colors">
+                           <button onClick={handleModalClose} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-widest rounded-xl border border-white/10 transition-colors">
                               Close Profile
                            </button>
                         </>

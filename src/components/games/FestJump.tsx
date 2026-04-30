@@ -160,7 +160,6 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       vy: 0,
       width: 24,
       height: 24,
-      height: 24,
       shield: upgrades.shield > 0 ? 1 : 0,
       jetpack: 0,
       magnet: 0,
@@ -300,81 +299,90 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       ctx.save();
       if (cameraShake > 0) ctx.translate(Math.random()*cameraShake - cameraShake/2, Math.random()*cameraShake - cameraShake/2);
       
-      let stretchX = 1;
-      let stretchY = 1;
-      if (player.vy < -5) { stretchX = 0.8; stretchY = 1.2; }
-      else if (player.vy > 5) { stretchX = 0.9; stretchY = 1.1; }
-      
-      const pWidth = player.width * stretchX;
-      const pHeight = player.height * stretchY;
-      const charX = x + (player.width - pWidth) / 2;
-      const charY = y + (player.height - pHeight);
+      const charX = x;
+      const charY = y;
+      const pWidth = player.width;
+      const pHeight = player.height;
 
-      // Body
-      const gradient = ctx.createLinearGradient(charX, charY, charX, charY + pHeight);
-      gradient.addColorStop(0, selectedChar.color);
-      gradient.addColorStop(1, '#0f172a');
+      // Holographic / Neon Aura
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = selectedChar.accent;
+      ctx.fillStyle = selectedChar.color;
       
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = selectedChar.color;
-
-      ctx.fillStyle = gradient;
+      // Main Body Shape
       ctx.beginPath();
       ctx.roundRect(charX, charY, pWidth, pHeight, 8);
       ctx.fill();
       
-      // Visor/Glasses & Headphones
       ctx.shadowBlur = 0;
-      ctx.fillStyle = 'rgba(255,255,255,0.8)';
-      
+
+      // Unique character designs
       if (selectedChar.id === 'ghost') {
-         ctx.beginPath();
-         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 2, 6, 0, Math.PI*2);
-         ctx.fill();
-         // ghostly trail
+         // Shuffler (Ghost)
+         ctx.fillStyle = '#fff';
+         ctx.beginPath(); ctx.arc(charX + pWidth/2, charY + pHeight/3, 8, 0, Math.PI*2); ctx.fill();
+         // Trail
          ctx.globalAlpha = 0.5;
          ctx.fillStyle = selectedChar.accent;
-         ctx.roundRect(charX + 4, charY + pHeight, pWidth - 8, 10 + Math.sin(Date.now()*0.01)*5, 4);
+         ctx.beginPath();
+         ctx.moveTo(charX + 4, charY + pHeight);
+         ctx.lineTo(charX + pWidth/2, charY + pHeight + 15 + Math.sin(Date.now() * 0.01) * 5);
+         ctx.lineTo(charX + pWidth - 4, charY + pHeight);
          ctx.fill();
          ctx.globalAlpha = 1.0;
-      } else {
-         // Cool glasses (trippy)
-         ctx.fillRect(charX + Math.max(4, pWidth*0.1), charY + pHeight*0.2, pWidth*0.8, pHeight*0.25);
-         // Glowing Equalizer on shirt
+      } else if (selectedChar.id === 'punk') {
+         // Basshead (Punk)
+         // Mohawk
          ctx.fillStyle = selectedChar.accent;
+         for(let i=0; i<4; i++) {
+           ctx.fillRect(charX + pWidth/2 - 8 + i*4, charY - 8 + Math.abs(2-i)*2, 4, 10);
+         }
+         // Visor
+         ctx.fillStyle = '#111';
+         ctx.fillRect(charX + 2, charY + 8, pWidth - 4, 10);
+         ctx.fillStyle = '#fff';
+         ctx.fillRect(charX + 4, charY + 10, pWidth - 8, 2);
+      } else if (selectedChar.id === 'cyber') {
+         // Main-DJ (Cyber)
+         ctx.fillStyle = '#0f172a';
+         ctx.fillRect(charX + 2, charY + 2, pWidth - 4, pHeight - 4);
+         
+         // DJ Headphones
+         ctx.strokeStyle = selectedChar.color;
+         ctx.lineWidth = 3;
+         ctx.beginPath();
+         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 4, 12, Math.PI, 0);
+         ctx.stroke();
+         ctx.fillStyle = selectedChar.accent;
+         ctx.fillRect(charX - 4, charY + pHeight/2 - 8, 6, 12);
+         ctx.fillRect(charX + pWidth - 2, charY + pHeight/2 - 8, 6, 12);
+         
+         // Glowing Chest Equalizer
          const t = Date.now() * 0.01;
-         ctx.fillRect(charX + pWidth*0.25, charY + pHeight*0.6, pWidth*0.1, 4 + Math.sin(t)*3);
-         ctx.fillRect(charX + pWidth*0.45, charY + pHeight*0.6, pWidth*0.1, 4 + Math.sin(t+1)*3);
-         ctx.fillRect(charX + pWidth*0.65, charY + pHeight*0.6, pWidth*0.1, 4 + Math.sin(t+2)*3);
-         
-         // Headphones
-         ctx.beginPath();
-         ctx.arc(charX + pWidth/2, charY + pHeight/2 - 2, pWidth/2 + 3, Math.PI, 0);
-         ctx.lineWidth = 3;
-         ctx.strokeStyle = selectedChar.accent;
-         ctx.stroke();
-         ctx.fillRect(charX - 3, charY + pHeight/2 - 6, 5, 12); // left earcup
-         ctx.fillRect(charX + pWidth - 2, charY + pHeight/2 - 6, 5, 12); // right earcup
-      }
-
-      // Add glowsticks in hands if bouncing up!
-      if (player.vy < 0) {
-         ctx.shadowBlur = 10;
-         ctx.shadowColor = '#10b981';
-         ctx.strokeStyle = '#10b981';
-         ctx.lineWidth = 3;
-         ctx.beginPath();
-         ctx.moveTo(charX - 10, charY + pHeight/2);
-         ctx.lineTo(charX - 15, charY - 5);
-         ctx.stroke();
-         
-         ctx.shadowColor = '#ec4899';
-         ctx.strokeStyle = '#ec4899';
-         ctx.beginPath();
-         ctx.moveTo(charX + pWidth + 10, charY + pHeight/2);
-         ctx.lineTo(charX + pWidth + 15, charY - 5);
-         ctx.stroke();
-         ctx.shadowBlur = 0;
+         ctx.fillStyle = selectedChar.color;
+         ctx.fillRect(charX + 6, charY + pHeight - 12 - Math.abs(Math.sin(t)*6), 4, Math.abs(Math.sin(t)*6) + 4);
+         ctx.fillRect(charX + 12, charY + pHeight - 12 - Math.abs(Math.sin(t+1)*6), 4, Math.abs(Math.sin(t+1)*6) + 4);
+         ctx.fillRect(charX + 18, charY + pHeight - 12 - Math.abs(Math.sin(t+2)*6), 4, Math.abs(Math.sin(t+2)*6) + 4);
+      } else {
+         // Raver (Default)
+         ctx.fillStyle = '#1e293b';
+         ctx.fillRect(charX + 2, charY + pHeight/2, pWidth - 4, pHeight/2);
+         // Rave glasses
+         ctx.fillStyle = selectedChar.accent;
+         ctx.fillRect(charX + 4, charY + 6, pWidth - 8, 8);
+         // Glowsticks in hands
+         if (player.vy < 0) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#10b981';
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(charX - 5, charY + pHeight/2); ctx.lineTo(charX - 10, charY - 5); ctx.stroke();
+            
+            ctx.shadowColor = '#ec4899';
+            ctx.strokeStyle = '#ec4899';
+            ctx.beginPath(); ctx.moveTo(charX + pWidth + 5, charY + pHeight/2); ctx.lineTo(charX + pWidth + 10, charY - 5); ctx.stroke();
+            ctx.shadowBlur = 0;
+         }
       }
 
       if (player.shield > 0) {
@@ -383,7 +391,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         ctx.lineWidth = 2 + Math.sin(Date.now()*0.01);
         ctx.shadowBlur = 15;
         ctx.shadowColor = '#3b82f6';
-        ctx.arc(x + player.width/2, y + player.height/2, 26 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
+        ctx.arc(x + player.width/2, y + player.height/2, 28 + Math.sin(Date.now()*0.01)*2, 0, Math.PI*2);
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
@@ -393,8 +401,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         ctx.fillStyle = '#f59e0b';
         ctx.shadowBlur = 15;
         ctx.shadowColor = '#f59e0b';
-        ctx.fillRect(charX - 4, charY + pHeight/2, 8, pHeight/2 + 5);
-        ctx.fillRect(charX + pWidth - 4, charY + pHeight/2, 8, pHeight/2 + 5);
+        ctx.fillRect(charX - 4, charY + pHeight/2 + 4, 6, pHeight/2);
+        ctx.fillRect(charX + pWidth - 2, charY + pHeight/2 + 4, 6, pHeight/2);
         ctx.shadowBlur = 0;
       }
 
@@ -453,20 +461,20 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          player.vy = -18 - upgrades.jump * 1.5;
          createParticles(player.x + player.width/2, player.y + player.height, '#f43f5e');
          setHudJetpack(Math.floor(player.jetpack));
-            } else {
-         player.vx *= Math.pow(0.5, normalDt); // Much tighter friction for better control
+      } else {
+         player.vx *= Math.pow(0.65, normalDt); // Much tighter friction for better control
          
          // Allow touch/mouse dragging to influence movement securely
          if (touchTargetX !== null) {
             const diff = touchTargetX - (player.x + player.width/2);
-            player.vx += Math.max(-selectedChar.speed, Math.min(selectedChar.speed, diff * 0.3)) * normalDt;
+            player.vx += Math.max(-selectedChar.speed*1.5, Math.min(selectedChar.speed*1.5, diff * 0.6)) * normalDt;
          } else {
-            if (keys.left) player.vx -= selectedChar.speed * 0.6 * normalDt;
-            if (keys.right) player.vx += selectedChar.speed * 0.6 * normalDt;
+            if (keys.left) player.vx -= selectedChar.speed * 2.5 * normalDt;
+            if (keys.right) player.vx += selectedChar.speed * 2.5 * normalDt;
          }
          
          // Hard cap speed to maintain control
-         const maxSpeed = selectedChar.speed;
+         const maxSpeed = selectedChar.speed * 1.8;
          if (player.vx > maxSpeed) player.vx = maxSpeed;
          if (player.vx < -maxSpeed) player.vx = -maxSpeed;
       }
@@ -995,84 +1003,48 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         if (pw.type === 'glowstick') {
             ctx.shadowColor = '#10b981';
             ctx.shadowBlur = 10;
-            ctx.fillStyle = '#a7f3d0';
-            ctx.beginPath();
-            ctx.roundRect(-2, -8, 4, 16, 2);
-            ctx.fill();
             ctx.fillStyle = '#10b981';
-            ctx.fillRect(-2, -3, 4, 10);
+            ctx.beginPath();
+            ctx.roundRect(-4, -10, 8, 20, 4);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(0, -6, 2, 0, Math.PI*2); ctx.fill();
             ctx.shadowBlur = 0;
         } else if (pw.type === 'vip') {
-            ctx.shadowColor = '#f59e0b';
+            ctx.shadowColor = '#818cf8';
             ctx.shadowBlur = 15;
-            ctx.fillStyle = '#1e1b4b'; // dark retro base
-            ctx.beginPath();
-            ctx.arc(0, 0, 12, 0, Math.PI*2);
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#f59e0b';
-            ctx.stroke();
-            // Golden star inside
-            ctx.fillStyle = '#facc15';
-            ctx.beginPath();
-            for(let i=0; i<5; i++) {
-                ctx.lineTo(Math.cos((18+i*72)/180*Math.PI)*6, -Math.sin((18+i*72)/180*Math.PI)*6);
-                ctx.lineTo(Math.cos((54+i*72)/180*Math.PI)*3, -Math.sin((54+i*72)/180*Math.PI)*3);
-            }
-            ctx.fill();
+            ctx.fillStyle = '#312e81'; 
+            ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+            ctx.lineWidth = 3; ctx.strokeStyle = '#818cf8'; ctx.stroke();
+            ctx.fillStyle = '#c7d2fe';
+            ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center'; ctx.fillText('SHLD', 0, 3);
             ctx.shadowBlur = 0;
         } else if (pw.type === 'merch') {
-            ctx.shadowColor = '#ec4899';
+            ctx.shadowColor = '#f43f5e';
             ctx.shadowBlur = 15;
-            ctx.fillStyle = '#be185d';
-            ctx.beginPath();
-            ctx.roundRect(-8, -6, 16, 14, 2);
-            ctx.fill();
-            ctx.fillStyle = '#ec4899'; // T-shirt sleeves
-            ctx.beginPath();
-            ctx.roundRect(-12, -6, 6, 8, 2);
-            ctx.roundRect(6, -6, 6, 8, 2);
-            ctx.fill();
-            ctx.fillStyle = '#fdf2f8'; // logo dot
-            ctx.beginPath();
-            ctx.arc(0, 0, 3, 0, Math.PI*2);
-            ctx.fill();
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(-10, 10); ctx.lineTo(10, 10); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(-2, -2, 4, 10);
             ctx.shadowBlur = 0;
         } else if (pw.type === 'beer') {
-            ctx.shadowColor = '#0ea5e9';
+            ctx.shadowColor = '#f59e0b';
             ctx.shadowBlur = 15;
-            ctx.fillStyle = '#0284c7'; // Can body
-            ctx.beginPath();
-            ctx.roundRect(-5, -8, 10, 16, 2);
-            ctx.fill();
-            ctx.fillStyle = '#cbd5e1'; // Silver top/bottom
-            ctx.fillRect(-5, -8, 10, 2);
-            ctx.fillRect(-5, 6, 10, 2);
-            ctx.fillStyle = '#38bdf8'; // Label
-            ctx.fillRect(-5, -3, 10, 6);
+            ctx.fillStyle = '#f59e0b'; // cup
+            ctx.beginPath(); ctx.moveTo(-6, 8); ctx.lineTo(6, 8); ctx.lineTo(8, -8); ctx.lineTo(-8, -8); ctx.fill();
+            ctx.fillStyle = '#fff'; // foam
+            ctx.beginPath(); ctx.arc(0, -8, 8, 0, Math.PI); ctx.fill();
             ctx.shadowBlur = 0;
-        } else {
-            // Magnet
+        } else if (pw.type === 'magnet') {
             ctx.shadowColor = '#a855f7';
             ctx.shadowBlur = 15;
-            ctx.fillStyle = '#1e1b4b'; 
-            ctx.beginPath();
-            ctx.arc(0, 0, 12, 0, Math.PI*2);
-            ctx.fill();
-            ctx.lineWidth = 2;
             ctx.strokeStyle = '#a855f7';
-            ctx.stroke();
-            // Magnet U shape
-            ctx.strokeStyle = '#d8b4fe';
-            ctx.beginPath();
-            ctx.arc(0, -2, 5, Math.PI, 0);
-            ctx.lineTo(5, 4);
-            ctx.moveTo(-5, -2);
-            ctx.lineTo(-5, 4);
-            ctx.stroke();
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(-6, 4, 2, 2);
-            ctx.fillRect(4, 4, 2, 2);
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(0, -2, 8, Math.PI, 0); ctx.stroke();
+            ctx.fillStyle = '#a855f7';
+            ctx.fillRect(-10, -2, 4, 8); ctx.fillRect(6, -2, 4, 8);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(-10, 4, 4, 2); ctx.fillRect(6, 4, 4, 2);
             ctx.shadowBlur = 0;
         }
         
@@ -1080,65 +1052,42 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       });
 
                   enemies.forEach(e => {
-          ctx.save();
-          ctx.translate(e.x + e.width / 2, e.y + e.width / 2);
-          
-          if (e.isBouncer) {
-              // Bouncer: Big security guard look
-              ctx.shadowColor = '#fbbf24';
-              ctx.shadowBlur = 10;
-              ctx.fillStyle = '#0f172a'; // dark suit
-              ctx.beginPath();
-              ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 4);
-              ctx.fill();
-              
-              // VIP Badge
-              ctx.fillStyle = '#fbbf24';
-              ctx.fillRect(e.width/2 - 10, -e.width/2 + 5, 5, 8);
-              
-              // Shades
-              ctx.fillStyle = '#000';
-              ctx.fillRect(-e.width/2 + 4, -e.width/2 + 10, e.width - 8, 8);
-              
-              // Earpiece
-              ctx.fillStyle = '#ef4444'; 
-              ctx.beginPath();
-              ctx.arc(e.width/2 - 2, -e.width/2 + 15, 2, 0, Math.PI*2);
-              ctx.fill();
-          } else {
-              // Noise Drone
-              ctx.rotate(Math.sin(Date.now() * 0.005 + e.x) * 0.1);
-              ctx.shadowColor = '#ef4444';
-              ctx.shadowBlur = 15;
-              ctx.fillStyle = '#450a0a'; 
-              ctx.beginPath();
-              ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 8);
-              ctx.fill();
-              
-              // Drone speaker front
-              ctx.fillStyle = '#171717';
-              ctx.beginPath();
-              ctx.arc(0, 0, e.width*0.35, 0, Math.PI * 2);
-              ctx.fill();
-              
-              const pulse = Math.sin(Date.now() * 0.02) * 3;
-              ctx.fillStyle = '#ef4444';
-              ctx.beginPath();
-              ctx.arc(0, 0, e.width*0.15 + pulse, 0, Math.PI * 2);
-              ctx.fill();
-              
-              // Antennas
-              ctx.strokeStyle = '#ef4444';
-              ctx.lineWidth = 2;
-              ctx.beginPath();
-              ctx.moveTo(-e.width/2 + 5, -e.width/2);
-              ctx.lineTo(-e.width/2 - 5, -e.width/2 - 5);
-              ctx.moveTo(e.width/2 - 5, -e.width/2);
-              ctx.lineTo(e.width/2 + 5, -e.width/2 - 5);
-              ctx.stroke();
-          }
-          ctx.shadowBlur = 0;
-          ctx.restore();
+        ctx.save();
+        ctx.translate(e.x + e.width/2, e.y + e.width/2);
+        
+        if (e.isBouncer) {
+            // Bouncer Enemy (Security)
+            ctx.fillStyle = '#09090b';
+            ctx.shadowColor = '#ef4444';
+            ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.roundRect(-e.width/2, -e.width/2, e.width, e.width, 4); ctx.fill();
+            
+            // Neon Red Cross
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(-e.width/4, -2, e.width/2, 4);
+            ctx.fillRect(-2, -e.width/4, 4, e.width/2);
+        } else {
+            // Drone Enemy (Floating Speaker)
+            ctx.rotate(Math.sin(Date.now() * 0.005 + e.x) * 0.2);
+            ctx.fillStyle = '#1e1b4b';
+            ctx.shadowColor = '#a855f7';
+            ctx.shadowBlur = 20;
+            ctx.beginPath(); ctx.arc(0, 0, e.width/2, 0, Math.PI*2); ctx.fill();
+            
+            // Speaker cones
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath(); ctx.arc(0, 0, e.width/3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#a855f7';
+            ctx.beginPath(); ctx.arc(0, 0, e.width/6, 0, Math.PI*2); ctx.fill();
+            
+            // Animated sound wave ring
+            ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(0, 0, e.width/2 + Math.abs(Math.sin(Date.now()*0.01)*5), 0, Math.PI*2); ctx.stroke();
+        }
+        ctx.restore();
       });
 
       trails.forEach(t => {
@@ -1271,7 +1220,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
           <p className="text-white/80 flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest px-2 py-1 bg-white/5 rounded">
             <User className="w-3 h-3 text-pink-400" /> <span style={{color: selectedChar.color}} className="drop-shadow-lg">{t(selectedChar.nameKey)}</span>
           </p>
-          <div className="flex items-center gap-2 text-yellow-400 text-[11px] font-black italic tracking-widest px-2 group cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowShop(true)}>
+          <div className="flex items-center gap-2 text-yellow-400 text-[11px] font-black tracking-widest px-2 group cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowShop(true)}>
             <div className="relative">
               <Zap className="w-4 h-4 fill-yellow-400 animate-pulse" />
               <div className="absolute inset-0 bg-yellow-400 blur-sm opacity-50"></div>
@@ -1282,7 +1231,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
         
         <div className="flex flex-col items-end">
           <div className="flex items-baseline gap-2 bg-gradient-to-r from-blue-600/20 to-purple-600/20 px-5 py-2 rounded-lg border border-blue-400/20 shadow-[inset_0_0_15px_rgba(59,130,246,0.2)]">
-            <p ref={scoreRefDOM} className="text-3xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-blue-300 to-purple-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">{score}</p>
+            <p ref={scoreRefDOM} className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-blue-300 to-purple-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]">{score}</p>
             <span className="text-[10px] text-blue-200/50 font-mono font-bold tracking-[0.2em] flex flex-col items-end">
               <span className="text-[8px] text-purple-300/40">HIGH SCORE</span>
               {highScore}
@@ -1317,7 +1266,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             >
               {!showCodeInput ? (
                 <div className="w-full max-w-md flex flex-col items-center flex-1 py-6 justify-start h-full">
-                  <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-blue-500 text-4xl mb-6 italic font-black uppercase drop-shadow-[0_0_15px_rgba(236,72,153,0.5)] relative inline-block tracking-widest">
+                  <h3 className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-blue-500 text-4xl mb-6 font-black uppercase drop-shadow-[0_0_15px_rgba(236,72,153,0.5)] relative inline-block tracking-widest">
                      JUMPFEST
                      <span className="absolute -top-4 -right-12 rotate-12 text-[9px] bg-green-500/20 text-green-400 font-bold px-2 py-1 border border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.5)] backdrop-blur-sm">V2.0 LIVE</span>
                   </h3>
@@ -1398,7 +1347,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                   <div className="w-full mt-6 pb-4">
                     <button 
                       onClick={() => { setScore(0); setIsPlaying(true); }}
-                      className="w-full py-4 bg-pink-600 hover:bg-pink-500 text-white font-black text-xl italic uppercase tracking-[0.3em] rounded-xl shadow-[0_0_30px_rgba(236,72,153,0.5),inset_0_2px_10px_rgba(255,255,255,0.4)] transition-all active:scale-95 border border-pink-400 group relative overflow-hidden"
+                      className="w-full py-4 bg-pink-600 hover:bg-pink-500 text-white font-black text-xl uppercase tracking-[0.3em] rounded-xl shadow-[0_0_30px_rgba(236,72,153,0.5),inset_0_2px_10px_rgba(255,255,255,0.4)] transition-all active:scale-95 border border-pink-400 group relative overflow-hidden"
                     >
                       <span className="relative z-10 flex flex-col items-center justify-center">
                         INITIALIZE LAUNCH

@@ -640,16 +640,55 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
        const bx = obs.x; const by = obs.y; const w = obs.width; const h = obs.height;
        ctx.save();
        ctx.translate(bx + w/2, by + h/2);
-       ctx.scale(1 + Math.sin(Date.now()/200)*0.1, 1 + Math.sin(Date.now()/200)*0.1);
-       ctx.rotate(Date.now()/1000);
        
-       ctx.fillStyle = obs.type === 'shield' ? '#818cf8' : '#3b82f6';
+       const floatY = Math.sin(Date.now()/200) * 4;
+       ctx.translate(0, floatY);
+       
        if (obs.type === 'shield') {
+          // Futuristic Shield Orb
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#818cf8';
+          ctx.fillStyle = 'rgba(129, 140, 248, 0.4)'; // inner glass
           ctx.beginPath(); ctx.arc(0, 0, w/2, 0, Math.PI*2); ctx.fill();
-          ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
-       } else {
-          ctx.beginPath(); ctx.moveTo(0, -h/2); ctx.lineTo(w/2, h/2); ctx.lineTo(-w/2, h/2); ctx.closePath(); ctx.fill();
-          ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+          
+          ctx.strokeStyle = '#818cf8';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.arc(0, 0, w/2, 0, Math.PI*2); ctx.stroke();
+          
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(-4, -4, w/6, 0, Math.PI*2); ctx.fill(); // highlight
+       } else if (obs.type === 'nitro') {
+          // NOS Bottle
+          ctx.rotate(Math.sin(Date.now()/500) * 0.2); // subtle sway
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#0ea5e9'; // bright cyan
+          
+          // Body
+          ctx.fillStyle = '#0284c7'; // dark cyan
+          ctx.beginPath(); ctx.roundRect(-w/2 + 4, -h/2 + 4, w - 8, h - 8, 4); ctx.fill();
+          // Highlight
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(-w/2 + 6, -h/2 + 4, w/2 - 4, h - 8);
+          
+          // Nozzle
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillRect(-4, -h/2, 8, 4);
+          
+          // Label
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(-w/2 + 4, -h/4, w - 8, h/2);
+          
+          // Lightning bolt on label
+          ctx.fillStyle = '#000';
+          ctx.beginPath();
+          ctx.moveTo(2, -h/8);
+          ctx.lineTo(-4, h/8);
+          ctx.lineTo(0, h/8);
+          ctx.lineTo(-2, h/4);
+          ctx.lineTo(4, 0);
+          ctx.lineTo(0, 0);
+          ctx.closePath();
+          ctx.fill();
        }
        ctx.restore();
     };
@@ -687,7 +726,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       
       // Route Sign
       ctx.fillStyle = '#ef4444'; // Neon sign
-      ctx.fillRect(bx + 4, by + parseInt(h) - 4, w - 8, 4);
+      ctx.fillRect(bx + 4, by + Math.floor(h) - 4, w - 8, 4);
     };
 
     const drawTaco = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -709,14 +748,23 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
     };
 
     const drawBache = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
-      ctx.fillStyle = '#1c1917';
+      // Classic CDMX Pothole
+      ctx.fillStyle = '#1c1917'; // very dark
       ctx.beginPath();
       ctx.ellipse(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, obs.height/2, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Inner dirt
       ctx.fillStyle = '#292524';
       ctx.beginPath();
-      ctx.ellipse(obs.x + obs.width/2 - 2, obs.y + obs.height/2 + 1, obs.width/2 - 4, obs.height/2 - 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(obs.x + obs.width/2 + 2, obs.y + obs.height/2 + 1, obs.width/2.5, obs.height/2.5, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Asphalt cracks around
+      ctx.strokeStyle = '#27272a';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(obs.x, obs.y + obs.height/2); ctx.lineTo(obs.x - 10, obs.y + obs.height/2 + 5);
+      ctx.moveTo(obs.x + obs.width, obs.y + obs.height/2); ctx.lineTo(obs.x + obs.width + 12, obs.y + obs.height/2 - 4);
+      ctx.stroke();
     };
 
     const drawMsg = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
@@ -739,14 +787,43 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
     const drawGas = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {
       const bx = obs.x; const by = obs.y; const w = obs.width; const h = obs.height;
-      ctx.fillStyle = '#ef4444'; // Red Jerrycan
-      ctx.beginPath(); ctx.roundRect(bx, by + 4, w, h - 4, 2); ctx.fill();
-      ctx.fillStyle = '#333'; // handle
-      ctx.fillRect(bx + w/2 - 4, by, 8, 4);
-      ctx.fillStyle = '#fff';
+      ctx.save();
+      ctx.translate(bx + w/2, by + h/2);
+      ctx.scale(1 + Math.sin(Date.now()/200)*0.05, 1 + Math.sin(Date.now()/200)*0.05);
+      
+      const ww = w; const hh = h;
+      
+      // Floating glowing gas pump
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#ef4444';
+      
+      // Base/Pump Body
+      ctx.fillStyle = '#ef4444'; 
+      ctx.beginPath(); ctx.roundRect(-ww/2, -hh/2 + 4, ww, hh - 4, 4); ctx.fill();
+      
+      // Screen/Meter
+      ctx.fillStyle = '#111';
+      ctx.fillRect(-ww/2 + 4, -hh/2 + 8, ww - 8, 10);
+      
+      // Top light
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath(); ctx.arc(0, -hh/2, 4, 0, Math.PI*2); ctx.fill();
+
+      // Hose
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(ww/2, -hh/2 + 10);
+      ctx.quadraticCurveTo(ww/2 + 10, 0, ww/2, hh/2 - 5);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ef4444';
       ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('G', bx + w/2, by + h/2 + 4);
+      ctx.fillText('G', 0, -hh/2 + 16);
+      
+      ctx.restore();
     };
 
     let leftPressed = false;
@@ -1016,10 +1093,18 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
       // Sky/Env color
       const skyAngle = (dayNightCycle * Math.PI * 2);
       const isNight = Math.sin(skyAngle) < 0;
-      const asphaltColor = isNight ? '#18181b' : '#3f3f46';
+      const asphaltColor = isNight ? '#18181b' : '#27272a'; // Darker, polished asphalt
       
       ctx.fillStyle = asphaltColor; // Asphalt
       ctx.fillRect(0, 0, GAME_W, GAME_H);
+      
+      // Speed lines on asphalt
+      ctx.fillStyle = isNight ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.05)';
+      for (let i = 0; i < 30; i++) {
+         const slX = 0 + (i * 37) % (GAME_W - 0 * 2);
+         const slY = ((currentDistance * 100) + i * 93) % GAME_H;
+         ctx.fillRect(slX, slY, 2, 40);
+      }
       
       // Metrobus Lane (CDMX)
       ctx.fillStyle = 'rgba(220, 38, 38, 0.15)'; // Deep red lane right side
@@ -1401,7 +1486,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#16a34a] rounded-sm mb-1" />VOCH</div>
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#ef4444] rounded-sm mb-1" />{t('game.race.gas', 'GAS')}</div>
                <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#818cf8] rounded-full mb-1 flex items-center justify-center"><Shield size={10} className="text-white"/></div>SHLD</div>
-               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#facc15] rounded-full mb-1 flex items-center justify-center"><Zap size={10} className="text-white"/></div>NITR</div>
+               <div className="flex flex-col items-center"><div className="w-4 h-4 bg-[#0ea5e9] rounded-full mb-1 flex items-center justify-center"><Zap size={10} className="text-white"/></div>NITR</div>
             </div>
 
             <button 
