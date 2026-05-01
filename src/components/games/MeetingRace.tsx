@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, Car, Heart, TerminalSquare, Zap, Banknote, Coffee, FileText, Shield } from 'lucide-react';
@@ -45,6 +46,7 @@ interface Particle {
 export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
+  const { unlockAchievement } = useAchievements();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -1190,6 +1192,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
               playSound(currentHp <= 0 ? 'lose' : 'alert');
 
               if (currentHp <= 0) {
+                 unlockAchievement('race_crasher');
                  isGameOver = true;
               }
            }
@@ -1233,6 +1236,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
       if (currentDistance >= GOAL_DISTANCE) {
         setScore(newScore + currentHp * 1000); // Bonus for HP left
+        unlockAchievement('race_winner');
         setGameOver(true);
         setIsPlaying(false);
         playSound('score');

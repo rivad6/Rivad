@@ -197,6 +197,7 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
           const hitOffset = (ball.y + ballSize / 2) - (player.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
           rally++;
+          if (rally === 10) unlockAchievement('pong_rally');
           playSound('hit');
           showHitText(ball.x, ball.y, isPower);
         }
@@ -214,6 +215,7 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
           const hitOffset = (ball.y + ballSize / 2) - (cpu.y + paddleHeight / 2);
           ball.dy = hitOffset * 0.25;
           rally++;
+          if (rally === 10) unlockAchievement('pong_rally');
           playSound('hit');
           showHitText(ball.x, ball.y, isPower);
           

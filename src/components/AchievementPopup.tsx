@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Trophy } from 'lucide-react';
 
 export function AchievementPopup() {
-  const { recentUnlock, clearRecentUnlock } = useAchievements();
+  const { recentUnlock, clearRecentUnlock, getTranslated } = useAchievements();
   const { playSound } = useAudio();
   const { t } = useLanguage();
 
@@ -20,9 +20,11 @@ export function AchievementPopup() {
     }
   }, [recentUnlock, playSound, clearRecentUnlock]);
 
+  const translated = recentUnlock ? getTranslated(recentUnlock) : null;
+
   return (
     <AnimatePresence>
-      {recentUnlock && (
+      {recentUnlock && translated && (
         <motion.div
           initial={{ opacity: 0, y: -50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -40,13 +42,13 @@ export function AchievementPopup() {
              <div className="flex-1">
                <div className="flex items-center gap-1.5 text-brand-accent text-[10px] font-black tracking-widest uppercase mb-1">
                  <Trophy size={10} />
-                 {t('popup.achievement.title') || 'LOGRO DESBLOQUEADO'}
+                 {t('popup.achievement.title', 'LOGRO DESBLOQUEADO')}
                </div>
                <h4 className="text-white font-bold text-sm leading-tight mb-1">
-                 {recentUnlock.title}
+                 {translated.title}
                </h4>
                <p className="text-zinc-400 text-xs leading-snug">
-                 {recentUnlock.description}
+                 {translated.description}
                </p>
              </div>
           </div>

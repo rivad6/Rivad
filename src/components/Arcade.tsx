@@ -67,16 +67,16 @@ export function Arcade() {
       setBootLog([]);
       
       const lines = [
-        "BIOS DATE 04/23/88 15:23:44 VER 2.11 RIVAD-ENTERTAINMENT",
-        "CPU: RIVAD Custom Silicon @ 8.2 MHz",
-        "Memory Test: 4096K OK",
-        "Initializing Video Subsystem...",
-        "Loading Sisyphus OS v3.1...",
-        "Device Drivers Loaded. Vector unit online.",
-        "Sound Subsystem: SYNC-OK. Output: STEREO 8-BIT.",
-        "Network: NO CARRIER.",
+        t('arc.boot.bios.line'),
+        t('arc.boot.cpu.line'),
+        t('arc.boot.mem.line'),
+        t('arc.boot.video.line'),
+        t('arc.boot.loading.line'),
+        t('arc.boot.drivers.line'),
+        t('arc.boot.sound.line'),
+        t('arc.boot.network.line'),
         "",
-        "A:\\> WAIT FOR INPUT..."
+        t('arc.boot.wait.line')
       ];
       
       lines.forEach((line, index) => {
@@ -123,7 +123,7 @@ export function Arcade() {
     setPowerState('inserting');
     setPendingGame(id);
     setActiveGame(null);
-    setBootLog(["A:\\> READ DRIVE A...", "LOCATING EXECUTABLE...", "LOADING TO RAM...", "EXECUTING..."]);
+    setBootLog([t('arc.boot.read.line'), t('arc.boot.locate.line'), t('arc.boot.ram.line'), t('arc.boot.exec.line')]);
     
     setTimeout(() => {
       setActiveGame(id);
@@ -321,7 +321,7 @@ export function Arcade() {
                        <div className="w-10 h-6 md:w-12 md:h-8 bg-zinc-800 border-b-4 border-[#0a0a0a] rounded-sm flex items-center justify-center shadow-[0_2px_5px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] active:border-b-0 active:translate-y-1 transition-all">
                          <Trophy size={14} className="text-yellow-600 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" />
                        </div>
-                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">AWARDS</span>
+                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">{t('arc.label.awards')}</span>
                      </button>
 
                      <button onClick={toggleFullscreen} className="group flex flex-col items-center gap-1.5" title="Fullscreen">
@@ -332,14 +332,14 @@ export function Arcade() {
                             <Maximize size={14} className="text-blue-500 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" />
                          )}
                        </div>
-                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">SCREEN</span>
+                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">{t('arc.label.screen')}</span>
                      </button>
                      
                      <button onClick={handlePower} className="group flex flex-col items-center gap-1.5" title="Power">
                        <div className={cn("w-10 h-6 md:w-12 md:h-8 border-b-4 rounded-sm flex items-center justify-center shadow-[0_2px_5px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] active:border-b-0 active:translate-y-1 transition-all", powerState !== 'off' ? 'bg-red-900 border-[#3a0a0a]' : 'bg-zinc-800 border-[#0a0a0a]')}>
                          <Power size={14} className={cn("transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]", powerState !== 'off' ? 'text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]' : 'text-zinc-600')} />
                        </div>
-                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">POWER</span>
+                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">{t('arc.label.power')}</span>
                      </button>
                    </div>
                  </div>
@@ -397,7 +397,7 @@ export function Arcade() {
             {/* Screen Content */}
             
             <div className="absolute bottom-2 right-4 z-50 pointer-events-none opacity-40 mix-blend-screen text-brand-accent font-mono text-[8px] tracking-[0.3em] font-black drop-shadow-[0_0_4px_#22c55e]">
-               by Rivad
+               {t('game.invaders.by_you', 'by Rivad')}
             </div>
             <div id="arcade-screen-container" className="relative z-10 w-full h-full flex-grow flex flex-col items-center justify-center [&_*:focus-visible]:outline-2 [&_*:focus-visible]:outline-brand-accent [&_*:focus]:outline-offset-2">
               {powerState === 'off' && (
@@ -471,7 +471,7 @@ export function Arcade() {
       ))}
       <div className="col-span-1 md:col-span-2 text-center mt-4">
          <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent translate-y-1 mr-2"></motion.span>
-         <span className="text-[10px] uppercase tracking-widest break-all">A:\&gt; AWAITING SELECTION...</span>
+         <span className="text-[10px] uppercase tracking-widest break-all">{t('arc.boot.wait.line')}</span>
       </div>
    </div>
 )}

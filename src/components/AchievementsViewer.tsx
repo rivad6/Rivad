@@ -11,7 +11,7 @@ interface Props {
 }
 
 export function AchievementsViewer({ isOpen, onClose }: Props) {
-  const { achievements } = useAchievements();
+  const { achievements, getTranslated } = useAchievements();
   const { t } = useLanguage();
 
   const unlockedCount = achievements.filter(a => a.unlockedAt).length;
@@ -97,11 +97,11 @@ export function AchievementsViewer({ isOpen, onClose }: Props) {
                             "font-bold text-sm truncate",
                             isUnlocked ? "text-white" : "text-zinc-400"
                           )}>
-                            {ach.title}
+                            {getTranslated(ach).title}
                           </h4>
                           {isUnlocked && (
                             <span className="text-[9px] font-mono whitespace-nowrap text-yellow-500/80 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                              Unlocked
+                              {t('ach.unlocked', 'Unlocked')}
                             </span>
                           )}
                         </div>
@@ -109,7 +109,7 @@ export function AchievementsViewer({ isOpen, onClose }: Props) {
                           "text-xs leading-snug line-clamp-2",
                           isUnlocked ? "text-zinc-400" : "text-zinc-600"
                         )}>
-                          {ach.description}
+                          {getTranslated(ach).description}
                         </p>
                       </div>
                     </motion.div>

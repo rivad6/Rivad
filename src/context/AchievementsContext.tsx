@@ -1,45 +1,62 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useLanguage } from './LanguageContext';
 
 export interface Achievement {
   id: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   icon: string;
   unlockedAt?: number;
 }
 
-const ACHIEVEMENTS_DATA: Achievement[] = [
-  { id: 'first_blood', title: 'Primera Sangre', description: 'Abrir un minijuego por primera vez.', icon: '🎮' },
-  { id: 'pong_master', title: 'Maestro del Debate', description: 'Gana una partida de Debate Pong a la IA.', icon: '🏓' },
-  { id: 'pong_loser', title: 'Silenciado', description: 'Pierde una partida de Debate Pong ante la IA.', icon: '🔇' },
-  { id: 'dictator', title: 'El Gran Elector', description: 'Gana una partida de Political Uno.', icon: '👑' },
-  { id: 'sellout', title: 'Vendido', description: 'Alcanza el máximo de Hype en Sell Out Game.', icon: '💸' },
-  { id: 'brokeback', title: 'Caída de Fama', description: 'Pierde toda tu relevancia en Sell Out Game.', icon: '📉' },
-  { id: 'red_pill', title: 'Basado', description: 'Termina la simulación RPG.', icon: '💊' },
-  { id: 'invaders_level_5', title: 'Explorador Orbital', description: 'Alcanza el nivel 5 en Defensores Creativos.', icon: '🚀' },
-  { id: 'invaders_boss_kill', title: 'Crítico Implacable', description: 'Derrota a un jefe en el Nivel 4.', icon: '👾' },
-  { id: 'invaders_all_ships', title: 'Coleccionista de Visiones', description: 'Desbloquea todas las naves del hangar.', icon: '🛸' },
+const ACHIEVEMENTS_DATA: Omit<Achievement, 'titleKey' | 'descriptionKey'>[] = [
+  { id: 'first_blood', icon: '🎮' },
+  { id: 'pong_master', icon: '🏓' },
+  { id: 'pong_loser', icon: '🔇' },
+  { id: 'pong_rally', icon: '🔥' },
+  { id: 'ttt_winner', icon: '⭕' },
+  { id: 'ttt_draw', icon: '🤝' },
+  { id: 'dictator', icon: '👑' },
+  { id: 'uno_action', icon: '🃏' },
+  { id: 'red_pill', icon: '💊' },
+  { id: 'rpg_bankruptcy', icon: '💸' },
+  { id: 'rpg_insane', icon: '🌀' },
+  { id: 'sellout', icon: '⚡' },
+  { id: 'brokeback', icon: '📉' },
+  { id: 'invaders_level_5', icon: '🚀' },
+  { id: 'invaders_boss_kill', icon: '👾' },
+  { id: 'invaders_all_ships', icon: '🛸' },
+  { id: 'race_winner', icon: '🏁' },
+  { id: 'race_crasher', icon: '💥' },
 ];
+
+const INITIAL_ACHIEVEMENTS: Achievement[] = ACHIEVEMENTS_DATA.map(a => ({
+  ...a,
+  titleKey: `ach.title.${a.id}`,
+  descriptionKey: `ach.desc.${a.id}`,
+}));
 
 interface AchievementsContextType {
   achievements: Achievement[];
   unlockAchievement: (id: string) => void;
   recentUnlock: Achievement | null;
   clearRecentUnlock: () => void;
+  getTranslated: (achievement: Achievement) => { title: string; description: string };
 }
 
 const AchievementsContext = createContext<AchievementsContextType | undefined>(undefined);
 
 export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [achievements, setAchievements] = useState<Achievement[]>(ACHIEVEMENTS_DATA);
+  const [achievements, setAchievements] = useState<Achievement[]>(INITIAL_ACHIEVEMENTS);
   const [recentUnlock, setRecentUnlock] = useState<Achievement | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const stored = localStorage.getItem('art-capital-achievements');
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setAchievements(ACHIEVEMENTS_DATA.map(a => ({
+        setAchievements(prev => prev.map(a => ({
           ...a,
           unlockedAt: parsed[a.id] || a.unlockedAt
         })));
@@ -48,6 +65,11 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     }
   }, []);
+
+  const getTranslated = (achievement: Achievement) => ({
+    title: t(achievement.titleKey as any),
+    description: t(achievement.descriptionKey as any)
+  });
 
   const unlockAchievement = (id: string) => {
     setAchievements(prev => {
@@ -76,7 +98,7 @@ export const AchievementsProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const clearRecentUnlock = () => setRecentUnlock(null);
 
   return (
-    <AchievementsContext.Provider value={{ achievements, unlockAchievement, recentUnlock, clearRecentUnlock }}>
+    <AchievementsContext.Provider value={{ achievements, unlockAchievement, recentUnlock, clearRecentUnlock, getTranslated }}>
       {children}
     </AchievementsContext.Provider>
   );

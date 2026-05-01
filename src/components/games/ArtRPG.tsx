@@ -213,8 +213,10 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
   useEffect(() => {
     if (isPausedGlobal) return;
     if (stats.budget <= 0 && currentNode !== 'fail_budget') {
+      unlockAchievement('rpg_bankruptcy');
       setCurrentNode('fail_budget');
     } else if (stats.sanity <= 0 && currentNode !== 'fail_sanity') {
+      unlockAchievement('rpg_insane');
       setCurrentNode('fail_sanity');
     } else if (stats.reputation <= 0 && currentNode !== 'fail_reputation') {
       setCurrentNode('fail_reputation');
@@ -235,9 +237,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
     // Random life events
     if (currentNode !== 'start' && !node.isEnding && Math.random() < 0.2) {
       const events = [
-        { b: -10, s: -5, r: 0, text: '¡Un café caro te ha dejado sin presupuesto!' },
-        { b: 5, s: -10, r: 10, text: '¡Has sido mencionado en una revista de arte!' },
-        { b: 0, s: 10, r: -5, text: '¡Meditar te ha ayudado a recuperar la cordura!' }
+        { b: -10, s: -5, r: 0, text: t('game.rpg.event.coffee') },
+        { b: 5, s: -10, r: 10, text: t('game.rpg.event.mention') },
+        { b: 0, s: 10, r: -5, text: t('game.rpg.event.meditate') }
       ];
       const event = events[Math.floor(Math.random() * events.length)];
       setLastStatDelta({ b: event.b, s: event.s, r: event.r });
@@ -488,9 +490,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
                   animate={{ opacity: 1, scale: 1 }}
                   className="flex flex-wrap gap-2 md:gap-3"
                 >
-                  {lastStatDelta.b !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.b > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>BUGRET: {lastStatDelta.b > 0 ? '+' : ''}{lastStatDelta.b}</span>}
-                  {lastStatDelta.s !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.s > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>SANITY: {lastStatDelta.s > 0 ? '+' : ''}{lastStatDelta.s}</span>}
-                  {lastStatDelta.r !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.r > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>REPUTATION: {lastStatDelta.r > 0 ? '+' : ''}{lastStatDelta.r}</span>}
+                  {lastStatDelta.b !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.b > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>{t('game.rpg.stat.budget')}: {lastStatDelta.b > 0 ? '+' : ''}{lastStatDelta.b}</span>}
+                  {lastStatDelta.s !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.s > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>{t('game.rpg.stat.sanity')}: {lastStatDelta.s > 0 ? '+' : ''}{lastStatDelta.s}</span>}
+                  {lastStatDelta.r !== 0 && <span className={cn("px-2 py-1 rounded text-[7px] md:text-[8px] font-black uppercase", lastStatDelta.r > 0 ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-500")}>{t('game.rpg.stat.reputation')}: {lastStatDelta.r > 0 ? '+' : ''}{lastStatDelta.r}</span>}
                 </motion.div>
               )}
             </motion.div>
@@ -514,17 +516,17 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
                       onClick={() => handleChoice('start')}
                       className={cn("w-full py-4 md:py-5 text-black bg-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 shadow-white/10")}
                     >
-                      {t('game.rpg.restart', 'REINTENTAR / NUEVA HISTORIA')}
+                      {t('game.rpg.restart')}
                     </motion.button>
                     {onFinish && (
                       <motion.button
-                        aria-label="EXIT TO MENU"
+                        aria-label={t('game.rpg.exit')}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={onFinish}
                         className="w-full py-3 md:py-4 border-2 border-brand-accent/50 text-brand-accent rounded-2xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.5em] hover:bg-brand-accent/10 transition-all opacity-80"
                       >
-                        {t('game.rpg.exit', 'SALIR AL MENÚ PRINCIPAL')}
+                        {t('game.rpg.exit')}
                       </motion.button>
                     )}
                   </div>

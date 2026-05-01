@@ -143,15 +143,15 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AudioProvider>
-        <AchievementsProvider>
-          <LanguageProvider>
+      <LanguageProvider>
+        <AudioProvider>
+          <AchievementsProvider>
             <BrowserRouter>
               <AppContent />
             </BrowserRouter>
-          </LanguageProvider>
-        </AchievementsProvider>
-      </AudioProvider>
+          </AchievementsProvider>
+        </AudioProvider>
+      </LanguageProvider>
     </ErrorBoundary>
   );
 }

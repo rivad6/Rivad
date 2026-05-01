@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAudio } from '../../context/AudioContext';
+import { useAchievements } from '../../context/AchievementsContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Eye, Landmark, HelpCircle } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const calculateWinner = (squares: Player[]) => {
 export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
+  const { unlockAchievement } = useAchievements();
   const [personality, setPersonality] = useState<'rationalist' | 'traditionalist' | 'postmodernist'>('rationalist');
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -59,6 +61,14 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedCell, board, winner, isDraw, xIsNext, isPausedGlobal]);
+
+  useEffect(() => {
+    if (winner === 'X') {
+      unlockAchievement('ttt_winner');
+    } else if (isDraw) {
+      unlockAchievement('ttt_draw');
+    }
+  }, [winner, isDraw, unlockAchievement]);
 
   useEffect(() => {
     if (!winner && !isDraw) {

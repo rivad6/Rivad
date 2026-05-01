@@ -49,6 +49,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   const [winner, setWinner] = useState<number | null>(null);
   const [focusedCardIndex, setFocusedCardIndex] = useState(0);
   const [isChoosingColor, setIsChoosingColor] = useState(false);
+  const [specialCardsPlayed, setSpecialCardsPlayed] = useState(0);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -230,6 +231,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
     setWinner(null);
     setDirection(1);
     setIsChoosingColor(false);
+    setSpecialCardsPlayed(0);
     setIsGameStarted(true);
     setMessage(t('game.uno.msg.turn'));
   };
@@ -382,6 +384,13 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
     
     if (isValidPlay(card)) {
       playSound('click');
+      if (card.action !== 'normal') {
+        const nextCount = specialCardsPlayed + 1;
+        setSpecialCardsPlayed(nextCount);
+        if (nextCount === 5) {
+          unlockAchievement('uno_action');
+        }
+      }
       setTopCard(card);
       const newHand = [...hands[0]];
       newHand.splice(index, 1);
