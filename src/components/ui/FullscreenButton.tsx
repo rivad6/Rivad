@@ -68,8 +68,9 @@ export function FullscreenButton({ targetRef, className = "" }: FullscreenButton
       onClick={toggleFullscreen}
       className={`absolute z-50 p-2 rounded-lg bg-black/40 hover:bg-black/80 text-white/70 hover:text-white backdrop-blur-md transition-all focus:outline-none shadow-lg border border-white/10 ${className}`}
       title={active ? "Exit Fullscreen" : "Fullscreen"}
+      aria-label={active ? "Exit Fullscreen" : "Fullscreen"}
     >
-      {active ? <Minimize size={20} /> : <Maximize size={20} />}
+      {active ? <Minimize size={20} aria-hidden="true" /> : <Maximize size={20} aria-hidden="true" />}
     </button>
   );
 }

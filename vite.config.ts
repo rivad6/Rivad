@@ -16,4 +16,15 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          motion: ['motion/react'],
+          lucide: ['lucide-react']
+        }
+      }
+    }
+  }
 });

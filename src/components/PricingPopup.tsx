@@ -42,9 +42,10 @@ export function PricingPopup() {
         >
           <button 
             onClick={() => setIsOpen(false)}
+            aria-label="Close pricing popup"
             className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
           
           <div className="flex justify-center mb-6">

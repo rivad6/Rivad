@@ -19,6 +19,7 @@ export const SellOutPage: React.FC = () => {
             <span className="text-[10px] uppercase font-black tracking-widest">{t('game.fest.back')}</span>
           </Link>
           <button 
+            aria-label="Share this page"
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
@@ -33,7 +34,7 @@ export const SellOutPage: React.FC = () => {
             }}
             className="text-zinc-500 hover:text-white transition-colors"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 

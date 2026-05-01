@@ -42,8 +42,9 @@ export function MusicPlayer() {
           <button 
             onClick={() => setIsDismissed(true)}
             className="absolute -top-2 -right-2 bg-[#222] border border-[#444] p-1 text-gray-400 hover:text-white hover:bg-black transition-colors rounded-full"
+            aria-label="Dismiss music player notification"
           >
-            <X size={12} />
+            <X size={12} aria-hidden="true" />
           </button>
         </motion.div>
       </AnimatePresence>

@@ -46,8 +46,9 @@ export function GameInvitePopup() {
                 <button 
                   onClick={() => setIsVisible(false)}
                   className="absolute -top-2 -right-2 p-1.5 text-gray-500 hover:text-white transition-colors"
+                  aria-label="Close popup"
                 >
-                  <X size={16} />
+                  <X size={16} aria-hidden="true" />
                 </button>
 
                 <div className="flex items-center gap-3">

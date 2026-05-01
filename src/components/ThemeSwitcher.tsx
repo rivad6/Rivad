@@ -38,11 +38,12 @@ export function ThemeSwitcher() {
   return (
     <div className="relative pointer-events-auto">
       <button 
+        aria-label="Toggle theme selector"
         onClick={() => setIsOpen(!isOpen)}
         className="text-gray-400 hover:text-white transition-colors p-2.5 frosted-layer rounded-full flex items-center justify-center"
         style={{ color: activeColor }}
       >
-        <Palette size={15} />
+        <Palette size={15} aria-hidden="true" />
       </button>
 
       <AnimatePresence>

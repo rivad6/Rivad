@@ -52,14 +52,15 @@ function Nav() {
         <ThemeSwitcher />
         <button 
           onClick={toggleMute}
+          aria-label={isMuted ? "Unmute sound" : "Mute sound"}
           className="text-gray-400 hover:text-white transition-colors pointer-events-auto p-2 frosted-layer rounded-full"
         >
-          {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+          {isMuted ? <VolumeX size={13} aria-hidden="true" /> : <Volume2 size={13} aria-hidden="true" />}
         </button>
         <div className="flex items-center gap-0.5 font-mono text-[8px] sm:text-[9px] uppercase tracking-widest frosted-layer p-1 rounded-full pointer-events-auto">
-          <button onClick={() => setLanguage('es')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'es' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>ES</button>
-          <button onClick={() => setLanguage('en')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'en' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>EN</button>
-          <button onClick={() => setLanguage('fr')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'fr' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>FR</button>
+          <button aria-label="Idioma Español" onClick={() => setLanguage('es')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'es' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>ES</button>
+          <button aria-label="English Language" onClick={() => setLanguage('en')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'en' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>EN</button>
+          <button aria-label="Langue Française" onClick={() => setLanguage('fr')} className={`px-2 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-500 ${language === 'fr' ? 'text-white bg-brand-accent shadow-[0_0_20px_rgba(242,74,41,0.4)]' : 'text-gray-500 hover:text-white hover:bg-white/10'}`}>FR</button>
         </div>
       </div>
     </nav>
