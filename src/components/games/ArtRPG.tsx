@@ -52,8 +52,8 @@ const storyMap: Record<string, StoryNode> = {
   'p1.q3c': {
     textKey: 'game.rpg.p1.q3c',
     choices: [
-      { textKey: 'game.rpg.p1.q3c.1', next: 'p1.q4c1', stats: { reputation: 20, budget: -10 } },
-      { textKey: 'game.rpg.p1.q3c.2', next: 'p4.q2', stats: { reputation: -5, sanity: 15 } }
+      { textKey: 'game.rpg.p1.q3c.1', next: 'p1.q4c1', stats: { reputation: 20, budget: -10, sanity: -5 } },
+      { textKey: 'game.rpg.p1.q3c.2', next: 'p4.q2', stats: { reputation: -5, sanity: 15, budget: -5 } }
     ]
   },
   'p1.q4c1': { textKey: 'game.rpg.p1.q4c1', choices: [{ textKey: 'game.rpg.p1.q4c1.1', next: 'p1.e9', stats: { budget: -20, reputation: 40 } }, { textKey: 'game.rpg.p1.q4c1.2', next: 'p1.e10', stats: { sanity: 20, reputation: -10 } }] },
@@ -362,7 +362,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
   const [currentNode, setCurrentNode] = useState<NodeId>('start');
   const [selectedIndex, setSelectedIndex] = useState(0);
   
-  // Stats system to make decisions feel coherent and impactful
+  // stats system to make decisions feel coherent and impactful
   const [stats, setStats] = useState({ budget: 50, sanity: 50, reputation: 50 });
   const [inventory, setInventory] = useState<string[]>([]);
   const [lastStatDelta, setLastStatDelta] = useState<{b: number, s: number, r: number} | null>(null);
@@ -371,13 +371,30 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
   const [characterClass, setCharacterClass] = useState<string | null>(null);
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [pathContext, setPathContext] = useState<string | null>(null);
+
+  // Helper to provide bridging context when jumping paths
+  const getPathBridge = (prev: string, next: string): string => {
+    if (prev === 'start' || prev === next) return "";
+    const p1 = prev.split('.')[0];
+    const p2 = next.split('.')[0];
+    if (p1 === p2) return "";
+
+    // Contextual bridges to smooth transitions
+    if (p1 === 'p1' && p2 === 'p4') return t('game.rpg.bridge.p1_p4', "Harto del catering, decides que la política de oficina es más nutritiva...");
+    if (p1 === 'p2' && p2 === 'p7') return t('game.rpg.bridge.p2_p7', "El pánico del artista atrae una energía densa, casi... no-humana.");
+    if (p1 === 'p3' && p2 === 'p8') return t('game.rpg.bridge.p3_p8', "Los circuitos colapsan revelando una verdad que no cabe en un disco duro.");
+    if (p1 === 'p5' && p2 === 'p3') return t('game.rpg.bridge.p5_p3', "El agua se filtra en los procesadores, cortocircuitando la realidad.");
+    
+    return t('game.rpg.bridge.generic', "El caos de la gala te arrastra hacia un nuevo problema...");
+  };
 
   // Typewriter effect
   useEffect(() => {
     if (currentNode === 'start') return;
     const node = storyMap[currentNode];
     if (!node) return;
-    const fullText = t(node.textKey);
+    const fullText = (pathContext ? pathContext + "\n\n" : "") + t(node.textKey);
     
     // Reset state for new node
     setDisplayedText(""); 
@@ -385,15 +402,15 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
     
     let i = 0;
     const interval = setInterval(() => {
-      // Use substring to avoid state flickering or first-character skip
       setDisplayedText(fullText.substring(0, i + 1));
       i++;
       
       if (i >= fullText.length) {
         clearInterval(interval);
         setIsTyping(false);
+        setPathContext(null); // Clear context once typed
       }
-    }, 15); // Adjust speed for readability
+    }, 12); // Slightly faster for better flow
     
     return () => {
       if (interval) clearInterval(interval);
@@ -411,19 +428,20 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
 
   // Helper to glitch text based on sanity
   const getGlitchedText = (text: string) => {
-    if (stats.sanity > 25) return text;
+    // Only glitch if sanity is truly critical
+    if (stats.sanity > 20) return text;
+    
     const chars = text.split('');
-    const glitchChars = '!@#$%^&*'; // Simplified set for better readability
+    const glitchChars = '!@#$%^&*'; 
     return chars.map((c, i) => {
       if (c === ' ' || c === '\n') return c;
-      // Stable glitching using index and currentNode to prevent flickering while typing
       const stableSeed = (currentNode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + i) % 100;
       
-      // Much more restrictive thresholds
-      const threshold = stats.sanity < 10 ? 8 : 2; 
+      // Threshold for when to glitch (only in very low sanity)
+      const threshold = stats.sanity < 10 ? 12 : 4; 
       
-      // Only glitch if the seed is below the threshold and only for every 10th character at most
-      return (stableSeed < threshold && i % 4 === 0) ? glitchChars[stableSeed % glitchChars.length] : c;
+      // Only glitch every few characters to maintain readability
+      return (stableSeed < threshold && i % 6 === 0) ? glitchChars[stableSeed % glitchChars.length] : c;
     }).join('');
   };
 
@@ -518,7 +536,6 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
       setCharacterClass(null);
     } else {
       playSound('click');
-      setHistory(prev => [...prev, next]);
       
       const choice = storyMap[currentNode]?.choices[choiceIndex ?? 0];
       let bDelta = 0;
@@ -529,44 +546,40 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
         bDelta = choice.stats.budget ?? 0;
         sDelta = choice.stats.sanity ?? 0;
         rDelta = choice.stats.reputation ?? 0;
-      } else if (choiceIndex !== undefined) {
-        // Fallback for nodes without specific stats
-        if (choiceIndex === 0) {
-          bDelta = -10;
-          sDelta = -10;
-          rDelta = 15;
-        } else if (choiceIndex === 1) {
-          bDelta = 15;
-          sDelta = -15;
-          rDelta = -10;
-        }
       }
       
-      if (bDelta !== 0 || sDelta !== 0 || rDelta !== 0) {
-        setLastStatDelta({ b: bDelta, s: sDelta, r: rDelta });
-        const newStats = {
-          budget: Math.min(100, Math.max(0, stats.budget + bDelta)),
-          sanity: Math.min(100, Math.max(0, stats.sanity + sDelta)),
-          reputation: Math.min(100, Math.max(0, stats.reputation + rDelta))
-        };
-        setStats(newStats);
-
-        // Item Acquisition Logic
-        if (next === 'p1.q4a1') setInventory(prev => Array.from(new Set([...prev, 'brush'])));
-        if (next === 'p2.q4a1') setInventory(prev => Array.from(new Set([...prev, 'check'])));
-        if (next === 'p4.q2b') setInventory(prev => Array.from(new Set([...prev, 'coffee'])));
-        if (next === 'boss.q1') setInventory(prev => Array.from(new Set([...prev, 'nft'])));
-
-        // Increase bizarre level if sanity is dangerously low or weird paths are taken
-        if (newStats.sanity < 15) setBizarreLevel(prev => prev + 1);
-        if (next.startsWith('p7') || next.startsWith('p8') || next.startsWith('boss')) setBizarreLevel(prev => prev + 2);
+      // Narrative Continuity: Detect if we are changing "worlds"
+      const bridge = getPathBridge(currentNode, next);
+      if (bridge) {
+        setPathContext(bridge);
+        sDelta -= 2;
       }
+
+      setLastStatDelta({ b: bDelta, s: sDelta, r: rDelta });
+      
+      const newStats = {
+        budget: Math.min(100, Math.max(0, stats.budget + bDelta)),
+        sanity: Math.min(100, Math.max(0, stats.sanity + sDelta)),
+        reputation: Math.min(100, Math.max(0, stats.reputation + rDelta))
+      };
+      
+      setStats(newStats);
+      setHistory(prev => [...prev, next]);
+
+      // Item Acquisition Logic
+      if (next === 'p1.q4a1') setInventory(prev => Array.from(new Set([...prev, 'brush'])));
+      if (next === 'p2.q4a1') setInventory(prev => Array.from(new Set([...prev, 'check'])));
+      if (next === 'p4.q2b') setInventory(prev => Array.from(new Set([...prev, 'coffee'])));
+      if (next === 'boss.q1') setInventory(prev => Array.from(new Set([...prev, 'nft'])));
+
+      // Increase bizarre level if sanity is dangerously low or weird paths are taken
+      if (newStats.sanity < 15) setBizarreLevel(prev => prev + 1);
+      if (next.startsWith('p7') || next.startsWith('p8') || next.startsWith('boss')) setBizarreLevel(prev => prev + 2);
     }
 
     // Story Precise Calculation logic for endings
     let finalNext = next;
     if (next.endsWith('.e1') && stats.sanity < 20) {
-      // Special "Insane" variation of endings
       finalNext = 'boss.q1'; 
     }
 
@@ -904,14 +917,21 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleChoice(choice.next, idx)}
                       className={cn(
-                        "w-full px-4 md:px-6 py-4 md:py-5 text-left flex items-center justify-between rounded-xl md:rounded-2xl border-2 transition-all group active:scale-95 shadow-lg",
+                        "w-full px-4 md:px-6 py-4 md:py-5 text-left flex items-center justify-between rounded-xl md:rounded-2xl border-2 transition-all group active:scale-95 shadow-lg relative",
                         idx === selectedIndex ? "bg-white text-black border-white" : cn("bg-black/40 text-white/90 hover:text-white hover:bg-black/60", mood.border)
                       )}
                     >
-                      <div className="flex items-center gap-3 md:gap-4">
+                      <div className="flex items-center gap-3 md:gap-4 flex-1">
                         <span className={cn("text-[9px] md:text-[10px] font-black transition-colors px-2 md:px-3 py-1 md:py-1.5 rounded", idx === selectedIndex ? "bg-black text-white" : "bg-white/10 text-white/30 group-hover:text-white/60")}>0{idx + 1}</span>
                         <span className="text-sm md:text-base font-bold uppercase tracking-wider">{t(choice.textKey)}</span>
                       </div>
+                      
+                      {/* Stat Preview */}
+                      <div className="flex gap-2 mr-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                         {choice.stats?.budget !== undefined && <span className={cn("text-[8px] font-bold", choice.stats.budget > 0 ? "text-emerald-500" : "text-red-500")}>💰{choice.stats.budget > 0 ? '+' : ''}{choice.stats.budget}</span>}
+                         {choice.stats?.sanity !== undefined && <span className={cn("text-[8px] font-bold", choice.stats.sanity > 0 ? "text-emerald-500" : "text-red-500")}>🧠{choice.stats.sanity > 0 ? '+' : ''}{choice.stats.sanity}</span>}
+                      </div>
+
                       <span className={cn("transition-all", idx === selectedIndex ? "translate-x-0 opacity-100" : "translate-x-[-10px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100 font-black")}>→</span>
                     </motion.button>
                   ))

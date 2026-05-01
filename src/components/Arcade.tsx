@@ -27,14 +27,29 @@ export function Arcade() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const games = [
-    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-brand-accent', label: t('arc.game1.lbl') },
-    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-brand-accent', label: t('arc.game2.lbl') },
-    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-brand-accent', label: t('arc.game3.lbl') },
-    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-brand-accent', label: t('arc.game4.lbl') },
-    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-brand-accent', label: t('arc.game5.lbl') },
-    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-brand-accent', label: t('arc.game6.lbl') },
-    { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-brand-accent', label: t('arc.game7.lbl') },
+    { id: 'pong', title: t('arc.game1'), icon: <Gamepad2 size={24} />, color: 'bg-brand-accent', label: t('arc.game1.lbl'), genre: t('arc.genre.sports') },
+    { id: 'uno', title: t('arc.game2'), icon: <Layers size={24} />, color: 'bg-brand-accent', label: t('arc.game2.lbl'), genre: t('arc.genre.cards') },
+    { id: 'tictactoe', title: t('arc.game3'), icon: <Cpu size={24} />, color: 'bg-brand-accent', label: t('arc.game3.lbl'), genre: t('arc.genre.puzzle') },
+    { id: 'rpg', title: t('arc.game4'), icon: <Paintbrush size={24} />, color: 'bg-brand-accent', label: t('arc.game4.lbl'), genre: t('arc.genre.rpg') },
+    { id: 'sellout', title: t('arc.game5'), icon: <DollarSign size={24} />, color: 'bg-brand-accent', label: t('arc.game5.lbl'), genre: t('arc.genre.arcade') },
+    { id: 'invaders', title: t('arc.game6'), icon: <Target size={24} />, color: 'bg-brand-accent', label: t('arc.game6.lbl'), genre: t('arc.genre.action') },
+    { id: 'race', title: t('arc.game7'), icon: <Trophy size={24} />, color: 'bg-brand-accent', label: t('arc.game7.lbl'), genre: t('arc.genre.racing') },
   ] as const;
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { x: -20, opacity: 0 },
+    visible: { x: 0, opacity: 1 }
+  };
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [pendingGame, setPendingGame] = useState<string | null>(null);
@@ -74,17 +89,20 @@ export function Arcade() {
         t('arc.boot.loading.line'),
         t('arc.boot.drivers.line'),
         t('arc.boot.sound.line'),
-        t('arc.boot.network.line'),
-        ""
+        t('arc.boot.network.line')
       ];
       
       lines.forEach((line, index) => {
         setTimeout(() => {
-          setBootLog(prev => [...prev, line]);
+          setBootLog(prev => {
+            // Avoid adding same lines multiple times if effect glitches
+            if (prev.includes(line)) return prev;
+            return [...prev, line];
+          });
           if (index === lines.length - 1) {
             setPowerState('waiting');
           }
-        }, index * 300 + 400);
+        }, index * 200 + 400); // Faster boot sequence
       });
 
     } else {
@@ -404,7 +422,7 @@ export function Arcade() {
               )}
 
               {(powerState === 'booting' || powerState === 'waiting' || powerState === 'inserting') && (
-                <div className="w-full h-full min-h-[400px] bg-black flex justify-start items-start p-6 md:p-12 overflow-y-auto relative custom-scrollbar">
+                <div className="w-full h-full min-h-[400px] bg-black flex flex-col items-stretch overflow-hidden relative">
                   {powerState === 'booting' && bootLog.length <= 1 && (
                     <motion.div initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute inset-0 bg-white z-50 pointer-events-none" />
                   )}
@@ -412,7 +430,7 @@ export function Arcade() {
                   <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] z-10" />
                   
                   {powerState === 'inserting' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-20 bg-black/40 backdrop-blur-sm">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-[60] bg-black/60 backdrop-blur-sm">
                       <div className="relative">
                         <motion.div 
                           animate={{ rotate: 360 }}
@@ -440,44 +458,91 @@ export function Arcade() {
                     </div>
                   )}
 
-                  <div className="text-brand-accent font-[var(--font-pixel)] text-[10px] md:text-xs leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.8)] z-0">
-                    {bootLog.map((line, i) => (
-                      <motion.div 
-                        initial={{ opacity: 0, x: -10 }} 
-                        animate={{ opacity: 1, x: 0 }} 
-                        key={i} 
-                        className={`mb-1 ${line === t('arc.boot.select') || line === t('arc.boot.start') ? "animate-pulse font-bold mt-4" : ""}`}
-                      >
-                        {line}
-                      </motion.div>
-                    ))}
-                    {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent ml-1 translate-y-1"></motion.span>}
-                  </div>
-
-                  {powerState === 'waiting' && (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-2 pb-24 relative z-0">
-                      {games.map(g => (
-                        <button
-                          key={g.id}
-                          aria-label={g.label}
-                          onClick={() => handleInsertCartridge(g.id)}
-                          className="border-2 border-brand-accent/50 bg-brand-accent/5 p-3 md:p-4 font-mono text-left hover:bg-brand-accent hover:text-black focus:bg-brand-accent focus:text-black focus:outline-none transition-colors group flex items-center gap-4"
-                        >
-                          <div className="text-brand-accent group-hover:text-black group-focus:text-black text-xl md:text-2xl">{g.icon}</div>
-                          <div className="flex flex-col gap-0.5">
-                            <div className="font-bold text-xs md:text-sm leading-tight text-brand-accent group-hover:text-black group-focus:text-black">{g.label}</div>
-                            <div className="text-[8px] md:text-[10px] opacity-75 leading-tight">{g.title}</div>
+                  {/* Dynamic Layout Container */}
+                  <div className={cn(
+                    "w-full h-full flex flex-col md:flex-row gap-0 translate-z-0",
+                    powerState === 'booting' ? "p-8 md:p-12" : "p-0"
+                  )}>
+                    
+                    {/* SIDEBAR / LOG AREA */}
+                    <div className={cn(
+                      "transition-all duration-700 flex flex-col border-brand-accent/20 overflow-hidden",
+                      powerState === 'booting' ? "w-full h-full" : "w-full md:w-56 h-auto md:h-full bg-black/40 border-b md:border-b-0 md:border-r border-brand-accent/10 backdrop-blur-md z-30"
+                    )}>
+                      <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar h-full">
+                        {powerState === 'waiting' && (
+                          <div className="mb-4 border-b border-brand-accent/20 pb-2 flex items-center gap-2">
+                             <div className="w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_8px_#f24a29]" />
+                             <span className="text-brand-accent font-mono text-[8px] tracking-[0.2em] font-black uppercase">Core v3.1 Status</span>
                           </div>
-                        </button>
-                      ))}
-                      <div className="col-span-1 md:col-span-2 text-center mt-8 pb-12">
-                        <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent translate-y-1 mr-2"></motion.span>
-                        <span className="text-[10px] uppercase tracking-widest break-all text-brand-accent/80">{t('arc.boot.wait.line')}</span>
+                        )}
+                        <div className="text-brand-accent font-[var(--font-pixel)] text-[9px] md:text-[10px] leading-relaxed w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.5)]">
+                          {bootLog.map((line, i) => (
+                            <motion.div 
+                              initial={{ opacity: 0, x: -10 }} 
+                              animate={{ opacity: 1, x: 0 }} 
+                              key={i} 
+                              className="mb-1 opacity-80"
+                            >
+                              {"> "}{line}
+                            </motion.div>
+                          ))}
+                          {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-2.5 h-4 bg-brand-accent ml-1 translate-y-1"></motion.span>}
+                        </div>
                       </div>
                     </div>
-                  )}
-                  {/* Fade-out mask at the bottom to prevent harsh cut */}
-                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
+
+                    {/* MAIN GALLERY AREA */}
+                    {powerState === 'waiting' && (
+                      <div className="flex-1 overflow-y-auto custom-scrollbar relative z-20 bg-black/20">
+                        <motion.div 
+                          variants={containerVariants}
+                          initial="hidden"
+                          animate="visible"
+                          className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 md:p-6 pb-24"
+                        >
+                          {games.map(g => (
+                            <motion.button
+                              variants={itemVariants}
+                              whileHover={{ x: 4, scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              key={g.id}
+                              aria-label={g.label}
+                              onClick={() => handleInsertCartridge(g.id)}
+                              className="border border-brand-accent/20 bg-gradient-to-br from-brand-accent/5 to-transparent p-4 font-mono text-left hover:bg-brand-accent/10 hover:border-brand-accent/50 focus:bg-brand-accent focus:text-black focus:outline-none transition-all group flex items-center gap-4 relative overflow-hidden rounded-sm"
+                            >
+                              <div className="text-brand-accent group-focus:text-black text-xl md:text-2xl p-2 bg-brand-accent/10 rounded group-hover:bg-brand-accent group-hover:text-black transition-colors">{g.icon}</div>
+                              
+                              <div className="flex flex-col gap-0.5 flex-1 overflow-hidden">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="font-bold text-[10px] md:text-xs leading-tight text-brand-accent group-focus:text-black truncate uppercase tracking-tighter">{g.label}</div>
+                                  <span className="text-[7px] border border-brand-accent/40 px-1 py-0.5 rounded-sm opacity-60 group-hover:opacity-100 group-hover:border-brand-accent/60 group-focus:text-black group-focus:border-black/40">
+                                    {g.genre}
+                                  </span>
+                                </div>
+                                <div className="text-[8px] md:text-[9px] opacity-60 group-hover:opacity-100 group-focus:text-black leading-tight italic truncate">
+                                  {g.title}
+                                </div>
+                              </div>
+
+                              <div className="text-brand-accent/30 group-hover:text-brand-accent group-focus:text-black transition-colors">
+                                <motion.span animate={{ x: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                                  {'>'}
+                                </motion.span>
+                              </div>
+                            </motion.button>
+                          ))}
+                          <div className="col-span-1 md:col-span-2 text-center mt-6">
+                            <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-2 h-4 bg-brand-accent translate-y-1 mr-2"></motion.span>
+                            <span className="text-[9px] uppercase tracking-[0.2em] text-brand-accent/60 font-bold">{t('arc.boot.wait.line')}</span>
+                          </div>
+                        </motion.div>
+                        
+                        {/* Fade-out mask at the bottom to prevent harsh cut in the library only */}
+                        <div className="sticky bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
