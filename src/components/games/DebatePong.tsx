@@ -271,13 +271,10 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
         ctx.fillRect(p.x, p.y, ballSize, ballSize);
       });
 
-      // Draw Paddles with bloom-ish effect
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#f24a29';
+      // Draw Paddles
       ctx.fillStyle = '#f24a29'; 
       ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
       
-      ctx.shadowColor = isPower ? '#f24a29' : '#fff';
       ctx.fillStyle = '#fff'; // CPU
       ctx.fillRect(cpu.x, cpu.y, paddleWidth, paddleHeight);
 
@@ -288,13 +285,10 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
       }
       
       // Ball
-      ctx.shadowBlur = isPower ? 20 : 10;
-      ctx.shadowColor = isPower ? '#f24a29' : '#fff';
       ctx.fillStyle = isPower ? '#f24a29' : '#fff'; 
       ctx.fillRect(ball.x, ball.y, ballSize, ballSize);
 
       if (hitText) {
-        ctx.shadowBlur = 5;
         ctx.fillStyle = isPower ? '#f24a29' : '#fff';
         ctx.font = '8px "Press Start 2P"';
         ctx.textAlign = 'center';

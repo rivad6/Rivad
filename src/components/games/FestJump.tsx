@@ -753,20 +753,19 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          const collisionOffsets = [0, -canvas.width, canvas.width];
          let collided = false;
 
-         // Check if player is falling. We use a generous vertical window based on falling speed.
          if (player.vy > 0) {
-            const verticalTolerance = Math.max(15, player.vy * normalDt + 10);
-            if (prevY + player.height <= p.y + verticalTolerance) {
+            const playerBottom = player.y + player.height;
+            const prevBottom = prevY + player.height;
+            
+            // Allow checking if the player crossed the platform bound or is resting on it.
+            if (prevBottom <= p.y + 20 && playerBottom >= p.y - 5 && playerBottom <= p.y + Math.max(PLATFORM_HEIGHT, player.vy * normalDt + 15)) {
                for (const offset of collisionOffsets) {
                   const px = player.x + offset;
-                  // Extremely gracious horizontal match (12px extra on each side - nearly half player width)
-                  const horizontalMatch = px + player.width + 12 > p.x && px - 12 < p.x + p.width;
+                  // The player's rect must overlap the platform's rect horizontally. 
+                  // Being exactly on the corner (0 pixels) might slip, so we allow 2-4px edge tolerance.
+                  const horizontalMatch = px + player.width > p.x - 4 && px < p.x + p.width + 4;
                   
-                  const playerBottom = player.y + player.height;
-                  // Dynamic vertical window that scales with fall velocity to prevent tunneling
-                  const verticalMatch = playerBottom >= p.y - 5 && playerBottom <= p.y + PLATFORM_HEIGHT + (player.vy * normalDt) + 8;
-                  
-                  if (horizontalMatch && verticalMatch) {
+                  if (horizontalMatch) {
                       collided = true;
                       break;
                   }
@@ -775,42 +774,43 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          }
          
          if (collided) {
-            // Snap player precisely to top of platform
-            player.y = p.y - player.height;
             if (p.type === 'breaking') {
-                p.crackValue += normalDt;
-                if (p.crackValue > 5) {
-                   p.broken = true;
-                   playSound('hit');
-                }
-            } else if (p.type === 'boost') {
-                player.vy = selectedChar.jumpForce * 1.5 - upgrades.jump;
-                player.jumps = 1;
-                playSound('bounce');
-                createParticles(p.x + p.width/2, p.y, '#eab308');
-                cameraShake = 15;
+                p.broken = true;
+                playSound('hit');
+                createParticles(p.x + p.width/2, p.y, '#9ca3af');
+                // Do NOT snap or bounce. Just let player fall through.
             } else {
-                player.vy = selectedChar.jumpForce - upgrades.jump * 0.5;
-                player.jumps = 1;
-                if (p.hasSpring) {
-                   player.vy *= 1.5;
-                   playSound('bounce');
-                   createParticles(p.x + p.width/2, p.y, '#f43f5e');
+                // Snap player precisely to top of platform
+                player.y = p.y - player.height;
+                if (p.type === 'boost') {
+                    player.vy = selectedChar.jumpForce * 1.5 - upgrades.jump;
+                    player.jumps = 1;
+                    playSound('bounce');
+                    createParticles(p.x + p.width/2, p.y, '#eab308');
+                    cameraShake = 15;
                 } else {
-                   playSound('jump');
+                    player.vy = selectedChar.jumpForce - upgrades.jump * 0.5;
+                    player.jumps = 1;
+                    if (p.hasSpring) {
+                       player.vy *= 1.5;
+                       playSound('bounce');
+                       createParticles(p.x + p.width/2, p.y, '#f43f5e');
+                    } else {
+                       playSound('jump');
+                    }
                 }
-            }
-            
-            if (!p.isStepped && !p.broken) {
-               p.isStepped = true;
-               if (p.type === 'billboard' && comboTimer <= 0) {
-                  comboTimer = 180;
-                  comboMultiplier = 2;
-                  sessionCoins += 5; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
-                  addFloatingText(p.x, p.y - 20, 'SPONSOR HIT!', '#3b82f6');
-               } else if (p.type !== 'breaking') {
-                  bonusScore += 10 * comboMultiplier;
-               }
+                
+                if (!p.isStepped) {
+                   p.isStepped = true;
+                   if (p.type === 'billboard' && comboTimer <= 0) {
+                      comboTimer = 180;
+                      comboMultiplier = 2;
+                      sessionCoins += 5; if (coinsRefDOM.current) coinsRefDOM.current.innerText = (festCoins + sessionCoins) + ' KARMAS';
+                      addFloatingText(p.x, p.y - 20, 'SPONSOR HIT!', '#3b82f6');
+                   } else {
+                      bonusScore += 10 * comboMultiplier;
+                   }
+                }
             }
          }
          
@@ -1451,6 +1451,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
 
     animationFrameId = requestAnimationFrame(gameLoop);
     return () => {
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('deviceorientation', handleOrientation);

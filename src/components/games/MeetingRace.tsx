@@ -59,10 +59,10 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
   }, []);
 
   const cars: CarConfig[] = [
-    { id: 'taxi', name: t('game.car.taxi.name', 'Taxi CDMX'), desc: t('game.car.taxi.desc', 'El clásico rosa con blanco'), speed: 440, handling: 10, maxHp: 3, color: '#ec4899' },
-    { id: 'sport', name: t('game.car.sport.name', 'Fífí Sport'), desc: t('game.car.sport.desc', 'Súper rápido pero odia los baches'), speed: 620, handling: 14, maxHp: 2, color: '#ef4444' },
-    { id: 'patrol', name: t('game.car.patrol.name', 'Interceptor Policial'), desc: t('game.car.patrol.desc', 'Unidad blindada diseñada para persecuciones extremas'), speed: 400, handling: 8, maxHp: 6, color: '#1e293b' },
-    { id: 'moto', name: t('game.car.moto.name', 'Moto Repartidor'), desc: t('game.car.moto.desc', 'Filtra el tráfico como jefe'), speed: 580, handling: 20, maxHp: 1, color: '#06b6d4' },
+    { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 440, handling: 10, maxHp: 3, color: '#ec4899' },
+    { id: 'sport', name: t('game.car.sport.name'), desc: t('game.car.sport.desc'), speed: 620, handling: 14, maxHp: 2, color: '#ef4444' },
+    { id: 'truck', name: t('game.car.truck.name'), desc: t('game.car.truck.desc'), speed: 400, handling: 8, maxHp: 6, color: '#1e293b' },
+    { id: 'moto', name: t('game.car.moto.name'), desc: t('game.car.moto.desc'), speed: 580, handling: 20, maxHp: 1, color: '#06b6d4' },
   ];
 
   const currentCar = cars.find(c => c.id === selectedCarId) || cars[0];
@@ -415,67 +415,67 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
         ctx.fill();
         ctx.globalAlpha = 1.0;
         
-      } else if (selectedCarId === 'patrol') {
-        // Armored Interceptor
-        ctx.fillStyle = '#020617'; // Huge tires
-        ctx.beginPath(); ctx.roundRect(bx - 4, by + 5, 8, 18, 2); ctx.fill();
-        ctx.beginPath(); ctx.roundRect(bx + w - 4, by + 5, 8, 18, 2); ctx.fill();
-        ctx.beginPath(); ctx.roundRect(bx - 4, by + h - 23, 8, 18, 2); ctx.fill();
-        ctx.beginPath(); ctx.roundRect(bx + w - 4, by + h - 23, 8, 18, 2); ctx.fill();
+      } else if (selectedCarId === 'truck') {
+        // Armored Bus / Pesero
+        ctx.fillStyle = '#1e293b'; // Tires
+        ctx.beginPath(); ctx.roundRect(bx - 4, by + 5, 8, 20, 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx + w - 4, by + 5, 8, 20, 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx - 4, by + h - 25, 8, 24, 2); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx + w - 4, by + h - 25, 8, 24, 2); ctx.fill();
 
-        // Main Heavy Body
-        ctx.fillStyle = '#0f172a';
+        // Main Heavy Body (slate 800)
+        ctx.fillStyle = '#1e293b';
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#000';
-        ctx.beginPath(); ctx.roundRect(bx, by, w, h, 4); ctx.fill();
+        ctx.beginPath(); ctx.roundRect(bx, by - 6, w, h + 12, 4); ctx.fill();
         ctx.shadowBlur = 0;
         
-        // Body details (armor plates)
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(bx + 2, by + 10, w - 4, h - 20);
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 1;
+        // Body details (painted side stripes)
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(bx + 2, by + 10, w - 4, h - 16);
+        ctx.strokeStyle = '#2dd4bf'; // Teal accents common on peseros
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(bx + 4, by + 20); ctx.lineTo(bx + w - 4, by + 20);
         ctx.moveTo(bx + 4, by + h - 25); ctx.lineTo(bx + w - 4, by + h - 25);
         ctx.stroke();
 
-        // Bull bar
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(bx - 2, by - 4, w + 4, 6);
-        ctx.fillRect(bx + 4, by - 6, w - 8, 4);
+        // Bull bar / Defensas gigantes
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(bx - 4, by - 10, w + 8, 8);
+        ctx.fillRect(bx + 4, by - 12, w - 8, 4);
         
-        // Reinforced roof
-        ctx.fillStyle = '#020617';
-        ctx.beginPath(); ctx.roundRect(bx + 4, by + 22, w - 8, h - 45, 2); ctx.fill();
+        // Roof
+        ctx.fillStyle = '#cbd5e1'; // White/gray roof
+        ctx.beginPath(); ctx.roundRect(bx + 4, by + 18, w - 8, h - 35, 2); ctx.fill();
         
+        // Vents
+        ctx.fillStyle = '#000';
+        ctx.fillRect(bx + 8, by + 30, w - 16, 10);
+        ctx.fillRect(bx + 8, by + 50, w - 16, 10);
+
         // Windows (tinted black)
         ctx.fillStyle = '#000';
-        ctx.fillRect(bx + 5, by + 15, w - 10, 7); // windshield
-        ctx.fillRect(bx + 5, by + h - 22, w - 10, 5); // back
+        ctx.fillRect(bx + 5, by + 8, w - 10, 8); // windshield
+        ctx.fillRect(bx + 5, by + h - 20, w - 10, 6); // back
 
         // Identity
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 10px monospace';
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 8px monospace';
         ctx.textAlign = 'center';
         ctx.save();
-        ctx.translate(bx + w/2, by + h/2 + 7);
+        ctx.translate(bx + w/2, by + h/2 + 2);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillText('POLICE', 0, 0);
+        ctx.fillText('RUTA 66', 0, 0);
         ctx.restore();
 
-        // High-intensity light bar
-        const isFlicker = Math.floor(Date.now() / 60) % 2 === 0;
-        const leftColor = isFlicker ? '#ef4444' : '#7f1d1d';
-        const rightColor = !isFlicker ? '#3b82f6' : '#1e3a8a';
+        // Caution lights instead of police lights
+        const isFlicker = Math.floor(Date.now() / 200) % 2 === 0;
         
-        ctx.fillStyle = leftColor;
-        ctx.shadowBlur = isFlicker ? 30 : 5; ctx.shadowColor = '#ef4444';
-        ctx.fillRect(bx + 6, by + h/2 - 6, w/2 - 7, 5);
-        
-        ctx.fillStyle = rightColor;
-        ctx.shadowBlur = !isFlicker ? 30 : 5; ctx.shadowColor = '#3b82f6';
-        ctx.fillRect(bx + w/2 + 1, by + h/2 - 6, w/2 - 7, 5);
+        ctx.fillStyle = isFlicker ? '#f59e0b' : '#b45309';
+        ctx.shadowBlur = isFlicker ? 15 : 2; ctx.shadowColor = '#f59e0b';
+        ctx.fillRect(bx + 4, by - 8, w/4, 4);
+        ctx.fillRect(bx + w - 4 - w/4, by - 8, w/4, 4);
         ctx.shadowBlur = 0;
       } else if (selectedCarId === 'sport') {
         // Velocity RS - Sleek Supercar
@@ -938,9 +938,9 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
 
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 10px monospace';
-      ctx.fillText('Jefe:', obs.x + 6, obs.y + 12);
+      ctx.fillText(t('game.race.msg_boss', 'Boss:'), obs.x + 6, obs.y + 12);
       ctx.font = '8px monospace';
-      ctx.fillText('Urgent!!', obs.x + 6, obs.y + 22);
+      ctx.fillText(t('game.race.msg_urgent', 'Urgent!!'), obs.x + 6, obs.y + 22);
     };
 
     const drawGas = (ctx: CanvasRenderingContext2D, obs: Obstacle) => {

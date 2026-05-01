@@ -184,7 +184,7 @@ export function Arcade() {
           </p>
         </div>
 
-        <div ref={arcadeCabinetRef} className={`flex flex-col items-center relative ${isFullscreen ? 'h-screen w-screen bg-[#050505] overflow-y-auto overflow-x-hidden p-4 md:p-8' : ''}`}>
+        <div ref={arcadeCabinetRef} className={`flex flex-col items-center relative ${isFullscreen ? 'fixed inset-0 z-[999] h-screen w-screen bg-[#050505] overflow-hidden' : ''}`}>
           {/* 60s Interruption Popup - Moved inside the machine container */}
           <AnimatePresence>
             {showPopup && (
@@ -479,9 +479,10 @@ export function Arcade() {
           </div>
           
           {/* Vintage PC Keyboard & Drive Area */}
+          {!isFullscreen && (
           <div className={cn(
             "flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#080808] rounded-2xl border-t border-white/10 border-[#000] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-6 md:gap-8 flex-shrink-0 transition-all",
-            isFullscreen ? "mt-2 md:mt-4 py-4 md:py-6 border-b-4 md:border-b-8" : "mt-8 py-8 border-b-[12px]"
+            "mt-8 py-8 border-b-[12px]"
           )}>
              {/* Decorative Floppy Drive */}
              <div className="flex flex-col gap-2 bg-[#1a1a24] p-3 rounded-lg border border-[#2a2a36] shadow-inner w-full md:w-64">
@@ -518,6 +519,7 @@ export function Arcade() {
                 </div>
              </div>
           </div>
+          )}
 </div>
         {/* End of arcadeCabinetRef */}
         </div>
