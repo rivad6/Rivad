@@ -514,17 +514,17 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
                       onClick={() => handleChoice('start')}
                       className={cn("w-full py-4 md:py-5 text-black bg-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 shadow-white/10")}
                     >
-                      {t('game.rpg.restart')}
+                      {t('game.rpg.restart', 'REINTENTAR / NUEVA HISTORIA')}
                     </motion.button>
                     {onFinish && (
                       <motion.button
-                        aria-label="BOOT SYSTEM"
+                        aria-label="EXIT TO MENU"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={onFinish}
                         className="w-full py-3 md:py-4 border-2 border-brand-accent/50 text-brand-accent rounded-2xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.5em] hover:bg-brand-accent/10 transition-all opacity-80"
                       >
-                        REBOOT SYSTEM
+                        {t('game.rpg.exit', 'SALIR AL MENÚ PRINCIPAL')}
                       </motion.button>
                     )}
                   </div>

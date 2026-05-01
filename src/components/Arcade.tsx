@@ -110,6 +110,13 @@ export function Arcade() {
     }, 800);
   };
 
+  const handleExitToMenu = () => {
+    playSound('hit');
+    playMusic('arcade');
+    setPowerState('waiting');
+    setActiveGame(null);
+  };
+
   const handleInsertCartridge = (id: string) => {
     if (powerState !== 'waiting' && powerState !== 'playing') return;
     playSound('powerup');
@@ -487,7 +494,7 @@ export function Arcade() {
                     {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} />}
-                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleReboot} />}
+                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
                     {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
                     {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} />}
