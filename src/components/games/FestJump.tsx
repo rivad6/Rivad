@@ -236,14 +236,17 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       }
     };
 
-    const handleOrientation = (e: DeviceOrientationEvent) => {
+    const handleOrientation = (_e: DeviceOrientationEvent) => {
+      // Tilt control often conflicts with touch precision and can cause "ghost" movement.
+      // We disable the logic here as the user specifically noted characters moving on their own.
+      /*
       if (controlMode !== 'mouse' || !e.gamma) return;
-      // Gamma is left-to-right tilt in degrees [-90, 90]
       const tilt = e.gamma; 
       const deadzone = 3;
       if (Math.abs(tilt) > deadzone) {
          player.vx += tilt * 0.15;
       }
+      */
     };
 
     const handlePointerMove = (e: any) => {
@@ -647,10 +650,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             if (Math.abs(diff) > deadzone) {
                const speedScale = Math.min(1, Math.abs(diff) / 50);
                const targetVx = Math.sign(diff) * maxSpeed * speedScale;
-               const responsiveness = 0.35; 
+               const responsiveness = 0.45; // Increased responsiveness for tighter control
                player.vx += (targetVx - player.vx) * responsiveness * normalDt;
             } else {
-               player.vx *= Math.pow(0.15, normalDt); 
+               player.vx *= Math.pow(0.05, normalDt); // Very sharp stop when reaching target
             }
          } else if (controlMode === 'keyboard') {
             // Smoother keyboard movement
@@ -662,7 +665,8 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             player.vx += (targetVx - player.vx) * accel * normalDt;
          } else {
             // Natural deceleration if no input/wrong mode
-            player.vx *= Math.pow(0.85, normalDt);
+            // Increased friction to stop faster when not touching/pressing
+            player.vx *= Math.pow(0.65, normalDt);
          }
          
          // Global momentum friction to prevent jitter
@@ -1497,14 +1501,14 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       <div className={isPlaying ? "w-full max-w-2xl h-full max-h-screen mx-auto flex flex-col" : "w-full h-full max-w-2xl mx-auto flex flex-col"}>
       
       {/* Top HUD */}
-      <div className="flex justify-between items-center w-full px-6 py-4 mb-2 bg-black/60 backdrop-blur-xl rounded-t-3xl border-b-4 border-pink-500 shrink-0 z-10 shadow-[0_15px_30px_rgba(236,72,153,0.15)]">
+      <div className="flex justify-between items-center w-full px-4 md:px-6 py-3 md:py-4 mb-1 md:mb-2 bg-black/60 backdrop-blur-xl rounded-t-2xl md:rounded-t-3xl border-b-2 md:border-b-4 border-pink-500 shrink-0 z-10 shadow-[0_15px_30px_rgba(236,72,153,0.15)]">
         <div className="flex flex-col gap-1">
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-2 md:gap-4">
               <div className="relative group cursor-pointer" onClick={() => setShowShop(true)}>
                  <div className="absolute -inset-2 bg-yellow-400/20 blur-xl group-hover:bg-yellow-400/40 transition-all"></div>
-                 <div className="relative flex items-center gap-2 bg-zinc-900/80 px-3 py-1.5 rounded-lg border border-white/10">
-                    <Zap className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span ref={coinsRefDOM} className="text-sm font-black text-white">{festCoins}</span>
+                 <div className="relative flex items-center gap-1.5 bg-zinc-900/80 px-2 md:px-3 py-1 rounded-lg border border-white/10">
+                    <Zap className="w-3.5 h-3.5 md:w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    <span ref={coinsRefDOM} className="text-xs md:text-sm font-black text-white">{festCoins}</span>
                  </div>
               </div>
               
@@ -1512,26 +1516,26 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                 <button 
                   aria-label="Pause game"
                   onClick={() => setIsPaused(true)}
-                  className="bg-zinc-900/80 text-white p-2.5 rounded-lg border border-white/10 hover:bg-zinc-800 hover:border-pink-500/50 transition-all shadow-lg active:scale-95 flex items-center justify-center"
+                  className="bg-zinc-900/80 text-white p-2 rounded-lg border border-white/10 hover:bg-zinc-800 hover:border-pink-500/50 transition-all shadow-lg active:scale-95 flex items-center justify-center"
                 >
-                  <Pause size={18} className="text-pink-500" />
+                  <Pause size={16} className="text-pink-500" />
                 </button>
               )}
            </div>
            
            {/* Active Powerup Gauges */}
-           <div className="flex gap-2 mt-2">
-              {hudShield > 0 && <div className="h-1.5 w-12 bg-blue-500 rounded-full shadow-[0_0_8px_#3b82f6]"></div>}
+           <div className="flex gap-1.5 mt-1.5">
+              {hudShield > 0 && <div className="h-1 w-8 md:w-12 bg-blue-500 rounded-full shadow-[0_0_8px_#3b82f6]"></div>}
               {hudJetpack > 0 && (
-                 <div className="h-1.5 bg-yellow-500 rounded-full shadow-[0_0_8px_#eab308] transition-all" style={{ width: `${Math.min(48, hudJetpack / 4)}px` }}></div>
+                 <div className="h-1 bg-yellow-500 rounded-full shadow-[0_0_15px_#eab308] transition-all" style={{ width: `${Math.min(48, hudJetpack / 4)}px` }}></div>
               )}
            </div>
         </div>
         
         <div className="flex flex-col items-end">
            <div className="relative">
-              <div className="absolute -top-4 -right-2 text-[8px] font-black text-pink-500 tracking-[0.3em] uppercase">Current_Earning</div>
-              <p ref={scoreRefDOM} className="text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{score}</p>
+              <div className="absolute -top-3 -right-1 text-[7px] md:text-[8px] font-black text-pink-500 tracking-[0.2em] uppercase">Current_Earning</div>
+              <p ref={scoreRefDOM} className="text-3xl md:text-5xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{score}</p>
            </div>
         </div>
       </div>
@@ -1557,34 +1561,34 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                initial={{ opacity: 0, scale: 0.9 }} 
                animate={{ opacity: 1, scale: 1 }} 
                exit={{ opacity: 0 }}
-               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#050510]/95 backdrop-blur-xl p-8 text-center pointer-events-auto"
+               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#050510]/95 backdrop-blur-xl p-4 md:p-8 text-center pointer-events-auto"
             >
-               <h2 className="text-4xl md:text-5xl font-black text-pink-500 mb-2 tracking-widest uppercase">GAME OVER</h2>
-               <p className="text-white/50 text-xs mb-8 uppercase tracking-[0.3em]">YOU FELL OUT OF THE FESTIVAL</p>
+               <h2 className="text-3xl md:text-5xl font-black text-pink-500 mb-1 tracking-widest uppercase">GAME OVER</h2>
+               <p className="text-white/50 text-[10px] md:text-xs mb-6 uppercase tracking-[0.3em]">YOU FELL OUT OF THE FESTIVAL</p>
                
-               <div className="bg-white/5 border border-white/10 rounded-xl p-6 w-full max-w-sm mb-8 space-y-4">
-                  <div className="flex justify-between items-center text-lg">
-                     <span className="text-white/70 uppercase">Distance Score</span>
+               <div className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-6 w-full max-w-sm mb-6 space-y-3">
+                  <div className="flex justify-between items-center text-base md:text-lg">
+                     <span className="text-white/70 uppercase text-xs md:text-sm">Distance Score</span>
                      <span className="font-black text-white">{gameResult.score}</span>
                   </div>
-                  <div className="flex justify-between items-center text-lg border-t border-white/10 pt-4">
-                     <span className="text-white/70 uppercase flex items-center gap-2"><Zap size={16} className="text-yellow-400" /> Karmas Earned</span>
+                  <div className="flex justify-between items-center text-base md:text-lg border-t border-white/10 pt-3">
+                     <span className="text-white/70 uppercase text-xs md:text-sm flex items-center gap-2"><Zap size={14} className="text-yellow-400" /> Karmas Earned</span>
                      <span className="font-black text-yellow-400">+{gameResult.coinsEarned}</span>
                   </div>
                </div>
                
-               <div className="flex flex-col gap-4 w-full max-w-sm">
+               <div className="flex flex-col gap-3 w-full max-w-sm">
                   <button 
                     aria-label="Play Again"
                     onClick={() => { setGameResult(null); setIsPlaying(true); playSound('start'); }}
-                    className="w-full py-5 bg-white text-black font-black uppercase text-xl hover:bg-pink-500 hover:text-white transition-colors"
+                    className="w-full py-4 md:py-5 bg-white text-black font-black uppercase text-lg md:text-xl hover:bg-pink-500 hover:text-white transition-colors"
                   >
                      PLAY AGAIN
                   </button>
                   <button 
                     aria-label="Main Menu"
                     onClick={() => setGameResult(null)}
-                    className="w-full py-4 text-white/40 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
+                    className="w-full py-3 text-white/40 font-black uppercase text-[10px] tracking-[0.3em] hover:text-white transition-colors"
                   >
                      MAIN MENU
                   </button>
@@ -1602,58 +1606,58 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
               <div className="w-full max-w-sm space-y-12">
                  <div className="relative">
                     <motion.h3 
-                      animate={{ scale: [1, 1.02, 1], rotate: [-0.5, 0.5, -0.5] }}
+                      animate={{ scale: [1, 1.02, 1], rotate: [-0.3, 0.3, -0.3] }}
                       transition={{ duration: 4, repeat: Infinity }}
-                      className="text-8xl font-black italic text-white tracking-tighter drop-shadow-[0_0_40px_rgba(236,72,153,0.5)]"
+                      className="text-6xl md:text-8xl font-black italic text-white tracking-tighter drop-shadow-[0_0_40px_rgba(236,72,153,0.5)]"
                     >
                        FEST<br/>JUMP
                     </motion.h3>
-                    <div className="absolute -top-6 -right-6 bg-pink-500 text-black text-[10px] font-black px-3 py-1 rotate-12 uppercase border-2 border-white/50 shadow-lg">V.2.0.4</div>
+                    <div className="absolute -top-4 -right-4 bg-pink-500 text-black text-[9px] font-black px-2 py-0.5 rotate-12 uppercase border border-white/50 shadow-lg">V.2.0.4</div>
                  </div>
 
                  {controlMode === null ? (
-                    <div className="flex flex-col gap-4">
-                       <h4 className="text-white/60 text-xs font-bold uppercase tracking-[0.3em] mb-4">Select Controls</h4>
+                    <div className="flex flex-col gap-3">
+                       <h4 className="text-white/60 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">Select Controls</h4>
                        <button 
                          aria-label="Select Keyboard Controls"
                          onClick={() => { setControlMode('keyboard'); playSound('click'); }}
-                         className="flex items-center justify-between p-5 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-pink-500 group transition-all"
+                         className="flex items-center justify-between p-4 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-pink-500 group transition-all"
                        >
                           <div className="flex items-center gap-4">
                              <div className="bg-zinc-800 p-2 rounded-lg group-hover:bg-pink-500/20 transition-colors">
-                                <Rocket className="text-pink-500" />
+                                <Rocket className="w-5 h-5 text-pink-500" />
                              </div>
                              <div className="text-left">
-                                <p className="font-black uppercase text-sm">Keyboard</p>
-                                <p className="text-[10px] text-white/40 uppercase">Classic ARROWS + SPACE</p>
+                                <p className="font-black uppercase text-xs">Keyboard</p>
+                                <p className="text-[9px] text-white/40 uppercase">Classic ARROWS + SPACE</p>
                              </div>
                           </div>
-                          <ChevronRight size={20} className="text-white/20 group-hover:text-pink-500 transition-colors" />
+                          <ChevronRight size={18} className="text-white/20 group-hover:text-pink-500 transition-colors" />
                        </button>
 
                        <button 
                          aria-label="Select Mouse Controls"
                          onClick={() => { setControlMode('mouse'); playSound('click'); }}
-                         className="flex items-center justify-between p-5 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-blue-500 group transition-all"
+                         className="flex items-center justify-between p-4 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-blue-500 group transition-all"
                        >
                           <div className="flex items-center gap-4">
                              <div className="bg-zinc-800 p-2 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-                                <Target className="text-blue-500" />
+                                <Target className="w-5 h-5 text-blue-500" />
                              </div>
                              <div className="text-left">
-                                <p className="font-black uppercase text-sm">Mouse / Touch</p>
-                                <p className="text-[10px] text-white/40 uppercase">Precision tracking</p>
+                                <p className="font-black uppercase text-xs">Mouse / Touch</p>
+                                <p className="text-[9px] text-white/40 uppercase">Precision tracking</p>
                              </div>
                           </div>
-                          <ChevronRight size={20} className="text-white/20 group-hover:text-blue-500 transition-colors" />
+                          <ChevronRight size={18} className="text-white/20 group-hover:text-blue-500 transition-colors" />
                        </button>
                     </div>
                  ) : (
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
                        <button 
                          aria-label="Start Game"
                          onClick={() => { setIsPlaying(true); playSound('start'); }}
-                         className="group relative w-full py-7 bg-white text-black font-black text-2xl uppercase skew-x-[-10deg] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
+                         className="group relative w-full py-5 md:py-7 bg-white text-black font-black text-xl md:text-2xl uppercase skew-x-[-10deg] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
                        >
                           <div className="absolute inset-0 bg-pink-500 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
                           <span className="relative z-10">{t('game.fest.start')}</span>
@@ -1663,15 +1667,15 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                           <button 
                             aria-label="Customize Character"
                             onClick={() => setShowShop(true)}
-                            className="flex-1 py-5 bg-zinc-900 border border-white/10 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-zinc-800 transition-colors"
+                            className="flex-1 py-4 bg-zinc-900 border border-white/10 text-white font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors"
                           >
-                             <ShoppingCart size={20} /> {t('game.fest.customize')}
+                             <ShoppingCart size={16} /> {t('game.fest.customize')}
                           </button>
                           
                           <button 
                             aria-label="Change Controls"
                             onClick={() => setControlMode(null)}
-                            className="p-5 bg-zinc-900 border border-white/10 text-white/40 hover:text-white transition-colors flex items-center justify-center"
+                            className="p-4 bg-zinc-900 border border-white/10 text-white/40 hover:text-white transition-colors flex items-center justify-center"
                             title="Change Controls"
                           >
                              <Settings size={20} />
