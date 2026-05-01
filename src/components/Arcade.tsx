@@ -53,6 +53,7 @@ export function Arcade() {
 
   const [activeGame, setActiveGame] = useState<string | null>(null);
   const [pendingGame, setPendingGame] = useState<string | null>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   useEffect(() => {
     // Unlock first blood achievement when entering the arcade
@@ -129,9 +130,15 @@ export function Arcade() {
 
   const handleExitToMenu = () => {
     playSound('hit');
-    playMusic('arcade');
-    setPowerState('waiting');
+    setIsRestoring(true);
     setActiveGame(null);
+    setBootLog([t('arc.boot.restoring'), t('arc.boot.cleaning')]);
+    
+    setTimeout(() => {
+      playMusic('arcade');
+      setPowerState('waiting');
+      setIsRestoring(false);
+    }, 1500);
   };
 
   const handleInsertCartridge = (id: string) => {
@@ -399,14 +406,14 @@ export function Arcade() {
           {/* CRT Screen Frame */}
           <div className={cn(
             "bg-[#050505] flex flex-col items-center justify-center relative transition-all duration-500 group/screen w-full",
-            isFullscreen ? "flex-grow min-h-0 border-none rounded-none p-0" : "border-8 border-b-[24px] md:border-[16px] md:border-b-[40px] border-[#0c0c0c] shadow-[inset_0_0_60px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-[20px] md:rounded-[32px] overflow-hidden p-0 aspect-auto md:aspect-square lg:aspect-[4/3] h-[55vh] min-h-[480px] max-h-[700px] md:max-h-[800px]"
+            isFullscreen ? "flex-grow min-h-0 border-none rounded-none p-0" : "flex-grow border-8 border-b-[24px] md:border-[16px] md:border-b-[40px] border-[#0c0c0c] shadow-[inset_0_0_60px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-[20px] md:rounded-[32px] overflow-hidden p-0 aspect-auto md:aspect-square lg:aspect-[4/3] min-h-[400px] max-h-[85vh]"
           )}>
             
             {/* Glass reflection */}
             <div className="absolute top-0 right-0 w-full h-[150%] bg-gradient-to-bl from-white/5 via-white/5 to-transparent -rotate-12 translate-x-1/2 -translate-y-1/4 pointer-events-none z-[60] mix-blend-overlay transition-opacity group-hover/screen:opacity-50"></div>
             
             {/* CRT Screen Effect overlay */}
-            <div className="absolute inset-0 pointer-events-none z-20 crt crt-flicker"></div>
+            <div className="absolute inset-0 pointer-events-none z-20 crt"></div>
             
             {/* Bezel vignette */}
             <div className="absolute inset-0 z-[15] pointer-events-none bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.8)_100%)]" />
@@ -421,9 +428,9 @@ export function Arcade() {
                 <div className="w-full h-full min-h-[400px] bg-black"></div>
               )}
 
-              {(powerState === 'booting' || powerState === 'waiting' || powerState === 'inserting') && (
+              {(powerState === 'booting' || powerState === 'waiting' || powerState === 'inserting' || isRestoring) && (
                 <div className="w-full h-full min-h-[400px] bg-black flex flex-col items-stretch overflow-hidden relative">
-                  {powerState === 'booting' && bootLog.length <= 1 && (
+                  {(powerState === 'booting' || isRestoring) && bootLog.length <= 1 && (
                     <motion.div initial={{ opacity: 1 }} animate={{ opacity: 0 }} transition={{ duration: 0.8, ease: "easeOut" }} className="absolute inset-0 bg-white z-50 pointer-events-none" />
                   )}
                   {/* Scanline overlay specifically for terminal text */}
@@ -467,12 +474,12 @@ export function Arcade() {
                     {/* SIDEBAR / LOG AREA */}
                     <div className={cn(
                       "transition-all duration-700 flex flex-col border-brand-accent/20 overflow-hidden",
-                      powerState === 'booting' 
-                        ? "w-full max-w-xl h-fit border border-brand-accent/30 bg-black/60 p-6 rounded-lg shadow-[0_0_30px_rgba(242,74,41,0.1)]" 
+                      (powerState === 'booting' || isRestoring)
+                        ? "w-full h-full border border-brand-accent/30 bg-black p-8 md:p-12 z-50 text-base" 
                         : "w-full md:w-56 h-auto md:h-full bg-black/40 border-b md:border-b-0 md:border-r border-brand-accent/10 backdrop-blur-md z-30"
                     )}>
-                      <div className={cn("overflow-y-auto custom-scrollbar h-full", powerState === 'booting' ? "max-h-[300px]" : "p-4 md:p-6")}>
-                        {powerState === 'waiting' && (
+                      <div className={cn("overflow-y-auto custom-scrollbar h-full", (powerState === 'booting' || isRestoring) ? "" : "p-4 md:p-6")}>
+                        {(powerState === 'waiting') && (
                           <div className="mb-4 border-b border-brand-accent/20 pb-2 flex items-center gap-2">
                              <div className="w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_8px_#f24a29]" />
                              <span className="text-brand-accent font-mono text-[8px] tracking-[0.2em] font-black uppercase">Core v3.1 Status</span>
@@ -573,13 +580,13 @@ export function Arcade() {
                     transition={{ duration: 0.3 }}
                     className="w-full h-full flex justify-center p-0 md:p-4 bg-black"
                   >
-                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
-                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
-                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
-                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
+                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
+                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
+                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
+                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
                     {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
-                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
-                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
+                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
+                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
                   </motion.div>
                 )}
               </AnimatePresence>

@@ -25,19 +25,12 @@ const calculateWinner = (squares: Player[]) => {
   return null;
 };
 
-export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
+export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean, onFinish?: () => void }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
   const [personality, setPersonality] = useState<'rationalist' | 'traditionalist' | 'postmodernist'>('rationalist');
   const [board, setBoard] = useState<Player[]>(Array(9).fill(null));
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handleFs);
-    return () => document.removeEventListener('fullscreenchange', handleFs);
-  }, []);
   const [xIsNext, setXIsNext] = useState<boolean>(true);
   const [log, setLog] = useState<string>(t('game.ttt.log.start'));
   const [focusedCell, setFocusedCell] = useState(4); // Center by default

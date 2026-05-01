@@ -46,10 +46,12 @@ interface Particle {
 export function MeetingRace({ 
   isPausedGlobal = false, 
   hideFullscreenButton = false,
-  onFinish
+  onFinish,
+  isFullscreen = false
 }: { 
   isPausedGlobal?: boolean, 
   hideFullscreenButton?: boolean,
+  isFullscreen?: boolean,
   onFinish?: () => void 
 }) {
   const { t } = useLanguage();
@@ -59,14 +61,7 @@ export function MeetingRace({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedCarId, setSelectedCarId] = useState('taxi');
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const lastKeyTime = useRef(0);
-
-  useEffect(() => {
-    const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handleFs);
-    return () => document.removeEventListener('fullscreenchange', handleFs);
-  }, []);
 
   const cars: CarConfig[] = [
     { id: 'taxi', name: t('game.car.taxi.name'), desc: t('game.car.taxi.desc'), speed: 440, handling: 10, maxHp: 3, color: '#ec4899' },
@@ -1534,7 +1529,7 @@ export function MeetingRace({
         )}
       </AnimatePresence>
       
-      <div className="flex justify-between items-center w-full max-w-lg mb-2 px-6 py-3 text-[10px] md:text-xs text-brand-accent font-bold bg-[#0c0c0e]/95 rounded-t-2xl border-t-2 border-brand-accent/40 shadow-[0_-10px_30px_rgba(56,189,248,0.1)] shrink-0 z-20">
+      <div className={cn("flex justify-between items-center w-full mb-2 px-6 py-3 text-[10px] md:text-xs text-brand-accent font-bold bg-[#0c0c0e]/95 rounded-t-2xl border-t-2 border-brand-accent/40 shadow-[0_-10px_30px_rgba(56,189,248,0.1)] shrink-0 z-20", isFullscreen ? "max-w-xl mt-auto" : "max-w-lg")}>
          <div className="flex items-center gap-6">
             <div className="flex flex-col gap-0.5">
                <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-black">Control_Module</span>

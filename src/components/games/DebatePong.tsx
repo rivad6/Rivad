@@ -8,7 +8,7 @@ import { cn } from '../../lib/utils';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
+export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean, onFinish?: () => void }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -363,9 +363,9 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
   }, [isPlaying]);
 
   return (
-    <div className={isPlaying ? "absolute inset-0 z-[100] bg-black flex flex-col items-center p-4 overflow-y-auto custom-scrollbar font-sans" : "flex flex-col items-center max-w-full overflow-hidden font-sans"}>
-      <div className={isPlaying ? "w-full max-w-[600px] flex flex-col min-h-full items-center" : "flex flex-col items-center w-full"}>
-      <div className="flex justify-between w-full max-w-[420px] mx-auto px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-xl border border-white/5 shadow-xl shrink-0 pt-4">
+    <div className={cn("flex flex-col items-center w-full h-full font-sans overflow-hidden", isFullscreen ? "bg-black" : "p-4")}>
+      <div className={cn("w-full flex-grow flex flex-col items-center justify-center", !isFullscreen && "max-w-[600px] h-full")}>
+      <div className={cn("flex justify-between w-full mx-auto px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-xl border border-white/5 shadow-xl shrink-0 pt-4", isFullscreen ? "max-w-xl" : "max-w-[420px]")}>
         <div className="flex flex-col items-center">
           <p className="text-brand-accent text-[8px] uppercase tracking-widest mb-1">{t('game.pong.thesis')}</p>
           <div className="flex items-center gap-3">

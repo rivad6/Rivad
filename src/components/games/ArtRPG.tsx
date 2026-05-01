@@ -355,7 +355,7 @@ const getMoodColors = (nodeId: string, bizarreLevel: number = 0) => {
   return { bg: 'bg-[#0a0a0B]', border: 'border-white/10', accent: 'text-brand-accent' }; // Default
 }
 
-export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
+export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean, onFinish?: () => void }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -374,19 +374,30 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
   const [pathContext, setPathContext] = useState<string | null>(null);
 
   // Helper to provide bridging context when jumping paths
-  const getPathBridge = (prev: string, next: string): string => {
+  const getPathBridge = (prev: string, next: string, currentStats: {budget: number, sanity: number, reputation: number}): string => {
     if (prev === 'start' || prev === next) return "";
     const p1 = prev.split('.')[0];
     const p2 = next.split('.')[0];
     if (p1 === p2) return "";
 
     // Contextual bridges to smooth transitions
-    if (p1 === 'p1' && p2 === 'p4') return t('game.rpg.bridge.p1_p4', "Harto del catering, decides que la política de oficina es más nutritiva...");
-    if (p1 === 'p2' && p2 === 'p7') return t('game.rpg.bridge.p2_p7', "El pánico del artista atrae una energía densa, casi... no-humana.");
-    if (p1 === 'p3' && p2 === 'p8') return t('game.rpg.bridge.p3_p8', "Los circuitos colapsan revelando una verdad que no cabe en un disco duro.");
-    if (p1 === 'p5' && p2 === 'p3') return t('game.rpg.bridge.p5_p3', "El agua se filtra en los procesadores, cortocircuitando la realidad.");
+    if (p1 === 'p1' && p2 === 'p4') return t('game.rpg.bridge.p1_p4');
+    if (p1 === 'p2' && p2 === 'p7') return t('game.rpg.bridge.p2_p7');
+    if (p1 === 'p3' && p2 === 'p8') return t('game.rpg.bridge.p3_p8');
+    if (p1 === 'p5' && p2 === 'p3') return t('game.rpg.bridge.p5_p3');
+
+    // Stat-based bridges (low)
+    if (currentStats.budget < 20) return t('game.rpg.bridge.low_budget');
+    if (currentStats.sanity < 20) return t('game.rpg.bridge.low_sanity');
+    if (currentStats.reputation < 20) return t('game.rpg.bridge.low_reputation');
+
+    // Stat-based bridges (high)
+    if (currentStats.budget > 80) return t('game.rpg.bridge.high_budget');
+    if (currentStats.sanity > 80) return t('game.rpg.bridge.high_sanity');
+    if (currentStats.reputation > 80) return t('game.rpg.bridge.high_reputation');
     
-    return t('game.rpg.bridge.generic', "El caos de la gala te arrastra hacia un nuevo problema...");
+    const rand = Math.floor(Math.random() * 4);
+    return t(rand === 0 ? 'game.rpg.bridge.generic' : `game.rpg.bridge.generic${rand}`);
   };
 
   // Typewriter effect
@@ -426,23 +437,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
     setCurrentNode('q1');
   };
 
-  // Helper to glitch text based on sanity
+  // Helper to maintain visual style without breaking readability
   const getGlitchedText = (text: string) => {
-    // Only glitch if sanity is truly critical
-    if (stats.sanity > 20) return text;
-    
-    const chars = text.split('');
-    const glitchChars = '!@#$%^&*'; 
-    return chars.map((c, i) => {
-      if (c === ' ' || c === '\n') return c;
-      const stableSeed = (currentNode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + i) % 100;
-      
-      // Threshold for when to glitch (only in very low sanity)
-      const threshold = stats.sanity < 10 ? 12 : 4; 
-      
-      // Only glitch every few characters to maintain readability
-      return (stableSeed < threshold && i % 6 === 0) ? glitchChars[stableSeed % glitchChars.length] : c;
-    }).join('');
+    return text; // No longer replacing characters with symbols for better readability
   };
 
   useEffect(() => {
@@ -549,7 +546,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
       }
       
       // Narrative Continuity: Detect if we are changing "worlds"
-      const bridge = getPathBridge(currentNode, next);
+      const bridge = getPathBridge(currentNode, next, stats);
       if (bridge) {
         setPathContext(bridge);
         sDelta -= 2;
@@ -637,7 +634,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
           <div className="absolute inset-0 bg-[linear-gradient(rgba(138,99,210,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(138,99,210,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
           
           <div className="relative z-10 w-full mb-8 flex justify-between items-end border-b pb-2 transition-colors duration-1000 border-white/10">
-            <span className="text-white/40 font-mono text-[10px] tracking-widest uppercase italic">Curator Simulator v2.5</span>
+            <span className="text-white/40 font-mono text-[10px] tracking-widest uppercase italic">{t('game.rpg.version')}</span>
             <span className="text-white/40 font-mono text-[10px] uppercase">{t('game.objective')}{t('game.rpg.goal')}</span>
           </div>
 
@@ -688,9 +685,10 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
   }
 
   return (
-    <div ref={containerRef} className={cn("w-full h-full flex flex-col p-4 sm:p-10 transition-colors duration-1000 relative overflow-y-auto custom-scrollbar [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none", mood.bg)}>
+    <div ref={containerRef} className={cn("w-full h-full flex flex-col p-4 sm:p-6 md:p-10 transition-colors duration-1000 relative overflow-y-auto custom-scrollbar [&.is-fullscreen]:shadow-none [&.is-fullscreen]:rounded-none [&.is-fullscreen]:border-none", mood.bg)}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
       
+      <div className="w-full max-w-5xl mx-auto flex flex-col flex-grow">
       {activeEvent && (
          <motion.div 
            initial={{ opacity: 0, y: 20 }}
@@ -712,7 +710,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
             className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center flex-col gap-6"
           >
             <div className="flex flex-col items-center gap-2">
-              <Paintbrush className="w-12 h-12 text-brand-accent animate-pulse" />
+              <Paintbrush className="w-12 h-12 text-brand-accent" />
               <h2 className="text-white font-black text-2xl uppercase tracking-[0.3em]">
                 {t('game.paused.system', 'ART SUSPENDED')}
               </h2>
@@ -729,10 +727,10 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
       <div className={cn("absolute -bottom-40 -left-40 w-96 h-96 blur-[150px] opacity-10 rounded-full transition-colors duration-1000", mood.accent.replace('text-', 'bg-'))} />
       
       {/* Header Info */}
-      <div className={cn("flex flex-col gap-6 border-b pb-6 mb-4 shrink-0 transition-colors duration-1000", mood.border, stats.sanity < 15 && "animate-pulse brightness-110")}>
+      <div className={cn("flex flex-col gap-6 border-b pb-6 mb-4 shrink-0 transition-colors duration-1000 w-full", mood.border, stats.sanity < 15 && "brightness-110")}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-             <div className={cn("w-3 h-3 rounded-full animate-pulse", mood.accent.replace('text-', 'bg-'))} />
+             <div className={cn("w-3 h-3 rounded-full", mood.accent.replace('text-', 'bg-'))} />
              <div className="flex flex-col">
                <span className="text-white font-black text-xs uppercase tracking-tighter">{t('game.rpg.title')}</span>
                <div className="flex items-center gap-2">
@@ -776,8 +774,8 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
               )}
             </div>
             <div className="flex items-center gap-2 px-2 py-1 bg-black/40 rounded-lg border border-white/5">
-               <div className={cn("w-1.5 h-1.5 rounded-full", stats.sanity < 30 ? "bg-red-500 animate-ping" : "bg-emerald-500")} />
-               <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">NEURAL_STABILITY</span>
+               <div className={cn("w-1.5 h-1.5 rounded-full", stats.sanity < 30 ? "bg-red-500 opacity-50" : "bg-emerald-500")} />
+               <span className="text-[7px] font-black text-white/40 uppercase tracking-widest">{t('game.rpg.label.stability')}</span>
             </div>
           </div>
         )}
@@ -785,9 +783,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
         {!node.isEnding && (
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'BUDGET', value: stats.budget, color: 'bg-amber-400', icon: '💰' },
-              { label: 'SANITY', value: stats.sanity, color: 'bg-blue-400', icon: '🧠' },
-              { label: 'REP', value: stats.reputation, color: mood.accent.replace('text-', 'bg-'), icon: '✨' }
+              { label: t('game.rpg.stat.budget'), value: stats.budget, color: 'bg-amber-400', icon: '💰' },
+              { label: t('game.rpg.stat.sanity'), value: stats.sanity, color: 'bg-blue-400', icon: '🧠' },
+              { label: t('game.rpg.stat.reputation'), value: stats.reputation, color: mood.accent.replace('text-', 'bg-'), icon: '✨' }
             ].map(stat => (
               <div key={stat.label} className="bg-black/20 backdrop-blur-sm p-3 rounded-2xl border border-white/5 flex flex-col gap-2 transition-all hover:border-white/10">
                 <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-[0.2em] text-white/30">
@@ -796,7 +794,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
                     stat.value < 25 ? "text-red-500 font-black scale-110 origin-right transition-transform" : "text-white/60",
                     stat.value > 80 ? "text-emerald-400 font-black" : ""
                   )}>
-                    {stat.value < 10 ? '¡CRÍTICO!' : stat.value < 30 ? '¡PELIGRO!' : stat.value > 90 ? 'DIVINO' : stat.value + '%'}
+                    {stat.value < 10 ? t('game.rpg.label.critical') : stat.value < 30 ? t('game.rpg.label.danger') : stat.value > 90 ? t('game.rpg.label.divine') : stat.value + '%'}
                   </span>
                 </div>
                 <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
@@ -838,23 +836,23 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
             >
               <div className="flex items-center gap-3">
                  <div className={cn("w-1 h-4 md:h-6 rounded-full transition-colors duration-1000", mood.accent.replace('text-', 'bg-'))} />
-                 <span className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em]", mood.accent)}>{node.isEnding ? 'FINAL_STATEMENT' : 'LOG_ENTRY_' + currentNode.toUpperCase()}</span>
+                 <span className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em]", mood.accent)}>{node.isEnding ? t('game.rpg.label.final_statement') : t('game.rpg.label.log_entry') + currentNode.toUpperCase()}</span>
               </div>
               
               <div 
                 className="relative cursor-pointer"
                 onClick={() => {
                   if (isTyping) {
-                    setDisplayedText(t(node.textKey));
+                    setDisplayedText((pathContext ? pathContext + "\n\n" : "") + t(node.textKey));
                     setIsTyping(false);
                   }
                 }}
               >
                 <div className="flex gap-4 md:gap-6">
-                  <span className={cn("text-xl sm:text-3xl md:text-4xl font-black animate-flicker shrink-0 pt-1", mood.accent)}>{'>'}</span>
+                  <span className={cn("text-xl sm:text-3xl md:text-4xl font-black shrink-0 pt-1", mood.accent)}>{'>'}</span>
                   <p className={cn(
                     "text-xl sm:text-3xl md:text-4xl font-bold leading-tight transition-all duration-300 font-sans",
-                    stats.sanity < 20 ? "text-red-500 drop-shadow-[0_0_8px_rgba(255,0,0,0.8)]" : "text-white"
+                    stats.sanity < 20 ? "text-red-500 drop-shadow-[0_0_4px_rgba(255,0,0,0.5)]" : "text-white"
                   )}>
                     {getGlitchedText(displayedText)}
                     {isTyping && <motion.span animate={{ opacity: [1, 0] }} transition={{ duration: 0.5, repeat: Infinity }} className="inline-block w-2 h-6 bg-brand-accent ml-1 align-middle" />}
@@ -925,12 +923,6 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
                         <span className={cn("text-[9px] md:text-[10px] font-black transition-colors px-2 md:px-3 py-1 md:py-1.5 rounded", idx === selectedIndex ? "bg-black text-white" : "bg-white/10 text-white/30 group-hover:text-white/60")}>0{idx + 1}</span>
                         <span className="text-sm md:text-base font-bold uppercase tracking-wider">{t(choice.textKey)}</span>
                       </div>
-                      
-                      {/* Stat Preview */}
-                      <div className="flex gap-2 mr-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                         {choice.stats?.budget !== undefined && <span className={cn("text-[8px] font-bold", choice.stats.budget > 0 ? "text-emerald-500" : "text-red-500")}>💰{choice.stats.budget > 0 ? '+' : ''}{choice.stats.budget}</span>}
-                         {choice.stats?.sanity !== undefined && <span className={cn("text-[8px] font-bold", choice.stats.sanity > 0 ? "text-emerald-500" : "text-red-500")}>🧠{choice.stats.sanity > 0 ? '+' : ''}{choice.stats.sanity}</span>}
-                      </div>
 
                       <span className={cn("transition-all", idx === selectedIndex ? "translate-x-0 opacity-100" : "translate-x-[-10px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100 font-black")}>→</span>
                     </motion.button>
@@ -944,9 +936,9 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
 
       {/* Aesthetic Footer */}
       <div className="flex justify-between items-center text-[7px] font-black text-white/10 uppercase tracking-[0.4em] pt-8 border-t border-white/5">
-         <span>SIM_SECTOR_V6 // PROTOCOL_BYPASS_ACTIVE</span>
-         <span className="text-brand-accent/40">{t('game.rpg.label.layer')}: {currentNode.startsWith('boss') ? 'BIZARRE_OVERLAY' : 'STANDARD_REALITY'}</span>
-         <span>TIMESTAMP: {new Date().toISOString()}</span>
+         <span>{t('game.rpg.label.system_sector')}</span>
+         <span className="text-brand-accent/40">{t('game.rpg.label.layer')}: {currentNode.startsWith('boss') ? t('game.rpg.label.layer_boss') : t('game.rpg.label.standard')}</span>
+         <span>{t('game.rpg.label.timestamp')}: {new Date().toISOString()}</span>
         <style>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
@@ -961,6 +953,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
             background: #8a63d2; 
           }
         `}</style>
+      </div>
       </div>
     </div>
   );

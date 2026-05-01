@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { useLanguage } from "../../context/LanguageContext";
 import { useAchievements } from "../../context/AchievementsContext";
+import { cn } from "../../lib/utils";
 import {
   Play,
   RefreshCw,
@@ -78,9 +79,11 @@ export function CreativeInvaders({
   isPausedGlobal = false,
   hideFullscreenButton = false,
   onFinish,
+  isFullscreen = false,
 }: {
   isPausedGlobal?: boolean;
   hideFullscreenButton?: boolean;
+  isFullscreen?: boolean;
   onFinish?: () => void;
 }) {
   const { t } = useLanguage();
@@ -2440,7 +2443,7 @@ export function CreativeInvaders({
         </div>
       </div>
 
-      <div className="relative border-x-4 border-b-4 border-blue-200 rounded-b-xl bg-[#fdf8ed] overflow-hidden w-full max-w-4xl flex-grow h-full max-h-[800px] touch-none shadow-sm shadow-blue-900/10">
+      <div className={cn("relative border-x-4 border-b-4 border-blue-200 rounded-b-xl bg-[#fdf8ed] overflow-hidden w-full flex-grow touch-none shadow-sm shadow-blue-900/10", isFullscreen ? "max-w-none max-h-none" : "max-w-4xl max-h-[800px]")}>
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.25] mix-blend-multiply z-10"
           style={{

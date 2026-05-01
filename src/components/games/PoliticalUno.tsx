@@ -36,7 +36,7 @@ type Card = {
   partyNameKey?: string;
 };
 
-export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
+export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean, onFinish?: () => void }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -52,13 +52,6 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   const [specialCardsPlayed, setSpecialCardsPlayed] = useState(0);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    const handleFs = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handleFs);
-    return () => document.removeEventListener('fullscreenchange', handleFs);
-  }, []);
 
   const cardGuide = [
     {
@@ -575,7 +568,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
   return (
     <div ref={containerRef} className={cn(
       "flex flex-col items-center h-full min-h-[450px] md:min-h-[600px] w-full max-w-7xl mx-auto font-sans text-[10px] md:text-sm text-white pt-2 pb-8 relative overflow-y-auto custom-scrollbar bg-[#0a0a0A]",
-      isFullscreen && "bg-black pb-4 text-xs md:text-md overflow-hidden"
+      isFullscreen && "bg-black pb-4 text-xs md:text-md overflow-hidden max-w-none"
     )}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2 z-50" />}
 
