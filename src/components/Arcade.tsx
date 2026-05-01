@@ -75,8 +75,7 @@ export function Arcade() {
         t('arc.boot.drivers.line'),
         t('arc.boot.sound.line'),
         t('arc.boot.network.line'),
-        "",
-        t('arc.boot.wait.line')
+        ""
       ];
       
       lines.forEach((line, index) => {
@@ -441,7 +440,7 @@ export function Arcade() {
                     </div>
                   )}
 
-                  <div className="text-brand-accent font-[var(--font-pixel)] text-[10px] md:text-xs leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.8)] z-0 pb-12">
+                  <div className="text-brand-accent font-[var(--font-pixel)] text-[10px] md:text-xs leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.8)] z-0">
                     {bootLog.map((line, i) => (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }} 
@@ -453,31 +452,32 @@ export function Arcade() {
                       </motion.div>
                     ))}
                     {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent ml-1 translate-y-1"></motion.span>}
-                    {powerState === 'waiting' && (
-   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-2">
-      {games.map(g => (
-         <button
-            key={g.id}
-            aria-label={g.label}
-            onClick={() => handleInsertCartridge(g.id)}
-            className="border-2 border-brand-accent/50 bg-brand-accent/5 p-3 md:p-4 font-mono text-left hover:bg-brand-accent hover:text-black focus:bg-brand-accent focus:text-black focus:outline-none transition-colors group flex items-center gap-4"
-         >
-            <div className="text-brand-accent group-hover:text-black group-focus:text-black text-xl md:text-2xl">{g.icon}</div>
-            <div>
-               <div className="font-bold text-xs md:text-sm">{g.label}</div>
-               <div className="text-[8px] md:text-[10px] opacity-75">{g.title}</div>
-            </div>
-         </button>
-      ))}
-      <div className="col-span-1 md:col-span-2 text-center mt-4">
-         <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent translate-y-1 mr-2"></motion.span>
-         <span className="text-[10px] uppercase tracking-widest break-all">{t('arc.boot.wait.line')}</span>
-      </div>
-   </div>
-)}
                   </div>
+
+                  {powerState === 'waiting' && (
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-2 pb-24 relative z-0">
+                      {games.map(g => (
+                        <button
+                          key={g.id}
+                          aria-label={g.label}
+                          onClick={() => handleInsertCartridge(g.id)}
+                          className="border-2 border-brand-accent/50 bg-brand-accent/5 p-3 md:p-4 font-mono text-left hover:bg-brand-accent hover:text-black focus:bg-brand-accent focus:text-black focus:outline-none transition-colors group flex items-center gap-4"
+                        >
+                          <div className="text-brand-accent group-hover:text-black group-focus:text-black text-xl md:text-2xl">{g.icon}</div>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="font-bold text-xs md:text-sm leading-tight text-brand-accent group-hover:text-black group-focus:text-black">{g.label}</div>
+                            <div className="text-[8px] md:text-[10px] opacity-75 leading-tight">{g.title}</div>
+                          </div>
+                        </button>
+                      ))}
+                      <div className="col-span-1 md:col-span-2 text-center mt-8 pb-12">
+                        <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent translate-y-1 mr-2"></motion.span>
+                        <span className="text-[10px] uppercase tracking-widest break-all text-brand-accent/80">{t('arc.boot.wait.line')}</span>
+                      </div>
+                    </div>
+                  )}
                   {/* Fade-out mask at the bottom to prevent harsh cut */}
-                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent pointer-events-none z-10" />
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-10" />
                 </div>
               )}
 

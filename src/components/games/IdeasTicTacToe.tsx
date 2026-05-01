@@ -179,7 +179,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
 
   return (
     <div ref={containerRef} className={cn(
-      "flex flex-col items-center justify-center font-[var(--font-pixel)] w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-y-auto custom-scrollbar transition-all duration-500",
+      "flex flex-col items-center justify-center font-sans w-full h-full max-w-[400px] mx-auto relative bg-[#0a0a0a] min-h-[350px] rounded-xl border-4 border-gray-800 p-2 sm:p-4 shadow-xl overflow-y-auto custom-scrollbar transition-all duration-500",
       isFullscreen && "bg-black border-none rounded-none max-w-none"
     )}>
       {!hideFullscreenButton && <FullscreenButton targetRef={containerRef} className="top-2 right-2" />}
@@ -253,7 +253,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
          <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase font-bold tracking-widest">{t('game.objective')}{t('game.ttt.goal')}</p>
          <span className="absolute -top-4 right-0 rotate-12 text-[8px] bg-red-600 text-white font-bold px-2 py-0.5 shadow-md border border-red-400 opacity-80 group-hover:opacity-100 transition-opacity">BY RIVAD</span>
       </div>
-      <div className="mb-2 text-center text-[10px] md:text-xs leading-tight w-full flex flex-col justify-center gap-1">
+      <div className="mb-2 text-center text-xs md:text-sm leading-tight w-full flex flex-col justify-center gap-1 font-mono">
         {!winner && !isDraw && (
           <div className="flex gap-1 justify-center scale-75 opacity-60 hover:opacity-100 transition-opacity">
             {(['rationalist', 'traditionalist', 'postmodernist'] as const).map(p => (

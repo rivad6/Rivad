@@ -363,7 +363,7 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
   }, [isPlaying]);
 
   return (
-    <div className={isPlaying ? "absolute inset-0 z-[100] bg-black flex flex-col items-center p-4 overflow-y-auto custom-scrollbar" : "flex flex-col items-center max-w-full overflow-hidden font-[var(--font-pixel)]"}>
+    <div className={isPlaying ? "absolute inset-0 z-[100] bg-black flex flex-col items-center p-4 overflow-y-auto custom-scrollbar font-sans" : "flex flex-col items-center max-w-full overflow-hidden font-sans"}>
       <div className={isPlaying ? "w-full max-w-[600px] flex flex-col min-h-full items-center" : "flex flex-col items-center w-full"}>
       <div className="flex justify-between w-full max-w-[420px] mx-auto px-6 py-4 mb-4 text-[#fcfcfc] bg-zinc-900/50 rounded-xl border border-white/5 shadow-xl shrink-0 pt-4">
         <div className="flex flex-col items-center">

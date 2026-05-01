@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dices, ArrowRight, MessageSquare, Send, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getGeneratorData } from '../data/generatorData';
 
 export function GeneratorPage() {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [eventName, setEventName] = useState("");
   const [selections, setSelections] = useState({ type: "", location: "", audience: "", budget: "" });
@@ -181,12 +182,10 @@ export function GeneratorPage() {
                       <button 
                         aria-label={t('orc.btn.action')}
                         onClick={() => {
-                          const contactDiv = document.getElementById('contacto');
-                          if (contactDiv) {
-                            contactDiv.scrollIntoView({ behavior: 'smooth' });
-                            const select = document.getElementById('topic') as HTMLSelectElement;
-                            if (select) select.value = 'Gestión Cultural y Conferencias';
-                          }
+                          navigate('/?contact=true');
+                          // The Home page or AppContent will handle the scroll if needed, 
+                          // but for now let's just use mailto to ensure "it leads to me" as requested.
+                          window.location.href = `mailto:oscarcesar0606@gmail.com?subject=Rivad Oracle: ${eventName}&body=Hola Rivad, obtuve este resultado: "${response}". Ayúdame a sacarlo del pizarrón.`;
                         }}
                         className="bg-pink-500 text-white px-8 py-4 rounded-full font-mono font-bold uppercase tracking-widest text-xs hover:bg-white hover:text-black hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-300 w-full sm:w-auto text-center flex items-center justify-center gap-3"
                       >

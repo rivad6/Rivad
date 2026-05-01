@@ -74,9 +74,9 @@ html {
   left: 0;
   bottom: 0;
   right: 0;
-  background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.08), rgba(0, 255, 0, 0.03), rgba(0, 0, 255, 0.08));
+  background: linear-gradient(transparent 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
   z-index: 20;
-  background-size: 100% 4px, 6px 100%;
+  background-size: 100% 2px, 3px 100%;
   pointer-events: none;
   animation: scanlines 10s linear infinite;
 }
@@ -117,12 +117,12 @@ html {
 
 
 @keyframes flicker {
-  0% { opacity: 0.98; }
-  5% { opacity: 0.85; }
-  10% { opacity: 0.98; }
+  0% { opacity: 0.99; }
+  5% { opacity: 0.95; }
+  10% { opacity: 0.99; }
   15% { opacity: 1; }
-  50% { opacity: 0.98; }
-  55% { opacity: 0.95; }
+  50% { opacity: 0.99; }
+  55% { opacity: 0.98; }
   60% { opacity: 0.99; }
   100% { opacity: 1; }
 }
