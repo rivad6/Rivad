@@ -57,6 +57,7 @@ export function ThemeSwitcher() {
             {THEMES.map((theme) => (
               <button
                 key={theme.color}
+                aria-label={`Select theme color ${theme.color}`}
                 onClick={() => handleSelect(theme)}
                 className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${activeColor === theme.color ? 'border-white' : 'border-transparent'}`}
                 style={{ backgroundColor: theme.color }}

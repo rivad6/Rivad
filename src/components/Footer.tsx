@@ -104,6 +104,7 @@ export function Footer() {
                 <div className="space-y-3">
                   <label htmlFor="name" className="text-[9px] font-mono tracking-[0.4em] text-gray-600 uppercase block">{t('footer.form.name.label')}</label>
                   <input 
+                    aria-label={t('footer.form.name.label')}
                     type="text" 
                     id="name" 
                     name="name"
@@ -115,6 +116,7 @@ export function Footer() {
                 <div className="space-y-3">
                   <label htmlFor="email" className="text-[9px] font-mono tracking-[0.4em] text-gray-600 uppercase block">{t('footer.form.email.label')}</label>
                   <input 
+                    aria-label={t('footer.form.email.label')}
                     type="email" 
                     id="email" 
                     name="email"
@@ -128,7 +130,7 @@ export function Footer() {
               <div className="space-y-3">
                 <label htmlFor="topic" className="text-[9px] font-mono tracking-[0.4em] text-gray-600 uppercase block">{t('footer.form.topic.label')}</label>
                 <div className="relative">
-                  <select id="topic" name="topic" required className="w-full bg-transparent border-b border-white/10 py-4 text-gray-500 focus:outline-none focus:border-brand-accent transition-colors duration-300 px-1 appearance-none font-sans text-lg cursor-pointer hover:text-white">
+                  <select aria-label={t('footer.form.topic.label')} id="topic" name="topic" required className="w-full bg-transparent border-b border-white/10 py-4 text-gray-500 focus:outline-none focus:border-brand-accent transition-colors duration-300 px-1 appearance-none font-sans text-lg cursor-pointer hover:text-white">
                     <option value="" className="text-gray-500 bg-transparent">{t('footer.form.topic.opt1')}</option>
                     <option value="Servicios Web" className="text-gray-100 bg-[#111]">{t('footer.form.topic.opt2')}</option>
                     <option value="Juegos Web" className="text-gray-100 bg-[#111]">{t('footer.form.topic.opt3')}</option>
@@ -153,6 +155,7 @@ export function Footer() {
               
               <button 
                 type="submit" 
+                aria-label={t('footer.send')}
                 className="w-full mt-12 frosted-layer border border-brand-accent/30 text-brand-accent hover:border-brand-accent hover:bg-brand-accent hover:text-white transition-all duration-700 py-6 font-mono font-bold uppercase tracking-[0.4em] text-[10px] justify-center items-center gap-4 group flex rounded-2xl shadow-[0_0_20px_rgba(220,38,38,0.1)] hover:shadow-[0_0_30px_rgba(220,38,38,0.3)]"
               >
                 {t('footer.send')}

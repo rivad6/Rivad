@@ -68,12 +68,14 @@ export function PricingPopup() {
 
           <div className="flex gap-4">
             <button
+              aria-label={t('popup.pricing.close') || 'Ignorar por ahora'}
               onClick={() => setIsOpen(false)}
               className="flex-1 px-4 py-3 border border-white/10 hover:bg-white/5 text-gray-400 text-xs font-mono tracking-widest transition-colors rounded uppercase"
             >
               {t('popup.pricing.close') || 'Ignorar por ahora'}
             </button>
             <button
+              aria-label={t('popup.pricing.cta') || 'Cotizar ecosistema'}
               onClick={() => {
                 setIsOpen(false);
                 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });

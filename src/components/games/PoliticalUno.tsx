@@ -591,6 +591,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
               {[2, 3, 4].map(count => (
                 <button
                   key={count}
+                  aria-label={`${count} Players`}
                   onClick={() => initGame(count)}
                   className="bg-zinc-900 hover:bg-brand-accent transition-all p-4 rounded-xl border border-white/5 flex flex-col items-center gap-2 group"
                 >
@@ -643,6 +644,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
       {/* Card Guide Toggle Button */}
       <div className="absolute top-4 right-4 z-[70]">
         <button
+          aria-label="Toggle Card Guide"
           onClick={() => setIsGuideOpen(!isGuideOpen)}
           className="bg-zinc-900/80 p-2 rounded-full border border-white/10 hover:border-brand-accent transition-colors shadow-xl"
           title="Card Guide / Guía de Cartas"
@@ -680,6 +682,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
               ))}
             </div>
             <button 
+              aria-label="Close Guide"
               onClick={() => setIsGuideOpen(false)}
               className="mt-6 w-full py-2 bg-zinc-900 rounded-lg text-[9px] font-black uppercase text-zinc-500 hover:text-white transition-colors border border-white/5"
             >
@@ -739,6 +742,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
 
                {/* Deck */}
                <button 
+                 aria-label={t('game.uno.label.draw')}
                  onClick={drawCard}
                  disabled={turn !== 0 || winner !== null || isChoosingColor}
                  className={cn(
@@ -891,6 +895,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
               <div className="grid grid-cols-2 gap-3 md:gap-4 w-full">
                 {colors.map(color => (
                   <motion.button
+                    aria-label={`Select color ${color}`}
                     key={color}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -961,6 +966,7 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
               )}
               
               <motion.button
+                aria-label={t('game.uno.label.reset_btn')}
                 whileHover={{ scale: 1.1, backgroundColor: '#fff', color: '#000' }}
                 whileTap={{ scale: 0.9 }}
                 onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}

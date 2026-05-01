@@ -250,7 +250,19 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       if (controlMode !== 'mouse') return;
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      touchTargetX = ((clientX - rect.left) / rect.width) * canvas.width;
+      
+      const scaleX = canvas.width / canvas.height;
+      const scaleY = rect.width / rect.height;
+      let displayedWidth = rect.width;
+      let displayedHeight = rect.height;
+      if (scaleX > scaleY) {
+        displayedHeight = rect.width / scaleX;
+      } else {
+        displayedWidth = rect.height * scaleX;
+      }
+      const offsetX = (rect.width - displayedWidth) / 2;
+      
+      touchTargetX = ((clientX - rect.left - offsetX) / displayedWidth) * canvas.width;
     };
 
     const handlePointerDown = (e: any) => {
@@ -610,17 +622,20 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       if (player.x < -player.width) player.x = canvas.width;
       if (player.x > canvas.width) player.x = -player.width;
       
-            // Jetpack & Controls
+      // Jetpack
       if (player.jetpack > 0) {
          player.jetpack -= normalDt;
          player.vy = -18 - upgrades.jump * 1.5;
          createParticles(player.x + player.width/2, player.y + player.height, '#f43f5e');
          setHudJetpack(Math.floor(player.jetpack));
-      } else {
-         const maxSpeed = selectedChar.speed + upgrades.luck * 0.2; 
-         
-         // Only use mouse tracking if in mouse mode AND we have a target
-         if (controlMode === 'mouse' && touchTargetX !== null) {
+      }
+
+      // Horizontal Controls
+      let maxSpeed = selectedChar.speed + upgrades.luck * 0.2;
+      if (player.jetpack > 0) maxSpeed *= 0.6; // Reduce speed side-to-side when jetpack is active
+      
+      // Only use mouse tracking if in mouse mode AND we have a target
+      if (controlMode === 'mouse' && touchTargetX !== null) {
             let diff = touchTargetX - (player.x + player.width/2);
             
             // Shortest path around screen wrap
@@ -657,7 +672,6 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          const hardCap = maxSpeed * 1.4;
          if (player.vx > hardCap) player.vx = hardCap;
          if (player.vx < -hardCap) player.vx = -hardCap;
-      }
       
       // Camera Follow
       if (player.y < canvas.height / 2) {
@@ -1496,6 +1510,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
               
               {isPlaying && (
                 <button 
+                  aria-label="Pause game"
                   onClick={() => setIsPaused(true)}
                   className="bg-zinc-900/80 text-white p-2.5 rounded-lg border border-white/10 hover:bg-zinc-800 hover:border-pink-500/50 transition-all shadow-lg active:scale-95 flex items-center justify-center"
                 >
@@ -1560,12 +1575,14 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                
                <div className="flex flex-col gap-4 w-full max-w-sm">
                   <button 
+                    aria-label="Play Again"
                     onClick={() => { setGameResult(null); setIsPlaying(true); playSound('start'); }}
                     className="w-full py-5 bg-white text-black font-black uppercase text-xl hover:bg-pink-500 hover:text-white transition-colors"
                   >
                      PLAY AGAIN
                   </button>
                   <button 
+                    aria-label="Main Menu"
                     onClick={() => setGameResult(null)}
                     className="w-full py-4 text-white/40 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
                   >
@@ -1598,6 +1615,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                     <div className="flex flex-col gap-4">
                        <h4 className="text-white/60 text-xs font-bold uppercase tracking-[0.3em] mb-4">Select Controls</h4>
                        <button 
+                         aria-label="Select Keyboard Controls"
                          onClick={() => { setControlMode('keyboard'); playSound('click'); }}
                          className="flex items-center justify-between p-5 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-pink-500 group transition-all"
                        >
@@ -1614,6 +1632,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                        </button>
 
                        <button 
+                         aria-label="Select Mouse Controls"
                          onClick={() => { setControlMode('mouse'); playSound('click'); }}
                          className="flex items-center justify-between p-5 bg-zinc-900 border border-white/10 text-white rounded-xl hover:border-blue-500 group transition-all"
                        >
@@ -1632,6 +1651,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                  ) : (
                     <div className="flex flex-col gap-4">
                        <button 
+                         aria-label="Start Game"
                          onClick={() => { setIsPlaying(true); playSound('start'); }}
                          className="group relative w-full py-7 bg-white text-black font-black text-2xl uppercase skew-x-[-10deg] overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
                        >
@@ -1641,6 +1661,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                        
                        <div className="flex gap-2">
                           <button 
+                            aria-label="Customize Character"
                             onClick={() => setShowShop(true)}
                             className="flex-1 py-5 bg-zinc-900 border border-white/10 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-zinc-800 transition-colors"
                           >
@@ -1648,6 +1669,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                           </button>
                           
                           <button 
+                            aria-label="Change Controls"
                             onClick={() => setControlMode(null)}
                             className="p-5 bg-zinc-900 border border-white/10 text-white/40 hover:text-white transition-colors flex items-center justify-center"
                             title="Change Controls"
@@ -1677,10 +1699,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              >
                 <div className="flex flex-col items-center max-w-sm w-full bg-zinc-900 p-8 rounded-3xl border border-white/10 shadow-2xl">
                    <h3 className="text-white text-sm font-bold uppercase tracking-widest mb-6 flex items-center gap-2"><Key className="text-pink-500" size={16}/> SYSTEM_OVERRIDE</h3>
-                   <input autoFocus value={codeInput} onChange={e=>setCodeInput(e.target.value.toUpperCase())} className="w-full bg-black/50 border border-pink-500/30 text-pink-400 text-center text-xl tracking-[0.3em] p-4 rounded-xl uppercase placeholder:text-white/10 focus:outline-none focus:border-pink-500 shadow-[inset_0_0_20px_rgba(236,72,153,0.1)] transition-colors font-mono mb-6" placeholder="******" />
+                   <input aria-label="System Override Code" autoFocus value={codeInput} onChange={e=>setCodeInput(e.target.value.toUpperCase())} className="w-full bg-black/50 border border-pink-500/30 text-pink-400 text-center text-xl tracking-[0.3em] p-4 rounded-xl uppercase placeholder:text-white/10 focus:outline-none focus:border-pink-500 shadow-[inset_0_0_20px_rgba(236,72,153,0.1)] transition-colors font-mono mb-6" placeholder="******" />
                    <div className="flex w-full gap-3">
-                      <button onClick={() => setShowCodeInput(false)} className="flex-1 p-3 bg-white/5 border border-white/10 text-white/50 text-[10px] rounded-lg tracking-widest font-bold uppercase hover:bg-white/10 transition-colors uppercase">Cancel</button>
-                      <button onClick={handleApplyCode} className="flex-[2] p-3 bg-pink-500 text-black text-[10px] rounded-lg tracking-widest font-black uppercase hover:bg-pink-400 transition-all uppercase">Apply Override</button>
+                      <button aria-label="Cancel" onClick={() => setShowCodeInput(false)} className="flex-1 p-3 bg-white/5 border border-white/10 text-white/50 text-[10px] rounded-lg tracking-widest font-bold uppercase hover:bg-white/10 transition-colors uppercase">Cancel</button>
+                      <button aria-label="Apply Override" onClick={handleApplyCode} className="flex-[2] p-3 bg-pink-500 text-black text-[10px] rounded-lg tracking-widest font-black uppercase hover:bg-pink-400 transition-all uppercase">Apply Override</button>
                    </div>
                 </div>
              </motion.div>
@@ -1695,7 +1717,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
              >
                 <div className="flex justify-between items-center mb-8 border-b-4 border-pink-500 pb-4">
                    <h2 className="text-4xl font-black italic text-white tracking-tighter uppercase">the.vault</h2>
-                   <button onClick={() => setShowShop(false)} className="bg-white text-black p-2 rounded-lg font-black hover:bg-pink-500 transition-colors"><ChevronLeft size={24}/></button>
+                   <button aria-label="Close Shop" onClick={() => setShowShop(false)} className="bg-white text-black p-2 rounded-lg font-black hover:bg-pink-500 transition-colors"><ChevronLeft size={24}/></button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar space-y-8 pr-2">
@@ -1703,6 +1725,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                       {['chars', 'upgrades'].map((tab) => (
                          <button 
                            key={tab} 
+                           aria-label={`Select tab ${tab}`}
                            onClick={() => setShopTab(tab as any)}
                            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${shopTab === tab ? 'bg-pink-500 border-pink-500 text-black' : 'bg-white/5 border-white/10 text-white/50'}`}
                          >
@@ -1716,6 +1739,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                          {CHARACTERS.map(char => (
                             <button 
                               key={char.id}
+                              aria-label={`Select character ${char.id}`}
                               onClick={() => {
                                  if (unlockedChars.includes(char.id)) { setSelectedCharId(char.id); playSound('click'); }
                                  else if (festCoins >= char.price) { setFestCoins(c => c - char.price); setUnlockedChars(p => [...p, char.id]); setSelectedCharId(char.id); playSound('win'); }
@@ -1745,6 +1769,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                                <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">{(t as any)(`game.fest.item_name.${upg}`)}</span>
                                <span className="text-xl font-black text-white">LV.{upgrades[upg as keyof typeof upgrades]}</span>
                                <button 
+                                 aria-label={`Buy upgrade ${upg}`}
                                  onClick={() => {
                                     const cost = (upgrades[upg as keyof typeof upgrades] + 1) * 300;
                                     if (festCoins >= cost) { setFestCoins(c => c - cost); setUpgrades(p => ({...p, [upg]: p[upg as keyof typeof upgrades] + 1})); playSound('score'); }
@@ -1773,6 +1798,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                    <h2 className="text-5xl font-black italic text-white tracking-tighter mb-4">{t('game.fest.pause')}</h2>
                    
                    <button 
+                     aria-label="Resume game"
                      onClick={() => setIsPaused(false)}
                      className="w-full py-5 bg-pink-500 text-black font-black text-xl uppercase skew-x-[-10deg] shadow-[0_10px_20px_rgba(236,72,153,0.2)] hover:scale-105 active:scale-95 transition-all"
                    >
@@ -1780,6 +1806,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                    </button>
                    
                    <button 
+                     aria-label="Restart game"
                      onClick={() => { 
                         setIsPaused(false); 
                         setIsPlaying(false);
@@ -1795,6 +1822,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                    </button>
                    
                    <button 
+                     aria-label="Quit game"
                      onClick={() => { setIsPaused(false); setIsPlaying(false); }}
                      className="w-full py-4 text-white/40 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
                    >
@@ -1811,10 +1839,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
       {isPlaying && showMobileControls && (
         <div className="relative z-50 w-full mt-4 px-4 flex justify-between md:hidden gap-4 pointer-events-auto">
           <div className="flex gap-4 w-2/3">
-            <button onPointerDown={(e) => { e.preventDefault(); keysRef.current.left = true; }} onPointerUp={(e) => { e.preventDefault(); keysRef.current.left = false; }} onPointerLeave={(e) => { e.preventDefault(); keysRef.current.left = false; }} className="flex-1 h-20 bg-gradient-to-t from-gray-900 to-gray-800 rounded-2xl shadow-[0_8px_0_#111827,0_15px_20px_rgba(0,0,0,0.5)] active:translate-y-2 active:shadow-[0_0px_0_#111827,0_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center text-white/50 border border-white/10 touch-none"><ChevronLeft size={36} /></button>
-            <button onPointerDown={(e) => { e.preventDefault(); keysRef.current.right = true; }} onPointerUp={(e) => { e.preventDefault(); keysRef.current.right = false; }} onPointerLeave={(e) => { e.preventDefault(); keysRef.current.right = false; }} className="flex-1 h-20 bg-gradient-to-t from-gray-900 to-gray-800 rounded-2xl shadow-[0_8px_0_#111827,0_15px_20px_rgba(0,0,0,0.5)] active:translate-y-2 active:shadow-[0_0px_0_#111827,0_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center text-white/50 border border-white/10 touch-none"><ChevronRight size={36} /></button>
+            <button aria-label="Move Left" onPointerDown={(e) => { e.preventDefault(); keysRef.current.left = true; }} onPointerUp={(e) => { e.preventDefault(); keysRef.current.left = false; }} onPointerLeave={(e) => { e.preventDefault(); keysRef.current.left = false; }} className="flex-1 h-20 bg-gradient-to-t from-gray-900 to-gray-800 rounded-2xl shadow-[0_8px_0_#111827,0_15px_20px_rgba(0,0,0,0.5)] active:translate-y-2 active:shadow-[0_0px_0_#111827,0_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center text-white/50 border border-white/10 touch-none"><ChevronLeft size={36} /></button>
+            <button aria-label="Move Right" onPointerDown={(e) => { e.preventDefault(); keysRef.current.right = true; }} onPointerUp={(e) => { e.preventDefault(); keysRef.current.right = false; }} onPointerLeave={(e) => { e.preventDefault(); keysRef.current.right = false; }} className="flex-1 h-20 bg-gradient-to-t from-gray-900 to-gray-800 rounded-2xl shadow-[0_8px_0_#111827,0_15px_20px_rgba(0,0,0,0.5)] active:translate-y-2 active:shadow-[0_0px_0_#111827,0_0px_0px_rgba(0,0,0,0.5)] flex items-center justify-center text-white/50 border border-white/10 touch-none"><ChevronRight size={36} /></button>
           </div>
-          <button onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' })); }} onPointerUp={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' })); }} className="w-1/3 h-20 bg-gradient-to-t from-pink-700 to-pink-500 rounded-2xl shadow-[0_8px_0_#831843,0_15px_30px_rgba(236,72,153,0.4)] active:translate-y-2 active:shadow-none flex items-center justify-center text-white border border-pink-400 touch-none"><Rocket size={32} className="animate-pulse" /></button>
+          <button aria-label="Jump" onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' })); }} onPointerUp={(e) => { e.preventDefault(); window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' })); }} className="w-1/3 h-20 bg-gradient-to-t from-pink-700 to-pink-500 rounded-2xl shadow-[0_8px_0_#831843,0_15px_30px_rgba(236,72,153,0.4)] active:translate-y-2 active:shadow-none flex items-center justify-center text-white border border-pink-400 touch-none"><Rocket size={32} className="animate-pulse" /></button>
         </div>
       )}
       </div>

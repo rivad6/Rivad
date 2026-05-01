@@ -107,6 +107,7 @@ export function GeneratorPage() {
                 <div className="w-full max-w-xl">
                   <label className="block font-mono text-xs text-pink-500/70 uppercase tracking-widest mb-6">{t('orc.input.label')}</label>
                   <input 
+                    aria-label={t('orc.input.label')}
                     type="text" 
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
@@ -116,6 +117,7 @@ export function GeneratorPage() {
                 </div>
                 
                 <button 
+                  aria-label="Spin Oracle"
                   onClick={handleSpin}
                   disabled={!eventName.trim()}
                   className="bg-white text-black px-12 py-5 rounded-full font-mono uppercase tracking-[0.2em] text-sm font-bold hover:bg-pink-500 hover:text-white hover:shadow-[0_0_40px_rgba(236,72,153,0.6)] transition-all duration-300 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-black disabled:hover:shadow-none disabled:cursor-not-allowed flex items-center gap-4 group"
@@ -177,6 +179,7 @@ export function GeneratorPage() {
                     
                     <div className="mt-12 flex flex-col sm:flex-row gap-6 items-center justify-between border-t border-pink-900/30 pt-8">
                       <button 
+                        aria-label={t('orc.btn.action')}
                         onClick={() => {
                           const contactDiv = document.getElementById('contacto');
                           if (contactDiv) {
@@ -189,7 +192,7 @@ export function GeneratorPage() {
                       >
                         {t('orc.btn.action')} <Send size={14} />
                       </button>
-                      <button onClick={() => {
+                      <button aria-label={t('orc.btn.reset')} onClick={() => {
                         setStep(1);
                         setEventName("");
                       }} className="text-pink-300/50 hover:text-pink-300 font-mono uppercase text-xs tracking-widest transition-colors flex items-center gap-2">

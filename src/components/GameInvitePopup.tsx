@@ -61,6 +61,7 @@ export function GameInvitePopup() {
                 </div>
 
                 <button
+                  aria-label={t('popup.invite.btn')}
                   onClick={() => {
                     navigate('/juegos');
                     setIsVisible(false);

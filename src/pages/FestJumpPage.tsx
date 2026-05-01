@@ -144,14 +144,14 @@ export function FestJumpPage() {
                    </h3>
                    <div className="space-y-4">
                       {/* Sponsor Block */}
-                      <button onClick={() => setActiveModal('sponsor_contact')} className="w-full text-left bg-gradient-to-r from-gray-900 to-black border border-white/5 p-4 rounded-xl hover:border-fuchsia-500/50 transition-colors group">
+                      <button aria-label="Sponsor Neon Cola" onClick={() => setActiveModal('sponsor_contact')} className="w-full text-left bg-gradient-to-r from-gray-900 to-black border border-white/5 p-4 rounded-xl hover:border-fuchsia-500/50 transition-colors group">
                          <div className="flex justify-between items-center mb-2">
                            <span className="font-bold text-white uppercase tracking-wider">Neon Cola</span>
                            <span className="text-[10px] bg-fuchsia-500/20 text-fuchsia-400 px-2 py-1 rounded font-mono">PARTNER</span>
                          </div>
                          <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors">Official energy provider of the simulation.</p>
                       </button>
-                      <button onClick={() => setActiveModal('sponsor_deck')} className="w-full text-left bg-gradient-to-r from-gray-900 to-black border border-white/5 p-4 rounded-xl hover:border-cyan-500/50 transition-colors group">
+                      <button aria-label="Sponsor Cybernetics Inc" onClick={() => setActiveModal('sponsor_deck')} className="w-full text-left bg-gradient-to-r from-gray-900 to-black border border-white/5 p-4 rounded-xl hover:border-cyan-500/50 transition-colors group">
                          <div className="flex justify-between items-center mb-2">
                            <span className="font-bold text-white uppercase tracking-wider">Cybernetics Inc</span>
                            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded font-mono">PLATINUM</span>
@@ -224,6 +224,7 @@ export function FestJumpPage() {
                   </div>
 
                   <button 
+                     aria-label="View Global Ranks"
                      onClick={() => setActiveModal('full_rankings')}
                      className="w-full mt-6 py-3 border border-white/10 text-xs font-mono text-gray-400 hover:text-white hover:bg-white/5 rounded-xl uppercase tracking-widest transition-all"
                   >
@@ -253,7 +254,7 @@ export function FestJumpPage() {
                >
                   <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 to-transparent pointer-events-none" />
                   
-                  <button onClick={handleModalClose} className="absolute top-6 right-6 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors z-10">
+                  <button aria-label="Close Modal" onClick={handleModalClose} className="absolute top-6 right-6 text-gray-500 hover:text-white bg-black/50 p-2 rounded-full border border-white/10 transition-colors z-10">
                      <X size={16} />
                   </button>
 
@@ -267,7 +268,7 @@ export function FestJumpPage() {
                            <p className="text-gray-400 leading-relaxed mb-8">
                               Place your brand directly inside the Jumpfest simulation. We offer virtual billboards, custom playable characters, and thematic power-ups.
                            </p>
-                           <button onClick={handleModalClose} className="w-full py-4 bg-white hover:bg-gray-200 text-black font-bold uppercase tracking-widest rounded-xl transition-all">
+                           <button aria-label="Request Media Kit" onClick={handleModalClose} className="w-full py-4 bg-white hover:bg-gray-200 text-black font-bold uppercase tracking-widest rounded-xl transition-all">
                               Request Media Kit
                            </button>
                         </>
@@ -282,7 +283,7 @@ export function FestJumpPage() {
                            <p className="text-gray-400 leading-relaxed mb-8">
                               Dive into our realtime metrics. The Engine delivers unparalleled engagement. View our interactive brief to explore tiers and integrations.
                            </p>
-                           <button onClick={handleModalClose} className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-widest rounded-xl transition-all">
+                           <button aria-label="Download Brief PDF" onClick={handleModalClose} className="w-full py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold uppercase tracking-widest rounded-xl transition-all">
                               Download Brief PDF
                            </button>
                         </>
@@ -297,7 +298,7 @@ export function FestJumpPage() {
                            <p className="text-gray-400 leading-relaxed mb-8">
                               We are currently fetching the planetary leaderboard data from outer rim nodes. Please check back next cycle.
                            </p>
-                           <button onClick={handleModalClose} className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest rounded-xl border border-zinc-700 transition-colors">
+                           <button aria-label="Close Dashboard" onClick={handleModalClose} className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase tracking-widest rounded-xl border border-zinc-700 transition-colors">
                               Close Dashboard
                            </button>
                         </>
@@ -317,7 +318,7 @@ export function FestJumpPage() {
                               <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-md">Vanguard</span>
                            </div>
                            
-                           <button onClick={handleModalClose} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-widest rounded-xl border border-white/10 transition-colors">
+                           <button aria-label="Close Profile" onClick={handleModalClose} className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-widest rounded-xl border border-white/10 transition-colors">
                               Close Profile
                            </button>
                         </>

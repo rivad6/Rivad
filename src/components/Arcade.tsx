@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize, Joystick, Trophy, Zap } from 'lucide-react';
+import { Gamepad2, Layers, Cpu, Paintbrush, DollarSign, MessageCircle, Target, Power, ArrowDown, Maximize, Minimize, Trophy, Zap } from 'lucide-react';
 import { DebatePong } from './games/DebatePong';
 import { IdeasTicTacToe } from './games/IdeasTicTacToe';
 import { PoliticalUno } from './games/PoliticalUno';
@@ -12,12 +12,14 @@ import { useAchievements } from '../context/AchievementsContext';
 import { useAudio } from '../context/AudioContext';
 import { useLanguage } from '../context/LanguageContext';
 import { cn } from '../lib/utils';
+import { AchievementsViewer } from './AchievementsViewer';
 
 export function Arcade() {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
   const { playSound, playMusic } = useAudio();
   const [showPopup, setShowPopup] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const [powerState, setPowerState] = useState<'off' | 'booting' | 'waiting' | 'inserting' | 'playing'>('off');
   const [bootLog, setBootLog] = useState<string[]>([]);
 
@@ -95,6 +97,19 @@ export function Arcade() {
     }
   };
 
+  const handleReboot = () => {
+    playSound('hit');
+    playMusic('none');
+    setPowerState('off');
+    setActiveGame(null);
+    setBootLog([]);
+    
+    // Auto-power on after a brief delay
+    setTimeout(() => {
+      handlePower();
+    }, 800);
+  };
+
   const handleInsertCartridge = (id: string) => {
     if (powerState !== 'waiting' && powerState !== 'playing') return;
     playSound('powerup');
@@ -111,8 +126,8 @@ export function Arcade() {
   };
 
   const startHoldKey = (key: string) => {
-    // For clickable games, simulate TAB/Shift+TAB for Arrows if needed, but it's risky
-    if (activeGame === 'uno' || activeGame === 'tictactoe' || activeGame === 'sellout') {
+    // For clickable games or the main menu, simulate TAB/Shift+TAB for Arrows
+    if (activeGame === 'uno' || activeGame === 'tictactoe' || activeGame === 'sellout' || powerState === 'waiting') {
        const arcadeScreen = document.getElementById('arcade-screen-container');
        if (arcadeScreen && (key === 'ArrowRight' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowUp')) {
          const focusable = Array.from(arcadeScreen.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')) as HTMLElement[];
@@ -136,11 +151,13 @@ export function Arcade() {
        }
     }
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    const code = key === ' ' ? 'Space' : key;
+    window.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true }));
   };
 
   const stopHoldKey = (key: string) => {
-    window.dispatchEvent(new KeyboardEvent('keyup', { key, bubbles: true }));
+    const code = key === ' ' ? 'Space' : key;
+    window.dispatchEvent(new KeyboardEvent('keyup', { key, code, bubbles: true }));
   };
 
   const toggleFullscreen = () => {
@@ -209,6 +226,7 @@ export function Arcade() {
                     "{t('arc.popup.text')}"
                   </p>
                   <button
+                    aria-label={t('arc.popup.btn', 'CONTINUAR')}
                     onClick={() => {
                       setShowPopup(false);
                       playSound('powerup');
@@ -221,69 +239,44 @@ export function Arcade() {
               </div>
             )}
           </AnimatePresence>
-          {/* Physical Cartridges outside the machine */}
+          {/* Arcade Machine Component */}
+          <div className={cn(
+            "relative bg-[#0F0F12] p-3 md:p-6 border-x-8 md:border-x-[20px] border-y-[10px] mb-8 md:border-t-[40px] md:border-b-[30px] border-[#0a0a0c] mx-auto overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.9),inset_0_2px_10px_rgba(255,255,255,0.05),inset_0_0_40px_rgba(0,0,0,0.8)] rounded-[24px] md:rounded-[32px] w-full transition-all duration-500",
+            isFullscreen ? "flex flex-col flex-grow min-h-0 h-full max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1100px] ring-1 ring-white/10 relative"
+          )}>
+
+          {/* Faux Marquee (Top of cabinet) */}
           {!isFullscreen && (
-            <div className="mb-12 relative z-20 w-full max-w-[1000px] mx-auto">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-px bg-zinc-800 flex-1"></div>
-                <p className="text-white/40 font-mono text-[10px] tracking-widest uppercase flex items-center gap-2">
-                  <ArrowDown size={12} className="animate-bounce text-brand-accent/50" /> {t('arc.select_cartridge', 'SELECT CARTRIDGE')}
-                </p>
-                <div className="h-px bg-zinc-800 flex-1"></div>
-              </div>
+            <div className="absolute top-0 inset-x-0 h-16 md:h-28 bg-[#111] flex flex-col items-center justify-center overflow-hidden border-b-8 border-black/90 shadow-[0_20px_30px_rgba(0,0,0,0.8)] z-30 perspective-[1000px]">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-color-dodge"></div>
+              {/* Backlight / glow */}
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,100,50,0.3)_0%,transparent_80%)] mix-blend-screen"></div>
+              {/* Top trim */}
+              <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-zinc-700 via-zinc-400 to-zinc-700 border-b border-black"></div>
               
-              <div className="grid grid-cols-3 md:grid-cols-7 gap-3 sm:gap-4 md:gap-6 preserve-3d perspective-1000">
-                {games.map((g) => (
-                  <motion.button
-                    key={g.id}
-                    onClick={() => handleInsertCartridge(g.id)}
-                    whileHover={{ y: -8, scale: 1.05, rotateX: 5 }}
-                    whileTap={{ y: 0, scale: 0.95 }}
-                    disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                    className={`flex-shrink-0 relative w-full aspect-[3/4] rounded-t-sm rounded-b flex flex-col items-center justify-start p-1.5 md:p-2 transition-all transition-colors duration-300 transform-style-3d overflow-hidden ${
-                      activeGame === g.id 
-                      ? 'bg-zinc-800 border-2 border-brand-accent -translate-y-4 shadow-[0_20px_40px_rgba(242,74,41,0.4),0_0_15px_rgba(242,74,41,0.6)] z-10' 
-                      : 'bg-zinc-900 border-2 border-zinc-700 hover:border-zinc-500 shadow-[0_8px_15px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] hover:shadow-[0_15px_25px_rgba(0,0,0,0.9)]'
-                    } ${(powerState === 'off' || powerState === 'booting') ? 'opacity-30 cursor-not-allowed grayscale' : ''}`}
-                  >
-                    {/* Metal Slider / Cartridge top */}
-                    <div className="absolute top-0 inset-x-0 h-4 md:h-6 bg-gradient-to-b from-zinc-700 to-zinc-800 rounded-t-sm flex justify-center py-0.5 md:py-1 shadow-inner border-b border-zinc-900">
-                       <div className="w-8 md:w-12 h-1.5 md:h-2 bg-black rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.2)]"></div>
-                    </div>
-                    {/* Cartridge Ridges */}
-                    <div className="absolute bottom-2 inset-x-2 h-4 md:h-6 flex justify-between gap-1 opacity-50">
-                       <div className="w-1 md:w-1.5 h-full bg-black rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"></div>
-                       <div className="w-1 md:w-1.5 h-full bg-black rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"></div>
-                    </div>
-                    
-                    {/* Label Area */}
-                    <div className={`w-full mt-5 md:mt-8 flex-1 mb-6 border border-zinc-950 ${g.color} relative overflow-hidden flex flex-col items-center justify-center p-1 md:p-2 rounded-sm shadow-[inset_0_0_10px_rgba(0,0,0,0.5)] bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')]`}>
-                      <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent"></div>
-                      <span className="text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] scale-75 md:scale-110 mb-1 z-10">{g.icon}</span>
-                      <span className="text-[6px] md:text-[8px] text-white font-mono font-black text-center z-10 leading-[1.1] tracking-widest uppercase mt-auto drop-shadow-[0_1px_1px_rgba(0,0,0,1)] line-clamp-2">{g.label}</span>
-                    </div>
-                  </motion.button>
-                ))}
+              {/* Marquee Graphic */}
+              <div className="relative w-full h-full flex flex-col items-center justify-center bg-black/60 border-y-2 border-white/10 mt-2 transform -rotateX-[5deg] shadow-inner">
+                 <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-red-500 to-transparent mix-blend-screen shadow-[0_0_15px_#ef4444]"></div>
+                 <div className="absolute bottom-0 inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent mix-blend-screen shadow-[0_0_15px_#3b82f6]"></div>
+                 
+                 <h1 className="text-transparent bg-clip-text bg-gradient-to-tr from-yellow-300 via-yellow-500 to-red-600 font-display font-black text-2xl md:text-5xl uppercase tracking-[0.2em] drop-shadow-[0_0_20px_rgba(239,68,68,0.7)] italic transform -skew-x-12 mt-1">
+                   SISYPHUS
+                 </h1>
+                 <span className="text-[6px] md:text-[9px] text-zinc-400 tracking-[0.4em] uppercase font-bold mt-1 shadow-black drop-shadow-md">Arcade System // v3.1</span>
               </div>
             </div>
           )}
 
-          {/* Arcade Machine Component */}
-          <div className={cn(
-            "relative bg-[#0a0a0a] p-4 md:p-8 md:px-12 border-x-[16px] md:border-x-[30px] border-y-[20px] mb-8 md:border-t-[40px] md:border-b-[60px] border-[#111] mx-auto overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.9),inset_0_2px_10px_rgba(255,255,255,0.05)] rounded-3xl w-full transition-all duration-500",
-            isFullscreen ? "flex flex-col flex-grow min-h-0 h-full max-w-none border-none rounded-none shadow-none p-2 md:p-4 mb-0" : "max-w-[1000px] ring-1 ring-white/5"
-          )}>
-
           {/* Cabinet texture effect */}
-          <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[radial-gradient(var(--color-brand-accent)_1px,transparent_1px)] [background-size:16px_16px]"></div>
-          <div className="absolute inset-x-0 top-0 h-40 opacity-10 pointer-events-none bg-gradient-to-b from-brand-accent to-transparent mix-blend-screen" ></div>
-          <div className="absolute inset-0 z-20 pointer-events-none shadow-[inset_0_20px_50px_rgba(0,0,0,0.1)]"></div>
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')] mix-blend-color-dodge"></div>
+          <div className="absolute inset-x-0 top-28 h-64 opacity-20 pointer-events-none bg-gradient-to-b from-black/80 to-transparent mix-blend-multiply" ></div>
+          <div className="absolute inset-0 z-20 pointer-events-none shadow-[inset_0_20px_60px_rgba(0,0,0,0.9)]"></div>
 
-          {/* Hardware Vents */}
+          {/* Hardware Vents - now positioned below the marquee */}
           {!isFullscreen && (
-             <div className="absolute top-3 md:top-6 left-1/2 -translate-x-1/2 flex gap-3 md:gap-5 opacity-60 pointer-events-none z-10">
-                {Array(8).fill(0).map((_, i) => (
-                   <div key={i} className="w-1.5 md:w-3 h-6 md:h-12 bg-[#050505] rounded-full shadow-[inset_1px_1px_4px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.1)] border border-[#111]"></div>
+             <div className="absolute top-[8rem] left-1/2 -translate-x-1/2 flex gap-3 md:gap-5 opacity-80 pointer-events-none z-10">
+                {Array(6).fill(0).map((_, i) => (
+                   <div key={i} className="w-2 md:w-3 h-5 md:h-10 bg-[#020202] rounded-full shadow-[inset_3px_5px_8px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.05)] border border-[#050505]"></div>
                 ))}
              </div>
           )}
@@ -291,75 +284,98 @@ export function Arcade() {
           {/* Console Screws */}
           {!isFullscreen && (
             <>
-              <div className="absolute top-4 left-4 md:top-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-45"></div></div>
-              <div className="absolute top-4 right-4 md:top-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-12"></div></div>
-              <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform rotate-90"></div></div>
-              <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 w-4 h-4 rounded-full bg-[#111] shadow-[inset_1px_1px_3px_rgba(0,0,0,1),1px_1px_0_rgba(255,255,255,0.3)] border border-[#333] flex items-center justify-center opacity-80 z-10"><div className="w-2.5 h-0.5 bg-[#000] transform -rotate-45"></div></div>
+              <div className="absolute top-36 left-6 md:top-40 md:left-12 w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#1a1a1a] shadow-[inset_1px_1px_2px_rgba(0,0,0,1)] border border-[#222] flex items-center justify-center z-10"><div className="w-2 h-0.5 bg-[#0a0a0a] transform rotate-45"></div></div>
+              <div className="absolute top-36 right-6 md:top-40 md:right-12 w-3 h-3 md:w-4 md:h-4 rounded-full bg-[#1a1a1a] shadow-[inset_1px_1px_2px_rgba(0,0,0,1)] border border-[#222] flex items-center justify-center z-10"><div className="w-2 h-0.5 bg-[#0a0a0a] transform rotate-12"></div></div>
             </>
           )}
           
-          <div className="flex justify-between items-center mb-6 relative z-50">
-            
-            <div className="flex flex-col bg-[#020205] p-3 md:p-4 rounded-xl border border-white/10 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
-              <h2 className="text-zinc-500 font-mono font-black tracking-[0.2em] md:tracking-[0.5em] text-[8px] md:text-[10px] uppercase mb-1 flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
-                 RIVAD CORP ENTERTAINMENT SYSTEM
-              </h2>
-              <h2 className="text-brand-accent font-mono font-black tracking-[0.2em] md:tracking-[0.4em] text-xs md:text-xl drop-shadow-[0_0_8px_rgba(242,74,41,0.6)] uppercase">SISYPHUS_OS_v3.1</h2>
-            </div>
-            
-            <div className="flex gap-2 md:gap-4 items-center">
-              
-              {isFullscreen && (
-                <div className="relative group">
-                  <button className="bg-brand-accent/10 text-brand-accent border-2 border-brand-accent/40 font-mono text-[10px] md:text-xs rounded-md px-4 py-2 uppercase tracking-widest hover:bg-brand-accent/20 shadow-[0_0_15px_rgba(242,74,41,0.4)] transition-all flex items-center gap-2">
-                    <Zap size={14} className="text-brand-accent animate-pulse" />
-                    {activeGame ? games.find(g => g.id === activeGame)?.title : t('arc.select_cartridge')}
-                  </button>
-                  <div className="absolute top-full right-0 mt-2 w-64 bg-[#050505] border border-brand-accent/30 rounded-lg p-2 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all z-50">
-                     <p className="text-brand-accent text-[8px] uppercase tracking-[0.3em] font-bold mb-2 border-b border-brand-accent/30 pb-1 px-2">{t('arc.select_cartridge')}</p>
-                     {games.map(g => (
-                       <button
-                         key={g.id}
-                         onClick={(e) => {
-                           e.currentTarget.blur();
-                           handleInsertCartridge(g.id);
-                         }}
-                         disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
-                         className="w-full text-left flex items-center gap-3 px-2 py-2 hover:bg-brand-accent/10 rounded text-white font-mono text-xs uppercase disabled:opacity-50"
-                       >
-                         <span className="text-brand-accent">{g.icon}</span>
-                         {g.label}
-                       </button>
-                     ))}
-                  </div>
-                </div>
-              )}
+          <div className={cn("w-full transition-all duration-500 relative z-20 flex flex-col", isFullscreen ? "h-full" : "mt-24 md:mt-28")}>
+             {/* Integrated Hardware Buttons Array */}
+             <div className={cn("flex justify-center items-center z-50 mb-6", isFullscreen ? "absolute top-4 right-4 items-center gap-4 bg-black/50 p-2 py-1 rounded-xl backdrop-blur-md border border-white/10" : "w-full px-4")}>
+               {!isFullscreen && (
+                 <div className="flex flex-row justify-between items-center w-full max-w-2xl bg-[#111] border-y border-zinc-900/80 px-6 py-2 shadow-[inset_0_2px_10px_rgba(0,0,0,1)] rounded-sm relative">
+                   <div className="absolute top-1 left-2 w-1.5 h-1.5 rounded-full bg-black/60 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.05)]"></div>
+                   <div className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-black/60 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.05)]"></div>
+                   <div className="absolute bottom-1 left-2 w-1.5 h-1.5 rounded-full bg-black/60 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.05)]"></div>
+                   <div className="absolute bottom-1 right-2 w-1.5 h-1.5 rounded-full bg-black/60 shadow-[inset_1px_1px_1px_rgba(255,255,255,0.05)]"></div>
+                   
+                   <div className="flex flex-col gap-1.5 opacity-80">
+                     <div className="flex gap-2">
+                       <div className="w-4 h-1 bg-red-600 rounded-full shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8),0_0_5px_rgba(239,68,68,0.3)]" />
+                       <div className="w-4 h-1 bg-blue-600 rounded-full shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8),0_0_5px_rgba(59,130,246,0.3)]" />
+                       <div className="w-4 h-1 bg-yellow-500 rounded-full shadow-[inset_1px_1px_2px_rgba(0,0,0,0.8),0_0_5px_rgba(250,204,21,0.3)]" />
+                     </div>
+                     <span className="text-[8px] font-mono text-zinc-500 tracking-[0.2em]">SYS.CTL</span>
+                   </div>
 
+                   <div className="flex gap-6 md:gap-10 items-center">
+                     {/* Hardware buttons */}
+                     <button onClick={() => setShowAchievements(true)} className="group flex flex-col items-center gap-1.5" title="Achievements">
+                       <div className="w-10 h-6 md:w-12 md:h-8 bg-zinc-800 border-b-4 border-[#0a0a0a] rounded-sm flex items-center justify-center shadow-[0_2px_5px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] active:border-b-0 active:translate-y-1 transition-all">
+                         <Trophy size={14} className="text-yellow-600 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" />
+                       </div>
+                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">AWARDS</span>
+                     </button>
 
-              {/* Fullscreen Button */}
-              <button
-                onClick={toggleFullscreen}
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full border-4 flex items-center justify-center transition-all bg-zinc-800 border-zinc-700 shadow-inner hover:bg-zinc-700 text-zinc-400 hover:text-white"
-                title="Toggle Fullscreen"
-              >
-                {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
-              </button>
-              
-              {/* Power Button */}
-              <button 
-                onClick={handlePower}
-                className={`w-10 h-10 md:w-12 md:h-12 rounded-full border-4 flex items-center justify-center transition-all ${powerState !== 'off' ? 'bg-red-500 border-red-300 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'bg-red-950 border-red-900 shadow-inner'}`}
-              >
-                <Power className={powerState !== 'off' ? 'text-white' : 'text-red-800'} size={20} />
-              </button>
-            </div>
-          </div>
+                     <button onClick={toggleFullscreen} className="group flex flex-col items-center gap-1.5" title="Fullscreen">
+                       <div className="w-10 h-6 md:w-12 md:h-8 bg-zinc-800 border-b-4 border-[#0a0a0a] rounded-sm flex items-center justify-center shadow-[0_2px_5px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] active:border-b-0 active:translate-y-1 transition-all">
+                         {isFullscreen ? (
+                            <Minimize size={14} className="text-blue-500 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" />
+                         ) : (
+                            <Maximize size={14} className="text-blue-500 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]" />
+                         )}
+                       </div>
+                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">SCREEN</span>
+                     </button>
+                     
+                     <button onClick={handlePower} className="group flex flex-col items-center gap-1.5" title="Power">
+                       <div className={cn("w-10 h-6 md:w-12 md:h-8 border-b-4 rounded-sm flex items-center justify-center shadow-[0_2px_5px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] active:border-b-0 active:translate-y-1 transition-all", powerState !== 'off' ? 'bg-red-900 border-[#3a0a0a]' : 'bg-zinc-800 border-[#0a0a0a]')}>
+                         <Power size={14} className={cn("transition-all duration-300 drop-shadow-[0_0_2px_rgba(0,0,0,0.8)]", powerState !== 'off' ? 'text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]' : 'text-zinc-600')} />
+                       </div>
+                       <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-black">POWER</span>
+                     </button>
+                   </div>
+                 </div>
+               )}
+               {isFullscreen && (
+                 <div className="flex gap-4 items-center">
+                    <div className="relative group">
+                      <button aria-label={activeGame ? games.find(g => g.id === activeGame)?.title : t('arc.select_cartridge', 'SELECT CARTRIDGE')} className="bg-brand-accent/10 text-brand-accent border border-brand-accent/40 font-mono text-[10px] md:text-xs rounded px-3 py-1 uppercase hover:bg-brand-accent/20 transition-all flex items-center gap-2">
+                        <Zap size={12} className="animate-pulse" />
+                        <span className="hidden sm:inline">{activeGame ? games.find(g => g.id === activeGame)?.title : t('arc.select_cartridge')}</span>
+                      </button>
+                      <div className="absolute top-full right-0 mt-2 w-48 bg-[#050505] border border-brand-accent/30 rounded p-1 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all">
+                         {games.map(g => (
+                           <button
+                             key={g.id}
+                             onClick={(e) => { e.currentTarget.blur(); handleInsertCartridge(g.id); }}
+                             disabled={powerState === 'off' || powerState === 'booting' || powerState === 'inserting'}
+                             className="w-full text-left flex items-center gap-2 px-2 py-1.5 hover:bg-brand-accent/10 rounded text-white font-mono text-[10px] uppercase disabled:opacity-50"
+                           >
+                             <span className="text-brand-accent scale-75">{g.icon}</span>
+                             {g.label}
+                           </button>
+                         ))}
+                      </div>
+                    </div>
+                    <button onClick={handlePower} className="group flex flex-col items-center gap-1.5" title="Power">
+                       <div className={cn("w-10 h-6 border-b-4 rounded-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all", powerState !== 'off' ? 'bg-red-900 border-[#3a0a0a]' : 'bg-zinc-800 border-[#0a0a0a]')}>
+                         <Power size={14} className={cn("transition-all duration-300", powerState !== 'off' ? 'text-red-400' : 'text-zinc-600')} />
+                       </div>
+                    </button>
+                    <button onClick={toggleFullscreen} className="group flex flex-col items-center gap-1.5" title="Fullscreen">
+                       <div className="w-10 h-6 bg-zinc-800 border-b-4 border-[#0a0a0a] rounded-sm flex items-center justify-center active:border-b-0 active:translate-y-1 transition-all">
+                         <Minimize size={14} className="text-blue-500 opacity-80 group-hover:opacity-100" />
+                       </div>
+                    </button>
+                 </div>
+               )}
+             </div>
 
           {/* CRT Screen Frame */}
           <div className={cn(
-            "bg-[#050505] border-[16px] md:border-[24px] border-[#0a0a0a] flex flex-col items-center justify-center relative shadow-[inset_0_0_100px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-3xl overflow-hidden p-0 md:p-4 transition-all duration-500 group/screen",
-            isFullscreen ? "flex-grow min-h-0 border-none rounded-none p-0 w-full" : "w-full aspect-[4/3] max-h-[600px] md:max-h-[700px] min-h-[400px]"
+            "bg-[#050505] flex flex-col items-center justify-center relative transition-all duration-500 group/screen w-full",
+            isFullscreen ? "flex-grow min-h-0 border-none rounded-none p-0" : "border-8 border-b-[24px] md:border-[16px] md:border-b-[40px] border-[#0c0c0c] shadow-[inset_0_0_60px_rgba(0,0,0,1),0_10px_20px_rgba(0,0,0,0.8)] rounded-[20px] md:rounded-[32px] overflow-hidden p-0 aspect-auto md:aspect-square lg:aspect-[4/3] h-[55vh] min-h-[480px] max-h-[700px] md:max-h-[800px]"
           )}>
             
             {/* Glass reflection */}
@@ -418,7 +434,7 @@ export function Arcade() {
                     </div>
                   )}
 
-                  <div className="text-brand-accent font-[var(--font-pixel)] text-[10px] md:text-xs leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.8)] z-0">
+                  <div className="text-brand-accent font-[var(--font-pixel)] text-[10px] md:text-xs leading-loose w-full mix-blend-screen drop-shadow-[0_0_5px_rgba(242,74,41,0.8)] z-0 pb-12">
                     {bootLog.map((line, i) => (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }} 
@@ -431,17 +447,18 @@ export function Arcade() {
                     ))}
                     {powerState !== 'waiting' && powerState !== 'off' && <motion.span animate={{ opacity: [1, 0] }} transition={{ repeat: Infinity, duration: 0.8 }} className="inline-block w-3 h-5 bg-brand-accent ml-1 translate-y-1"></motion.span>}
                     {powerState === 'waiting' && (
-   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+   <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-2">
       {games.map(g => (
          <button
             key={g.id}
+            aria-label={g.label}
             onClick={() => handleInsertCartridge(g.id)}
-            className="border-2 border-brand-accent/50 bg-brand-accent/5 p-4 font-mono text-left hover:bg-brand-accent hover:text-black transition-colors group flex items-center gap-4"
+            className="border-2 border-brand-accent/50 bg-brand-accent/5 p-3 md:p-4 font-mono text-left hover:bg-brand-accent hover:text-black focus:bg-brand-accent focus:text-black focus:outline-none transition-colors group flex items-center gap-4"
          >
-            <div className="text-brand-accent group-hover:text-black">{g.icon}</div>
+            <div className="text-brand-accent group-hover:text-black group-focus:text-black text-xl md:text-2xl">{g.icon}</div>
             <div>
-               <div className="font-bold text-sm">{g.label}</div>
-               <div className="text-[10px] opacity-75">{g.title}</div>
+               <div className="font-bold text-xs md:text-sm">{g.label}</div>
+               <div className="text-[8px] md:text-[10px] opacity-75">{g.title}</div>
             </div>
          </button>
       ))}
@@ -452,6 +469,8 @@ export function Arcade() {
    </div>
 )}
                   </div>
+                  {/* Fade-out mask at the bottom to prevent harsh cut */}
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black to-transparent pointer-events-none z-10" />
                 </div>
               )}
 
@@ -468,7 +487,7 @@ export function Arcade() {
                     {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} />}
-                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleReboot} />}
                     {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
                     {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} />}
                     {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} />}
@@ -477,52 +496,17 @@ export function Arcade() {
               </AnimatePresence>
             </div>
           </div>
-          
-          {/* Vintage PC Keyboard & Drive Area */}
-          {!isFullscreen && (
-          <div className={cn(
-            "flex flex-col md:flex-row justify-between items-center px-4 md:px-12 bg-[#080808] rounded-2xl border-t border-white/10 border-[#000] shadow-[0_20px_40px_rgba(0,0,0,0.8),inset_0_2px_5px_rgba(255,255,255,0.05)] relative z-10 gap-6 md:gap-8 flex-shrink-0 transition-all",
-            "mt-8 py-8 border-b-[12px]"
-          )}>
-             {/* Decorative Floppy Drive */}
-             <div className="flex flex-col gap-2 bg-[#1a1a24] p-3 rounded-lg border border-[#2a2a36] shadow-inner w-full md:w-64">
-                <div className="bg-[#111] h-3 w-full rounded-sm relative">
-                   <div className="absolute top-1/2 -translate-y-1/2 right-2 w-4 h-1 bg-[#111] rounded shadow-inner"></div>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                   <div className={`w-2 h-2 rounded-full shadow-inner ${powerState === 'inserting' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : 'bg-red-900'}`}></div>
-                   <button onClick={() => playSound('hit')} className="w-6 h-3 bg-[#d8dad3] border border-[#a0a29c] rounded-sm hover:translate-y-px transition-transform"></button>
-                </div>
-             </div>
-             
-             {/* Vintage Keyboard Layout chunk */}
-             <div className="flex gap-6 items-center">
-                {/* Arrow Keys */}
-                <div className="flex flex-col items-center gap-1">
-                   <button onMouseDown={() => startHoldKey('ArrowUp')} onMouseUp={() => stopHoldKey('ArrowUp')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">↑</button>
-                   <div className="flex gap-1">
-                     <button onMouseDown={() => startHoldKey('ArrowLeft')} onMouseUp={() => stopHoldKey('ArrowLeft')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">←</button>
-                     <button onMouseDown={() => startHoldKey('ArrowDown')} onMouseUp={() => stopHoldKey('ArrowDown')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">↓</button>
-                     <button onMouseDown={() => startHoldKey('ArrowRight')} onMouseUp={() => stopHoldKey('ArrowRight')} className="w-10 h-10 md:w-12 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-bold hover:text-white">→</button>
-                   </div>
-                </div>
-                
-                {/* Action Keys */}
-                <div className="flex flex-col gap-2">
-                   <div className="flex gap-2">
-                     <button onMouseDown={() => startHoldKey(' ')} onMouseUp={() => stopHoldKey(' ')} className="w-32 h-10 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold hover:text-white uppercase tracking-widest flex items-center justify-center">SPACE</button>
-                   </div>
-                   <div className="flex gap-2">
-                     <button onMouseDown={() => startHoldKey('Enter')} onMouseUp={() => stopHoldKey('Enter')} className="flex-1 h-10 md:h-12 bg-[#1e1e28] border-b-4 border-[#111118] text-brand-accent shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold hover:text-white uppercase flex items-center justify-center">ENTER</button>
-                     <button onMouseDown={() => { stopHoldKey('Escape'); startHoldKey('Escape'); }} onMouseUp={() => stopHoldKey('Escape')} className="w-16 h-10 md:h-12 bg-red-950/30 border-b-4 border-red-900 text-red-500 shadow-[inset_0_1px_2px_rgba(239,68,68,0.2)] rounded hover:translate-y-1 hover:border-b-0 transition-all font-mono text-xs font-bold hover:text-white uppercase flex items-center justify-center">ESC</button>
-                   </div>
-                </div>
-             </div>
           </div>
-          )}
+          
+          {/* Removing Physical Control Deck based on user request */}
 </div>
         {/* End of arcadeCabinetRef */}
         </div>
+        
+        <AchievementsViewer 
+          isOpen={showAchievements} 
+          onClose={() => setShowAchievements(false)} 
+        />
       </div>
     </div>
   );

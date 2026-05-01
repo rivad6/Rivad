@@ -239,6 +239,7 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
               You reached 1,000,000 Hype. You are now officially a corporate shill. Congratulations.
             </p>
             <button
+               aria-label="Prestige and Restart"
                onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); setPrestige(prev => prev + 1); }}
                className="bg-brand-accent text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(138,99,210,0.5)] hover:scale-105 transition-all text-sm"
             >
@@ -262,6 +263,7 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
               Your relevance dropped to 0. You are no longer trending and the internet has forgotten you.
             </p>
             <button
+               aria-label="Try Again"
                onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
                className="bg-red-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:scale-105 transition-all text-sm"
             >
@@ -405,6 +407,7 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
             
             {hype >= 1000000 && (
               <motion.button
+                aria-label={t('game.sell.label.prestige')}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 whileHover={{ scale: 1.05 }}
@@ -420,6 +423,7 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
             
             {gameState !== 'playing' && (
               <motion.button 
+                aria-label={t('game.sell.label.reset')}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 whileHover={{ scale: 1.05 }}
@@ -481,6 +485,7 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
 
               return (
                 <motion.button
+                  aria-label={`Buy ${t(upgrade.nameKey)}`}
                   key={upgrade.id}
                   whileHover={canAfford ? { x: 5 } : {}}
                   whileTap={canAfford ? { scale: 0.98 } : {}}

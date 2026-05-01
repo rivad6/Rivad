@@ -58,6 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
 
               <button
+                aria-label="Reiniciar Sistema"
                 onClick={this.handleReset}
                 className="w-full py-3 bg-brand-accent text-black font-bold uppercase tracking-widest hover:bg-white transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
               >

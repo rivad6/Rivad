@@ -1511,6 +1511,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             </p>
             {!isPausedGlobal && (
               <button
+                aria-label="Resume"
                 onClick={() => { setIsPaused(false); playSound('start'); }}
                 className="bg-orange-500 text-white px-6 md:px-8 py-2 md:py-3 rounded-full font-black uppercase text-[10px] md:text-xs tracking-widest hover:bg-orange-400 transition-all shadow-[0_0_20px_rgba(249,115,22,0.3)] active:scale-95"
               >
@@ -1526,6 +1527,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             <div className="flex flex-col gap-0.5">
                <span className="text-[7px] text-zinc-500 uppercase tracking-widest font-black">Control_Module</span>
                <button 
+                 aria-label="Toggle Controls"
                  onClick={() => { playSound('hover'); setShowMobileControls(prev => !prev); }} 
                  className={`flex items-center gap-1.5 uppercase text-[9px] font-black border px-2 py-0.5 rounded transition-all ${showMobileControls ? 'bg-brand-accent/20 border-brand-accent text-brand-accent shadow-[0_0_10px_rgba(56,189,248,0.3)]' : 'text-zinc-600 border-zinc-800 hover:border-zinc-500'}`}
                >
@@ -1583,6 +1585,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
                </div>
                
                <button 
+                 aria-label={t('game.race.story.start', 'START ENGINE')}
                  onClick={() => setShowStory(false)}
                  className="bg-white text-black font-black px-6 md:px-8 py-2 md:py-3 uppercase text-sm md:text-lg hover:bg-orange-500 transition-colors shadow-[4px_4px_0_0_rgba(249,115,22,1)]"
                >
@@ -1599,6 +1602,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
           <>
             <div className="absolute bottom-6 md:bottom-10 left-2 md:left-4 z-20 pointer-events-none">
               <button 
+                aria-label="Steer Left"
                 onMouseDown={() => { keysGamepad.current.left = true; playSound('click'); }}
                 onMouseUp={() => keysGamepad.current.left = false}
                 onMouseLeave={() => keysGamepad.current.left = false}
@@ -1611,6 +1615,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             </div>
             <div className="absolute bottom-6 md:bottom-10 right-2 md:right-4 z-20 pointer-events-none">
               <button 
+                aria-label="Steer Right"
                 onMouseDown={() => { keysGamepad.current.right = true; playSound('click'); }}
                 onMouseUp={() => keysGamepad.current.right = false}
                 onMouseLeave={() => keysGamepad.current.right = false}
@@ -1645,6 +1650,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
               {cars.map(car => (
                 <button
                   key={car.id}
+                  aria-label={`Select ${car.name}`}
                   onClick={() => setSelectedCarId(car.id)}
                   className={`flex flex-col items-start p-2 border-2 transition-all rounded-lg ${selectedCarId === car.id ? 'border-brand-accent bg-brand-accent/10' : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'}`}
                 >
@@ -1683,6 +1689,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             </div>
 
             <button 
+              aria-label={t('game.insert', 'INSERT COIN')}
               onClick={() => {
                 setScore(0);
                 setHp(currentCar.maxHp);
@@ -1742,6 +1749,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
             
             <div className="flex gap-4">
               <button
+                 aria-label={t('game.retry', 'PLAY AGAIN')}
                  onClick={() => {
                    setScore(0);
                    setHp(currentCar.maxHp);

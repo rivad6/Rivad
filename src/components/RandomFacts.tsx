@@ -27,6 +27,7 @@ export function RandomFacts() {
   return (
     <>
       <button
+        aria-label={t('hero.random_facts')}
         onClick={handleOpen}
         className="group relative inline-flex w-full max-w-[320px] sm:max-w-md items-center gap-2 px-6 py-4 bg-brand-accent/10 border border-brand-accent/30 hover:bg-brand-accent hover:border-brand-accent transition-all duration-300 backdrop-blur-sm justify-center shadow-[4px_4px_0_rgba(242,74,41,0.3)] hover:shadow-[0_0_0_rgba(242,74,41,0)] hover:translate-x-[4px] hover:translate-y-[4px]"
       >
@@ -61,10 +62,11 @@ export function RandomFacts() {
                     </h3>
                   </div>
                   <button
+                    aria-label="Close random facts"
                     onClick={() => setIsOpen(false)}
                     className="p-2 hover:bg-brand-accent/20 transition-colors rounded-sm"
                   >
-                    <X size={20} className="text-gray-400 hover:text-white transition-colors" />
+                    <X size={20} aria-hidden="true" className="text-gray-400 hover:text-white transition-colors" />
                   </button>
                 </div>
 
@@ -102,6 +104,7 @@ export function RandomFacts() {
                 {/* Footer */}
                 <div className="p-4 md:p-6 border-t border-brand-accent/20 bg-brand-accent/5 flex justify-between items-center gap-4 flex-col sm:flex-row">
                   <button
+                    aria-label={t('rf.btn_next')}
                     onClick={handleNext}
                     className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] px-6 py-4 bg-[#1a1726] border border-white/10 text-white font-bold hover:bg-brand-accent hover:border-brand-accent hover:text-black transition-all flex items-center gap-3 w-full sm:w-auto justify-center group"
                   >
@@ -109,6 +112,7 @@ export function RandomFacts() {
                     {t('rf.btn_next')}
                   </button>
                   <button
+                    aria-label={t('rf.btn_close')}
                     onClick={() => setIsOpen(false)}
                     className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] px-6 py-4 bg-brand-accent border border-brand-accent text-[#0F0D15] font-bold hover:bg-white hover:border-white transition-colors w-full sm:w-auto text-center shadow-[4px_4px_0_rgba(255,255,255,0.2)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]"
                   >

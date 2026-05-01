@@ -1055,6 +1055,8 @@ export function CreativeInvaders({
           loadAsteroidsLevel();
           createExplosion(GAME_WIDTH / 2, GAME_HEIGHT / 2, "#38bdf8", 100);
           playSound("win");
+          setHasDiscoveredSecret(true);
+          localStorage.setItem("invaders_secret_discovered", "true");
         }
 
         for (let i = 0; i < 3; i++) {
@@ -1139,8 +1141,10 @@ export function CreativeInvaders({
       } else {
         if (s.player.isMovingLeft) s.player.x -= playerCurrentSpeed;
         if (s.player.isMovingRight) s.player.x += playerCurrentSpeed;
-        if (s.player.isMovingUp) s.player.y -= playerCurrentSpeed;
-        if (s.player.isMovingDown) s.player.y += playerCurrentSpeed;
+        if (gameState === "asteroids") {
+          if (s.player.isMovingUp) s.player.y -= playerCurrentSpeed;
+          if (s.player.isMovingDown) s.player.y += playerCurrentSpeed;
+        }
       }
 
       if (gameState === "asteroids") {
@@ -1457,6 +1461,7 @@ export function CreativeInvaders({
 
                   if (enemy.variant === 99) {
                     // Final Boss defeated!
+                    localStorage.setItem("invaders_secret_discovered", "true");
                     s.score += 50000;
                     // Huge reward
                     for (let k = 0; k < 15; k++) {
@@ -1468,7 +1473,6 @@ export function CreativeInvaders({
                     }
                     // Signal completion
                     s.enemies = [];
-                    s.isTransitioning = true;
                     s.levelUpTimer = 200;
                   } else {
                     for (let k = 0; k < 3; k++) {
@@ -1667,9 +1671,9 @@ export function CreativeInvaders({
           s.isTransitioning = true;
           s.projectiles = [];
           state.current.level++;
-          if (state.current.level === 5) unlockAchievement("invaders_level_5");
+          if (state.current.level === 6) unlockAchievement("invaders_level_5");
           s.levelUpTimer = 100;
-          if (state.current.level % 5 === 0) {
+          if ((state.current.level - 1) % 5 === 0 && state.current.level > 1) {
             setGameState("takeoff");
             setHasDiscoveredSecret(true);
             localStorage.setItem("invaders_secret_discovered", "true");
@@ -1677,28 +1681,44 @@ export function CreativeInvaders({
             loadLevel(state.current.level);
           }
         } else if (gameState === "asteroids") {
-          s.isTransitioning = true;
-          s.projectiles = [];
-          state.current.wave++;
-          saveScore();
-          playSound("win");
-
-          // Show sequence and either continue asteroids or go back to main gameplay
-          if (state.current.wave % 2 === 0) {
-            // Every 2 asteroid waves, go back to main game
-            s.levelUpTimer = 150;
-            loadLevel(state.current.level);
-            setGameState("playing");
-            if (state.current) state.current.isTransitioning = false;
+          if (s.isAsteroidMode) {
+             // Endless mode: just spawn more immediately to keep the chaos flowing
+             for (let i = 0; i < 4; i++) {
+                s.enemies.push({
+                  x: Math.random() < 0.5 ? -50 : GAME_WIDTH + 50,
+                  y: Math.random() * GAME_HEIGHT,
+                  vx: (Math.random() - 0.5) * 4,
+                  vy: (Math.random() - 0.5) * 4,
+                  width: 80, height: 80,
+                  type: "asteroid_l",
+                  hp: 2, maxHp: 2,
+                  offset: Math.random() * Math.PI * 2
+                });
+             }
           } else {
-            // Stay in asteroid mode, but reset for next wave
-            s.levelUpTimer = 100;
-            setTimeout(() => {
-              if (state.current) {
-                loadAsteroidsLevel();
-                state.current.isTransitioning = false;
-              }
-            }, 1500);
+            s.isTransitioning = true;
+            s.projectiles = [];
+            state.current.wave++;
+            saveScore();
+            playSound("win");
+
+            // Show sequence and either continue asteroids or go back to main gameplay
+            if (state.current.wave % 2 === 0) {
+              // Every 2 asteroid waves, go back to main game
+              s.levelUpTimer = 150;
+              loadLevel(state.current.level);
+              setGameState("playing");
+              if (state.current) state.current.isTransitioning = false;
+            } else {
+              // Stay in asteroid mode, but reset for next wave
+              s.levelUpTimer = 100;
+              setTimeout(() => {
+                if (state.current) {
+                  loadAsteroidsLevel();
+                  state.current.isTransitioning = false;
+                }
+              }, 1500);
+            }
           }
         }
       }
@@ -2347,6 +2367,7 @@ export function CreativeInvaders({
               </p>
               {!isPausedGlobal && (
                 <button
+                  aria-label="Resume"
                   onClick={() => {
                     pausedRef.current = false;
                     playSound("start");
@@ -2659,6 +2680,7 @@ export function CreativeInvaders({
                         {(["easy", "normal", "hard"] as const).map((d) => (
                           <button
                             key={d}
+                            aria-label={`Difficulty: ${d}`}
                             onClick={() => {
                               setDifficulty(d);
                               playSound("hover");
@@ -2677,6 +2699,7 @@ export function CreativeInvaders({
 
                     <div className="mt-6 flex items-center gap-2">
                       <button
+                        aria-label="Toggle Mobile Controls"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowMobileControls((prev) => !prev);
@@ -2692,12 +2715,14 @@ export function CreativeInvaders({
                     </div>
                     <div className="flex gap-2 mt-4 ml-2">
                       <button
+                        aria-label="Store Tab Pencils"
                         onClick={() => setStoreTab("chars")}
                         className={`px-4 py-2 text-[10px] uppercase font-bold font-mono tracking-widest transition-all border-2 border-b-0 rounded-t-lg -mb-1 relative z-10 ${storeTab === "chars" ? "bg-yellow-100 border-yellow-300 text-yellow-800 rotate-1 shadow-[2px_0px_0px_#fde047]" : "bg-zinc-100 border-zinc-200 text-zinc-400 mt-1 cursor-pointer"}`}
                       >
                         Pencils
                       </button>
                       <button
+                        aria-label="Store Tab Upgrades"
                         onClick={() => setStoreTab("upgrades")}
                         className={`px-4 py-2 text-[10px] uppercase font-bold font-mono tracking-widest transition-all border-2 border-b-0 rounded-t-lg -mb-1 relative z-10 ${storeTab === "upgrades" ? "bg-yellow-100 border-yellow-300 text-yellow-800 -rotate-1 shadow-[-2px_0px_0px_#fde047]" : "bg-zinc-100 border-zinc-200 text-zinc-400 mt-1 cursor-pointer"}`}
                       >
@@ -2708,10 +2733,20 @@ export function CreativeInvaders({
                     {(hasDiscoveredSecret ||
                       secretCode.trim().toLowerCase() === "asteroid") && (
                       <button
+                        aria-label="Enter Deep Space"
                         onClick={(e) => {
                           e.preventDefault();
-                          setSecretCode("asteroid");
-                          handleSecretSubmit(e);
+                          playSound("powerup");
+                          setIsAsteroidMode(true);
+                          setHasDiscoveredSecret(true);
+                          localStorage.setItem("invaders_secret_discovered", "true");
+                          setSecretCode("");
+                          initGame("takeoff");
+                          if (state.current) {
+                            state.current.score += 1000;
+                            state.current.isAsteroidMode = true;
+                            state.current.bgType = "deep";
+                          }
                         }}
                         className="mt-6 w-full max-w-[200px] py-1.5 bg-purple-100 border border-purple-300 rounded text-purple-700 font-mono text-[8px] uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-all flex items-center justify-center gap-2 group"
                       >
@@ -2726,6 +2761,7 @@ export function CreativeInvaders({
                     >
                       <input
                         type="text"
+                        aria-label="Secret Code"
                         value={secretCode}
                         onChange={(e) => setSecretCode(e.target.value)}
                         placeholder={t(
@@ -2735,6 +2771,7 @@ export function CreativeInvaders({
                         className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-[8px] font-mono uppercase tracking-widest focus:border-blue-500 focus:outline-none transition-colors"
                       />
                       <button
+                        aria-label="Submit Secret Code"
                         type="submit"
                         className="bg-blue-100 border border-blue-300 text-blue-600 px-2 py-1 rounded text-[8px] font-mono uppercase hover:bg-blue-500 hover:text-white transition-all"
                       >
@@ -2751,6 +2788,7 @@ export function CreativeInvaders({
                       <>
                         <div className="flex justify-between items-center w-full mb-6">
                           <button
+                            aria-label="Previous Character"
                             onClick={(e) => {
                               e.stopPropagation();
                               playSound("hover");
@@ -2807,6 +2845,7 @@ export function CreativeInvaders({
                           </div>
 
                           <button
+                            aria-label="Next Character"
                             onClick={(e) => {
                               e.stopPropagation();
                               playSound("hover");
@@ -2825,17 +2864,40 @@ export function CreativeInvaders({
 
                         <div className="w-full flex justify-center">
                           {unlockedChars.includes(selectedCharId) ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                initGame();
-                              }}
-                              className="w-full bg-blue-500 text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl border-2 border-blue-700 flex justify-center items-center gap-3 hover:bg-blue-400 transition-all shadow-[4px_4px_0px_#1d4ed8] active:translate-y-1 active:translate-x-1 active:shadow-none cursor-pointer pointer-events-auto -rotate-1"
-                            >
-                              <Play size={18} /> {t("game.invaders.start_game")}
-                            </button>
+                            <div className="flex flex-col gap-3 w-full">
+                              <button
+                                aria-label="Start Game"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  initGame();
+                                }}
+                                className="w-full bg-blue-500 text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl border-2 border-blue-700 flex justify-center items-center gap-3 hover:bg-blue-400 transition-all shadow-[4px_4px_0px_#1d4ed8] active:translate-y-1 active:translate-x-1 active:shadow-none cursor-pointer pointer-events-auto -rotate-1"
+                              >
+                                <Play size={18} /> {t("game.invaders.start_game") || "START GAME"}
+                              </button>
+                              {hasDiscoveredSecret && (
+                                <button
+                                  aria-label="Start Deep Space"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    playSound("powerup");
+                                    setIsAsteroidMode(true);
+                                    initGame("takeoff");
+                                    if (state.current) {
+                                      state.current.score += 1000;
+                                      state.current.isAsteroidMode = true;
+                                      state.current.bgType = "deep";
+                                    }
+                                  }}
+                                  className="w-full bg-purple-600 text-white font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl border-2 border-purple-800 flex justify-center items-center gap-3 hover:bg-purple-500 transition-all shadow-[4px_4px_0px_#6b21a8] active:translate-y-1 active:translate-x-1 active:shadow-none cursor-pointer pointer-events-auto rotate-1"
+                                >
+                                  <Star size={18} /> DEEP SPACE
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             <button
+                              aria-label={`Buy ${selectedChar.nameKey}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 buyChar(selectedChar);
@@ -2899,6 +2961,7 @@ export function CreativeInvaders({
                               </div>
                             </div>
                             <button
+                              aria-label={`Upgrade ${upg.name}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (
@@ -2954,6 +3017,7 @@ export function CreativeInvaders({
                 </span>
               </p>
               <button
+                aria-label="Try Again"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -3007,6 +3071,7 @@ export function CreativeInvaders({
                 </span>
               </p>
               <button
+                aria-label="Draw More"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -3034,6 +3099,7 @@ export function CreativeInvaders({
               <div className="absolute bottom-6 left-6 flex flex-col gap-1 opacity-40 hover:opacity-100 transition-opacity">
                 <div className="flex gap-1 justify-center">
                   <button
+                    aria-label="Move Up"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       state.current.player.isMovingUp = true;
@@ -3057,6 +3123,7 @@ export function CreativeInvaders({
                 </div>
                 <div className="flex gap-1">
                   <button
+                    aria-label="Move Left"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       state.current.player.isMovingLeft = true;
@@ -3081,6 +3148,7 @@ export function CreativeInvaders({
                   </button>
                   <div className="w-12 h-12" /> {/* Center hole */}
                   <button
+                    aria-label="Move Right"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       state.current.player.isMovingRight = true;
@@ -3106,6 +3174,7 @@ export function CreativeInvaders({
                 </div>
                 <div className="flex gap-1 justify-center">
                   <button
+                    aria-label="Move Down"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       state.current.player.isMovingDown = true;
@@ -3134,6 +3203,7 @@ export function CreativeInvaders({
               {/* Fire Button (Right) - More Minimal */}
               <div className="absolute bottom-10 right-10 flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
                 <button
+                  aria-label="Fire"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     fire();

@@ -414,6 +414,7 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
             </h3>
             <p className="text-[8px] text-gray-400 mb-6 uppercase tracking-widest">{t('game.objective')}{t('game.pong.goal')}</p>
             <button 
+              aria-label={t('game.insert')}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -458,12 +459,14 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
              
              <div className="flex flex-col gap-4 w-full max-w-xs">
                 <button 
+                  aria-label="REMATCH"
                   onClick={() => { setPlayerScore(0); setCpuScore(0); setGameResult(null); setIsPlaying(true); }}
                   className="w-full bg-white text-black py-4 uppercase font-black tracking-widest hover:bg-brand-accent hover:text-white transition-colors"
                 >
                   REMATCH
                 </button>
                 <button 
+                  aria-label="MAIN MENU"
                   onClick={() => { setPlayerScore(0); setCpuScore(0); setGameResult(null); }}
                   className="w-full text-white/50 text-[10px] py-4 uppercase font-black tracking-[0.2em] hover:text-white transition-colors"
                 >

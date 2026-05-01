@@ -227,6 +227,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
                     : 'A stalemate of ideas. Status quo remains.'}
                  </p>
                  <button
+                    aria-label={t('game.ttt.reset', 'REMATCH')}
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
                     className="w-full bg-brand-accent text-white px-8 py-4 font-black uppercase text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors rounded-xl shadow-[0_0_20px_rgba(138,99,210,0.3)] active:scale-95"
@@ -248,6 +249,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
             {(['rationalist', 'traditionalist', 'postmodernist'] as const).map(p => (
               <button 
                 key={p} 
+                aria-label={t(`game.ttt.personality.${p}`)}
                 onClick={() => setPersonality(p)}
                 className={cn(
                   "px-2 py-0.5 rounded border border-white/10 grow text-[8px]",
@@ -280,6 +282,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
         {board.map((square, i) => (
           <button
             key={i}
+            aria-label={`Square ${i}`}
             onClick={() => handleClick(i)}
             disabled={!!square || !!winner || !xIsNext}
             className={cn(
@@ -305,6 +308,7 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
       </div>
 
       <button
+        aria-label={t('game.ttt.reset')}
         onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
         onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
         className="mt-4 bg-brand-accent text-white px-4 py-2 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto rounded"

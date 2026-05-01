@@ -162,7 +162,7 @@ const getMoodColors = (nodeId: string) => {
   return { bg: 'bg-[#0a0a0B]', border: 'border-white/10', accent: 'text-brand-accent' }; // Default
 }
 
-export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
+export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -356,6 +356,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
           </motion.div>
 
           <button
+            aria-label={t('game.rpg.start')}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleChoice('q1'); }}
             onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleChoice('q1'); }}
             className="px-12 py-5 bg-white text-black font-black text-xs md:text-sm uppercase tracking-[0.4em] hover:bg-brand-accent hover:text-white transition-all shadow-xl shadow-brand-accent/30 cursor-pointer z-50 relative rounded-2xl active:scale-95"
@@ -505,17 +506,32 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false }:
                 className="grid grid-cols-1 gap-2 md:gap-3"
               >
                 {node.isEnding ? (
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleChoice('start')}
-                    className={cn("w-full py-4 md:py-5 text-black bg-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 shadow-white/10")}
-                  >
-                    {t('game.rpg.restart')}
-                  </motion.button>
+                  <div className="flex flex-col gap-3">
+                    <motion.button
+                      aria-label={t('game.rpg.restart')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleChoice('start')}
+                      className={cn("w-full py-4 md:py-5 text-black bg-white rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 shadow-white/10")}
+                    >
+                      {t('game.rpg.restart')}
+                    </motion.button>
+                    {onFinish && (
+                      <motion.button
+                        aria-label="BOOT SYSTEM"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={onFinish}
+                        className="w-full py-3 md:py-4 border-2 border-brand-accent/50 text-brand-accent rounded-2xl text-[8px] md:text-[9px] font-black uppercase tracking-[0.5em] hover:bg-brand-accent/10 transition-all opacity-80"
+                      >
+                        REBOOT SYSTEM
+                      </motion.button>
+                    )}
+                  </div>
                 ) : (
                   node.choices.map((choice, idx) => (
                     <motion.button
+                      aria-label={t(choice.textKey)}
                       key={choice.textKey}
                       whileHover={{ x: 10, scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}

@@ -132,9 +132,9 @@ function AppContent() {
       <AchievementPopup />
       <SpeedInsights />
       <Analytics />
-      <div className="flex-1 relative z-10 w-full">
+      <main className="flex-1 relative z-10 w-full">
         <AnimatedRoutes />
-      </div>
+      </main>
       {!isGamePage && <Footer />}
     </div>
   );
