@@ -194,6 +194,49 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
             </p>
           </motion.div>
         )}
+        
+        {(winner || isDraw) && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center pointer-events-auto"
+          >
+             <motion.div 
+               initial={{ scale: 0.9, y: 10 }}
+               animate={{ scale: 1, y: 0 }}
+               className="bg-[#111] border-2 border-white/10 p-6 sm:p-8 rounded-3xl flex flex-col items-center shadow-2xl mx-4 relative overflow-hidden"
+             >
+               <div className="absolute inset-0 bg-brand-accent/5 blur-[50px] rounded-full pointer-events-none" />
+               <div className="relative z-10 flex flex-col items-center">
+                 {winner === 'X' ? (
+                   <div className="text-brand-accent text-5xl sm:text-6xl mb-4 font-black">X</div>
+                 ) : winner === 'O' ? (
+                   <div className="text-blue-400 text-5xl sm:text-6xl mb-4 font-black">O</div>
+                 ) : (
+                   <div className="text-zinc-500 text-5xl sm:text-6xl mb-4 font-black">-</div>
+                 )}
+                 <h2 className="text-xl sm:text-3xl font-black text-white uppercase tracking-widest mb-2 text-center">
+                   {winner === 'X' ? t('game.ttt.win.user', 'YOU WIN') 
+                    : winner === 'O' ? t('game.ttt.win.bot', 'BOT WINS') 
+                    : t('game.ttt.draw', 'DRAW')}
+                 </h2>
+                 <p className="text-zinc-400 text-xs sm:text-sm uppercase tracking-widest mb-8 text-center max-w-xs">
+                   {winner === 'X' ? 'Reason illuminates the board. Logic prevails.' 
+                    : winner === 'O' ? `The ${personality} perspective has dominated the grid.`
+                    : 'A stalemate of ideas. Status quo remains.'}
+                 </p>
+                 <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                    className="w-full bg-brand-accent text-white px-8 py-4 font-black uppercase text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors rounded-xl shadow-[0_0_20px_rgba(138,99,210,0.3)] active:scale-95"
+                 >
+                    {t('game.ttt.reset', 'REMATCH')}
+                 </button>
+               </div>
+             </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
       <div className="mb-1 text-center w-full relative group">
          <p className="text-[#8a63d2] text-[8px] md:text-[10px] uppercase font-bold tracking-widest">{t('game.objective')}{t('game.ttt.goal')}</p>

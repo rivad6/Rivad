@@ -50,6 +50,7 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
   });
   const [showMobileControls, setShowMobileControls] = useState(() => localStorage.getItem('fest_mobile_controls') === 'true');
   const [controlMode, setControlMode] = useState<'keyboard' | 'mouse' | null>(() => (localStorage.getItem('fest_control_mode') as any) || null);
+  const [gameResult, setGameResult] = useState<{score: number, coinsEarned: number} | null>(null);
   const [gameStats, setGameStats] = useState<{earned: number, total: number, enemies: number, items: number} | null>(null);
   const keysRef = useRef({ left: false, right: false, up: false });
   const pausedRef = useRef(false);
@@ -860,8 +861,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
                     playSound('lose');
                     const finalScore = Math.floor(maxScore) + bonusScore;
                     setScore(finalScore);
-                    setFestCoins(prev => prev + sessionCoins + Math.floor(finalScore / 50));
+                    const earnedCoins = sessionCoins + Math.floor(finalScore / 50);
+                    setFestCoins(prev => prev + earnedCoins);
                     if (finalScore > highScore) setHighScore(finalScore);
+                    setGameResult({ score: finalScore, coinsEarned: earnedCoins });
                     setIsPlaying(false);
                     return; // Exit loop since game ended
                 }
@@ -930,11 +933,10 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
          playSound('lose');
          const finalScore = Math.floor(maxScore) + bonusScore;
          setScore(finalScore);
-         setFestCoins(prev => {
-             const added = sessionCoins + Math.floor(finalScore / 50);
-             return prev + added;
-         });
+         const earnedCoins = sessionCoins + Math.floor(finalScore / 50);
+         setFestCoins(prev => prev + earnedCoins);
          if (finalScore > highScore) setHighScore(finalScore);
+         setGameResult({ score: finalScore, coinsEarned: earnedCoins });
          setIsPlaying(false);
       }
       
@@ -1534,7 +1536,45 @@ export function FestJump({ isPausedGlobal = false, hideFullscreenButton = false,
             </motion.div>
           )}
 
-          {!isPlaying && !showCodeInput && !showShop && (
+          {gameResult && !isPlaying && (
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.9 }} 
+               animate={{ opacity: 1, scale: 1 }} 
+               exit={{ opacity: 0 }}
+               className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#050510]/95 backdrop-blur-xl p-8 text-center pointer-events-auto"
+            >
+               <h2 className="text-4xl md:text-5xl font-black text-pink-500 mb-2 tracking-widest uppercase">GAME OVER</h2>
+               <p className="text-white/50 text-xs mb-8 uppercase tracking-[0.3em]">YOU FELL OUT OF THE FESTIVAL</p>
+               
+               <div className="bg-white/5 border border-white/10 rounded-xl p-6 w-full max-w-sm mb-8 space-y-4">
+                  <div className="flex justify-between items-center text-lg">
+                     <span className="text-white/70 uppercase">Distance Score</span>
+                     <span className="font-black text-white">{gameResult.score}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-lg border-t border-white/10 pt-4">
+                     <span className="text-white/70 uppercase flex items-center gap-2"><Zap size={16} className="text-yellow-400" /> Karmas Earned</span>
+                     <span className="font-black text-yellow-400">+{gameResult.coinsEarned}</span>
+                  </div>
+               </div>
+               
+               <div className="flex flex-col gap-4 w-full max-w-sm">
+                  <button 
+                    onClick={() => { setGameResult(null); setIsPlaying(true); playSound('start'); }}
+                    className="w-full py-5 bg-white text-black font-black uppercase text-xl hover:bg-pink-500 hover:text-white transition-colors"
+                  >
+                     PLAY AGAIN
+                  </button>
+                  <button 
+                    onClick={() => setGameResult(null)}
+                    className="w-full py-4 text-white/40 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
+                  >
+                     MAIN MENU
+                  </button>
+               </div>
+            </motion.div>
+          )}
+
+          {!isPlaying && !gameResult && !showCodeInput && !showShop && (
             <motion.div 
                initial={{ opacity: 0 }} 
                animate={{ opacity: 1 }} 

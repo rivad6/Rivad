@@ -223,6 +223,52 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
             </p>
           </motion.div>
         )}
+        
+        {gameState === 'win' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center flex-col text-center p-6"
+          >
+            <Star className="w-20 h-20 text-yellow-500 mb-6 animate-spin-slow" />
+            <h2 className="text-4xl md:text-5xl font-black text-brand-accent mb-4 tracking-widest uppercase">
+              SELLING OUT COMPLETE
+            </h2>
+            <p className="text-zinc-400 max-w-sm text-xs md:text-sm uppercase tracking-widest mb-10 leading-relaxed">
+              You reached 1,000,000 Hype. You are now officially a corporate shill. Congratulations.
+            </p>
+            <button
+               onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); setPrestige(prev => prev + 1); }}
+               className="bg-brand-accent text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(138,99,210,0.5)] hover:scale-105 transition-all text-sm"
+            >
+               PRESTIGE & RESTART
+            </button>
+          </motion.div>
+        )}
+
+        {gameState === 'lose' && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center flex-col text-center p-6"
+          >
+            <AlertTriangle className="w-20 h-20 text-red-500 mb-6 animate-bounce" />
+            <h2 className="text-4xl md:text-5xl font-black text-red-500 mb-4 tracking-widest uppercase">
+              CANCELLED
+            </h2>
+            <p className="text-zinc-400 max-w-sm text-xs md:text-sm uppercase tracking-widest mb-10 leading-relaxed">
+              Your relevance dropped to 0. You are no longer trending and the internet has forgotten you.
+            </p>
+            <button
+               onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+               className="bg-red-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:scale-105 transition-all text-sm"
+            >
+               TRY AGAIN
+            </button>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <div className="w-full flex flex-col">

@@ -4,6 +4,7 @@ import { useAudio } from '../../context/AudioContext';
 import { useAchievements } from '../../context/AchievementsContext';
 import { User, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '../../lib/utils';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
@@ -16,6 +17,7 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
   const [playerScore, setPlayerScore] = useState(0);
   const [cpuScore, setCpuScore] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [gameResult, setGameResult] = useState<{ isWin: boolean, playerScore: number, cpuScore: number } | null>(null);
   const pausedGlobalRef = useRef(false);
 
   useEffect(() => {
@@ -134,6 +136,11 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
       if (isPausedGlobal) return;
       if (player.score >= 5 || cpu.score >= 5) {
         setIsPlaying(false);
+        setGameResult({ 
+          isWin: player.score >= 5, 
+          playerScore: player.score, 
+          cpuScore: cpu.score 
+        });
         if (player.score >= 5) {
           playSound('win');
           unlockAchievement('pong_master');
@@ -405,10 +412,10 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
           )}
         </AnimatePresence>
         <AnimatePresence>
-        {!isPlaying && (
+        {!isPlaying && !gameResult && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ type: 'spring', bounce: 0.1 }} className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black/80 backdrop-blur-sm">
             <h3 className="text-white text-lg mb-2 text-center leading-loose relative inline-block">
-              {playerScore >= 5 ? t('game.pong.win') : cpuScore >= 5 ? t('game.pong.lose') : t('game.pong.title')}
+              {t('game.pong.title')}
               <span className="absolute -top-3 -right-6 rotate-12 text-[8px] bg-brand-accent text-white font-bold px-1 py-0.5 shadow-[0_0_5px_rgba(138,99,210,0.8)] border border-white">BY RIVAD</span>
             </h3>
             <p className="text-[8px] text-gray-400 mb-6 uppercase tracking-widest">{t('game.objective')}{t('game.pong.goal')}</p>
@@ -429,9 +436,46 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
               }}
               className="bg-brand-accent text-white px-6 py-3 uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-colors relative z-50 cursor-pointer pointer-events-auto shadow-[0_0_20px_rgba(138,99,210,0.4)]"
             >
-              {playerScore >= 5 || cpuScore >= 5 ? t('game.retry') : t('game.insert')}
+              {t('game.insert')}
             </button>
-            <p className="text-[8px] text-gray-500 mt-6 mt-4">{t('game.pong.controls')}</p>
+            <p className="text-[8px] text-gray-500 mt-6">{t('game.pong.controls')}</p>
+          </motion.div>
+        )}
+        
+        {gameResult && !isPlaying && (
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-4">
+             <h2 className={cn("text-4xl md:text-5xl font-black uppercase mb-2", gameResult.isWin ? "text-green-500" : "text-red-500")}>
+                {gameResult.isWin ? 'DEBATE WON' : 'DEBATE LOST'}
+             </h2>
+             <p className="text-white/60 text-xs mb-8 uppercase tracking-[0.2em]">
+                {gameResult.isWin ? 'You successfully proved your thesis' : 'Your argument was completely dismantled'}
+             </p>
+             <div className="flex gap-8 mb-8 text-2xl font-black italic border border-white/10 p-6 rounded-xl bg-white/5">
+                <div className="flex flex-col items-center">
+                   <span className="text-[10px] text-brand-accent uppercase mb-2">You</span>
+                   <span className="text-white">{gameResult.playerScore}</span>
+                </div>
+                <div className="w-px bg-white/20"></div>
+                <div className="flex flex-col items-center">
+                   <span className="text-[10px] text-zinc-500 uppercase mb-2">Opponent</span>
+                   <span className="text-zinc-400">{gameResult.cpuScore}</span>
+                </div>
+             </div>
+             
+             <div className="flex flex-col gap-4 w-full max-w-xs">
+                <button 
+                  onClick={() => { setPlayerScore(0); setCpuScore(0); setGameResult(null); setIsPlaying(true); }}
+                  className="w-full bg-white text-black py-4 uppercase font-black tracking-widest hover:bg-brand-accent hover:text-white transition-colors"
+                >
+                  REMATCH
+                </button>
+                <button 
+                  onClick={() => { setPlayerScore(0); setCpuScore(0); setGameResult(null); }}
+                  className="w-full text-white/50 text-[10px] py-4 uppercase font-black tracking-[0.2em] hover:text-white transition-colors"
+                >
+                  MAIN MENU
+                </button>
+             </div>
           </motion.div>
         )}
         </AnimatePresence>
