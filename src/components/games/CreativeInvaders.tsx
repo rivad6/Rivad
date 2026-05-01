@@ -77,9 +77,11 @@ type Difficulty = "easy" | "normal" | "hard";
 export function CreativeInvaders({
   isPausedGlobal = false,
   hideFullscreenButton = false,
+  onFinish,
 }: {
   isPausedGlobal?: boolean;
   hideFullscreenButton?: boolean;
+  onFinish?: () => void;
 }) {
   const { t } = useLanguage();
   const { unlockAchievement } = useAchievements();
@@ -3016,22 +3018,37 @@ export function CreativeInvaders({
                   {score}
                 </span>
               </p>
-              <button
-                aria-label="Try Again"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  initGame();
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  initGame();
-                }}
-                className="bg-red-500 text-white border-2 border-red-700 font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl flex items-center gap-3 hover:bg-red-600 transition-all shadow-[4px_4px_0px_#b91c1c] active:translate-y-1 active:translate-x-1 active:shadow-none relative z-50 cursor-pointer pointer-events-auto rotate-2"
-              >
-                <RefreshCw size={18} /> {t("game.invaders.tryagain", "Draw Again")}
-              </button>
+              <div className="flex flex-col gap-3 w-full max-w-[240px]">
+                  <button
+                    aria-label="Try Again"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      initGame();
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      initGame();
+                    }}
+                    className="w-full bg-red-500 text-white border-2 border-red-700 font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-red-600 transition-all shadow-[4px_4px_0px_#b91c1c] active:translate-y-1 active:translate-x-1 active:shadow-none relative z-50 cursor-pointer pointer-events-auto rotate-1"
+                  >
+                    <RefreshCw size={18} /> {t("game.invaders.tryagain", "Draw Again")}
+                  </button>
+                  {onFinish && (
+                    <button
+                      aria-label="BACK TO MENU"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onFinish();
+                      }}
+                      className="w-full text-zinc-400 text-[10px] py-1 font-mono uppercase tracking-[0.2em] hover:text-zinc-800 transition-colors"
+                    >
+                      BACK TO MENU
+                    </button>
+                  )}
+              </div>
             </motion.div>
           )}
 
@@ -3070,22 +3087,37 @@ export function CreativeInvaders({
                   {score}
                 </span>
               </p>
-              <button
-                aria-label="Draw More"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  initGame();
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  initGame();
-                }}
-                className="bg-emerald-500 text-white border-2 border-emerald-700 font-black font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl flex items-center gap-3 hover:bg-emerald-600 transition-all shadow-[4px_4px_0px_#047857] active:translate-y-1 active:translate-x-1 active:shadow-none relative z-50 cursor-pointer pointer-events-auto -rotate-2"
-              >
-                <RefreshCw size={18} /> Draw More
-              </button>
+              <div className="flex flex-col gap-3 w-full max-w-[240px]">
+                  <button
+                    aria-label="Draw More"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      initGame();
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      initGame();
+                    }}
+                    className="w-full bg-emerald-500 text-white border-2 border-emerald-700 font-black font-mono text-sm uppercase tracking-widest px-8 py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-emerald-600 transition-all shadow-[4px_4px_0px_#047857] active:translate-y-1 active:translate-x-1 active:shadow-none relative z-50 cursor-pointer pointer-events-auto -rotate-1"
+                  >
+                    <RefreshCw size={18} /> Draw More
+                  </button>
+                  {onFinish && (
+                    <button
+                      aria-label="BACK TO MENU"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onFinish();
+                      }}
+                      className="w-full text-zinc-400 text-[10px] py-1 font-mono uppercase tracking-[0.2em] hover:text-zinc-800 transition-colors"
+                    >
+                      BACK TO MENU
+                    </button>
+                  )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

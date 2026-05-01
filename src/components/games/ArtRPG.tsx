@@ -410,7 +410,7 @@ export function ArtRPG({ isPausedGlobal = false, hideFullscreenButton = false, o
         setIsTyping(false);
         setPathContext(null); // Clear context once typed
       }
-    }, 12); // Slightly faster for better flow
+    }, 25); // Refined speed for better legibility and less flicker
     
     return () => {
       if (interval) clearInterval(interval);

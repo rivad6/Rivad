@@ -36,7 +36,7 @@ const UPGRADES: Upgrade[] = [
   { id: 'nft', nameKey: 'game.sell.action.nft', baseCost: 10000, hypeBoost: 500, icon: <DollarSign />, unlockedAt: 80 },
 ];
 
-export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean }> = ({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false }) => {
+export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenButton?: boolean, isFullscreen?: boolean, onFinish?: () => void }> = ({ isPausedGlobal = false, hideFullscreenButton = false, isFullscreen = false, onFinish }) => {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -238,13 +238,24 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
             <p className="text-zinc-400 max-w-sm text-xs md:text-sm uppercase tracking-widest mb-10 leading-relaxed">
               You reached 1,000,000 Hype. You are now officially a corporate shill. Congratulations.
             </p>
-            <button
-               aria-label="Prestige and Restart"
-               onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); setPrestige(prev => prev + 1); }}
-               className="bg-brand-accent text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(138,99,210,0.5)] hover:scale-105 transition-all text-sm"
-            >
-               PRESTIGE & RESTART
-            </button>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+                <button
+                   aria-label="Prestige and Restart"
+                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); setPrestige(prev => prev + 1); }}
+                   className="w-full bg-brand-accent text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-[0_0_30px_rgba(138,99,210,0.5)] hover:scale-105 transition-all text-sm"
+                >
+                   PRESTIGE & RESTART
+                </button>
+                {onFinish && (
+                  <button
+                    aria-label="RETURN TO TERMINAL"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onFinish(); }}
+                    className="w-full text-white/40 text-[10px] py-2 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
+                  >
+                    RETURN TO TERMINAL
+                  </button>
+                )}
+            </div>
           </motion.div>
         )}
 
@@ -262,13 +273,24 @@ export const SellOutGame: React.FC<{ isPausedGlobal?: boolean, hideFullscreenBut
             <p className="text-zinc-400 max-w-sm text-xs md:text-sm uppercase tracking-widest mb-10 leading-relaxed">
               Your relevance dropped to 0. You are no longer trending and the internet has forgotten you.
             </p>
-            <button
-               aria-label="Try Again"
-               onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
-               className="bg-red-600 text-white px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:scale-105 transition-all text-sm"
-            >
-               TRY AGAIN
-            </button>
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+                <button
+                   aria-label="Try Again"
+                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                   className="w-full bg-red-600 text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-[0_0_30px_rgba(239,68,68,0.5)] hover:scale-105 transition-all text-sm"
+                >
+                   TRY AGAIN
+                </button>
+                {onFinish && (
+                  <button
+                    aria-label="RETURN TO TERMINAL"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onFinish(); }}
+                    className="w-full text-white/40 text-[10px] py-2 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
+                  >
+                    RETURN TO TERMINAL
+                  </button>
+                )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

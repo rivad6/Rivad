@@ -461,15 +461,17 @@ export function Arcade() {
                   {/* Dynamic Layout Container */}
                   <div className={cn(
                     "w-full h-full flex flex-col md:flex-row gap-0 translate-z-0",
-                    powerState === 'booting' ? "p-8 md:p-12" : "p-0"
+                    powerState === 'booting' ? "p-8 md:p-12 items-center justify-center bg-[#050505]" : "p-0"
                   )}>
                     
                     {/* SIDEBAR / LOG AREA */}
                     <div className={cn(
                       "transition-all duration-700 flex flex-col border-brand-accent/20 overflow-hidden",
-                      powerState === 'booting' ? "w-full h-full" : "w-full md:w-56 h-auto md:h-full bg-black/40 border-b md:border-b-0 md:border-r border-brand-accent/10 backdrop-blur-md z-30"
+                      powerState === 'booting' 
+                        ? "w-full max-w-xl h-fit border border-brand-accent/30 bg-black/60 p-6 rounded-lg shadow-[0_0_30px_rgba(242,74,41,0.1)]" 
+                        : "w-full md:w-56 h-auto md:h-full bg-black/40 border-b md:border-b-0 md:border-r border-brand-accent/10 backdrop-blur-md z-30"
                     )}>
-                      <div className="p-4 md:p-6 overflow-y-auto custom-scrollbar h-full">
+                      <div className={cn("overflow-y-auto custom-scrollbar h-full", powerState === 'booting' ? "max-h-[300px]" : "p-4 md:p-6")}>
                         {powerState === 'waiting' && (
                           <div className="mb-4 border-b border-brand-accent/20 pb-2 flex items-center gap-2">
                              <div className="w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_8px_#f24a29]" />
@@ -499,37 +501,52 @@ export function Arcade() {
                           variants={containerVariants}
                           initial="hidden"
                           animate="visible"
-                          className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 md:p-6 pb-24"
+                          className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 md:p-8 pb-32"
                         >
-                          {games.map(g => (
+                          {games.map((g, idx) => (
                             <motion.button
                               variants={itemVariants}
-                              whileHover={{ x: 4, scale: 1.02 }}
+                              whileHover={{ y: -4, scale: 1.01 }}
                               whileTap={{ scale: 0.98 }}
                               key={g.id}
                               aria-label={g.label}
                               onClick={() => handleInsertCartridge(g.id)}
-                              className="border border-brand-accent/20 bg-gradient-to-br from-brand-accent/5 to-transparent p-4 font-mono text-left hover:bg-brand-accent/10 hover:border-brand-accent/50 focus:bg-brand-accent focus:text-black focus:outline-none transition-all group flex items-center gap-4 relative overflow-hidden rounded-sm"
+                              className="group relative bg-[#0a0a0c] border border-white/5 p-0 rounded-xl overflow-hidden transition-all hover:border-brand-accent/40 focus:ring-2 focus:ring-brand-accent focus:outline-none"
                             >
-                              <div className="text-brand-accent group-focus:text-black text-xl md:text-2xl p-2 bg-brand-accent/10 rounded group-hover:bg-brand-accent group-hover:text-black transition-colors">{g.icon}</div>
+                              {/* Background Gradient Accent */}
+                              <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity", g.color)} />
                               
-                              <div className="flex flex-col gap-0.5 flex-1 overflow-hidden">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="font-bold text-[10px] md:text-xs leading-tight text-brand-accent group-focus:text-black truncate uppercase tracking-tighter">{g.label}</div>
-                                  <span className="text-[7px] border border-brand-accent/40 px-1 py-0.5 rounded-sm opacity-60 group-hover:opacity-100 group-hover:border-brand-accent/60 group-focus:text-black group-focus:border-black/40">
-                                    {g.genre}
-                                  </span>
-                                </div>
-                                <div className="text-[8px] md:text-[9px] opacity-60 group-hover:opacity-100 group-focus:text-black leading-tight italic truncate">
-                                  {g.title}
+                              <div className="flex items-stretch h-32">
+                                {/* Left strip */}
+                                <div className={cn("w-2 h-full opacity-40 group-hover:opacity-100 transition-opacity", g.color)} />
+                                
+                                <div className="p-4 flex gap-4 w-full items-center">
+                                  <div className={cn("w-16 h-16 rounded-lg flex items-center justify-center text-white/20 group-hover:text-brand-accent shadow-inner transition-all", g.color.replace('bg-', 'bg-opacity-10 '))}>
+                                    {g.icon}
+                                  </div>
+                                  
+                                  <div className="flex flex-col gap-1 flex-1 text-left">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] font-black text-brand-accent/60 uppercase tracking-widest">{g.genre}</span>
+                                      <div className="h-px w-4 bg-brand-accent/20" />
+                                    </div>
+                                    <h4 className="text-white font-bold text-sm md:text-base leading-tight uppercase group-hover:text-brand-accent transition-colors">{g.label}</h4>
+                                    <p className="text-[9px] text-zinc-500 font-mono italic opacity-0 group-hover:opacity-100 transition-opacity">
+                                      {g.title}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex flex-col items-end gap-2 opacity-20 group-hover:opacity-100 transition-opacity">
+                                    <span className="text-[8px] font-black font-mono">ID: 00{idx + 1}</span>
+                                    <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center">
+                                      <ArrowDown size={14} className="group-hover:translate-y-1 transition-transform" />
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 
-                              <div className="text-brand-accent/30 group-hover:text-brand-accent group-focus:text-black transition-colors">
-                                <motion.span animate={{ x: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
-                                  {'>'}
-                                </motion.span>
-                              </div>
+                              {/* Hover Shine */}
+                              <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-25deg] group-hover:left-[100%] transition-all duration-1000" />
                             </motion.button>
                           ))}
                           <div className="col-span-1 md:col-span-2 text-center mt-6">
@@ -556,13 +573,13 @@ export function Arcade() {
                     transition={{ duration: 0.3 }}
                     className="w-full h-full flex justify-center p-0 md:p-4 bg-black"
                   >
-                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} />}
-                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} />}
-                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'pong' && <DebatePong isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
+                    {activeGame === 'tictactoe' && <IdeasTicTacToe isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
+                    {activeGame === 'uno' && <PoliticalUno isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
                     {activeGame === 'rpg' && <ArtRPG isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
-                    {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} />}
-                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} />}
-                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} />}
+                    {activeGame === 'sellout' && <SellOutGame isPausedGlobal={showPopup} hideFullscreenButton={true} isFullscreen={isFullscreen} onFinish={handleExitToMenu} />}
+                    {activeGame === 'invaders' && <CreativeInvaders isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
+                    {activeGame === 'race' && <MeetingRace isPausedGlobal={showPopup} hideFullscreenButton={true} onFinish={handleExitToMenu} />}
                   </motion.div>
                 )}
               </AnimatePresence>

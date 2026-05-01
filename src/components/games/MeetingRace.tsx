@@ -43,7 +43,15 @@ interface Particle {
   size: number;
 }
 
-export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
+export function MeetingRace({ 
+  isPausedGlobal = false, 
+  hideFullscreenButton = false,
+  onFinish
+}: { 
+  isPausedGlobal?: boolean, 
+  hideFullscreenButton?: boolean,
+  onFinish?: () => void 
+}) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -1751,7 +1759,7 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
               <p className="text-2xl md:text-4xl font-black text-white tracking-tight">{score.toLocaleString()}</p>
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 w-full max-w-[200px]">
               <button
                  aria-label={t('game.retry', 'PLAY AGAIN')}
                  onClick={() => {
@@ -1763,10 +1771,22 @@ export function MeetingRace({ isPausedGlobal = false, hideFullscreenButton = fal
                    setIsPlaying(true);
                    playSound('start');
                  }}
-                 className="bg-orange-500 text-black px-6 md:px-8 py-2 md:py-3 text-xs md:text-sm font-black hover:bg-orange-400 transition-all uppercase rounded-full glow-orange shadow-lg active:scale-95"
+                 className="bg-orange-500 text-black w-full py-2 md:py-3 text-xs md:text-sm font-black hover:bg-orange-400 transition-all uppercase rounded-full glow-orange shadow-lg active:scale-95"
               >
                 {t('game.retry', 'PLAY AGAIN')}
               </button>
+              {onFinish && (
+                <button
+                  aria-label="MAIN MENU"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onFinish();
+                  }}
+                  className="w-full text-zinc-500 text-[10px] py-1 font-black uppercase tracking-[0.2em] hover:text-white transition-colors"
+                >
+                  MAIN MENU
+                </button>
+              )}
             </div>
           </motion.div>
         )}

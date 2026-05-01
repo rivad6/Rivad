@@ -36,7 +36,7 @@ type Card = {
   partyNameKey?: string;
 };
 
-export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
+export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
   const { t } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -974,17 +974,29 @@ export function PoliticalUno({ isPausedGlobal = false, hideFullscreenButton = fa
                 </>
               )}
               
-              <motion.button
-                aria-label={t('game.uno.label.reset_btn')}
-                whileHover={{ scale: 1.1, backgroundColor: '#fff', color: '#000' }}
-                whileTap={{ scale: 0.9 }}
-                onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
-                onTouchEnd={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
-                className="mt-4 md:mt-8 bg-zinc-900 text-white px-8 md:px-16 py-3 md:py-5 font-black uppercase text-[10px] md:text-base tracking-[0.2em] md:tracking-[0.4em] transition-all rounded-full border border-white/10 flex items-center gap-2 md:gap-3 shadow-2xl relative z-50 cursor-pointer pointer-events-auto"
-              >
-                <ArrowLeftRight className="w-4 h-4 md:w-5 md:h-5" />
-                {t('game.uno.label.reset_btn')}
-              </motion.button>
+              <div className="flex flex-col gap-3 w-full max-w-xs md:max-w-md">
+                <motion.button
+                  aria-label={t('game.uno.label.reset_btn')}
+                  whileHover={{ scale: 1.05, backgroundColor: '#fff', color: '#000' }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+                  onTouchEnd={(e:any) => { e.preventDefault(); e.stopPropagation(); initGame(); }}
+                  className="w-full bg-white text-black px-8 md:px-16 py-3 md:py-4 font-black uppercase text-[10px] md:text-sm tracking-[0.2em] md:tracking-[0.4em] transition-all rounded-xl shadow-2xl relative z-50 cursor-pointer pointer-events-auto"
+                >
+                  {t('game.uno.label.reset_btn')}
+                </motion.button>
+                {onFinish && (
+                  <motion.button
+                    aria-label="MAIN MENU"
+                    whileHover={{ scale: 1.05, color: '#f24a29' }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={(e:any) => { e.preventDefault(); e.stopPropagation(); onFinish(); }}
+                    className="w-full text-white/50 text-[10px] md:text-xs py-2 uppercase font-black tracking-[0.2em] hover:text-white transition-colors"
+                  >
+                    MAIN MENU
+                  </motion.button>
+                )}
+              </div>
               
               <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-screen overflow-hidden opacity-5 pointer-events-none text-[150px] font-black whitespace-nowrap italic uppercase">
                  CORRUPCIÓN • PODER • DINERO • INFLUENCIA • DEDAZO

@@ -8,7 +8,7 @@ import { cn } from '../../lib/utils';
 
 import { FullscreenButton } from '../ui/FullscreenButton';
 
-export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
+export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -469,7 +469,12 @@ export function DebatePong({ isPausedGlobal = false, hideFullscreenButton = fals
                 </button>
                 <button 
                   aria-label="MAIN MENU"
-                  onClick={() => { setPlayerScore(0); setCpuScore(0); setGameResult(null); }}
+                  onClick={() => { 
+                    setPlayerScore(0); 
+                    setCpuScore(0); 
+                    setGameResult(null); 
+                    if (onFinish) onFinish();
+                  }}
                   className="w-full text-white/50 text-[10px] py-4 uppercase font-black tracking-[0.2em] hover:text-white transition-colors"
                 >
                   MAIN MENU

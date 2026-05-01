@@ -25,7 +25,7 @@ const calculateWinner = (squares: Player[]) => {
   return null;
 };
 
-export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = false }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean }) {
+export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = false, onFinish }: { isPausedGlobal?: boolean, hideFullscreenButton?: boolean, onFinish?: () => void }) {
   const { t, language } = useLanguage();
   const { playSound, playMusic } = useAudio();
   const { unlockAchievement } = useAchievements();
@@ -236,14 +236,25 @@ export function IdeasTicTacToe({ isPausedGlobal = false, hideFullscreenButton = 
                     : winner === 'O' ? `The ${personality} perspective has dominated the grid.`
                     : 'A stalemate of ideas. Status quo remains.'}
                  </p>
-                 <button
-                    aria-label={t('game.ttt.reset', 'REMATCH')}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
-                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
-                    className="w-full bg-brand-accent text-white px-8 py-4 font-black uppercase text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors rounded-xl shadow-[0_0_20px_rgba(138,99,210,0.3)] active:scale-95"
-                 >
-                    {t('game.ttt.reset', 'REMATCH')}
-                 </button>
+                 <div className="flex flex-col gap-3 w-full">
+                   <button
+                      aria-label={t('game.ttt.reset', 'REMATCH')}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                      onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); resetGame(); }}
+                      className="w-full bg-brand-accent text-white px-8 py-4 font-black uppercase text-xs sm:text-sm tracking-widest hover:bg-white hover:text-black transition-colors rounded-xl shadow-[0_0_20px_rgba(138,99,210,0.3)] active:scale-95"
+                   >
+                      {t('game.ttt.reset', 'REMATCH')}
+                   </button>
+                   {onFinish && (
+                      <button
+                        aria-label="EXIT TO MENU"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onFinish(); }}
+                        className="w-full text-white/40 text-[10px] py-2 font-black uppercase tracking-[0.3em] hover:text-white transition-colors"
+                      >
+                        EXIT TO MENU
+                      </button>
+                   )}
+                 </div>
                </div>
              </motion.div>
           </motion.div>
