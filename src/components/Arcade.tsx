@@ -130,15 +130,9 @@ export function Arcade() {
 
   const handleExitToMenu = () => {
     playSound('hit');
-    setIsRestoring(true);
     setActiveGame(null);
-    setBootLog([t('arc.boot.restoring'), t('arc.boot.cleaning')]);
-    
-    setTimeout(() => {
-      playMusic('arcade');
-      setPowerState('waiting');
-      setIsRestoring(false);
-    }, 1500);
+    playMusic('arcade');
+    setPowerState('waiting');
   };
 
   const handleInsertCartridge = (id: string) => {
